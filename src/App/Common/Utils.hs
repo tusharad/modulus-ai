@@ -10,7 +10,6 @@ module App.Common.Utils
   , myForm
   , inputFile
   , select
-  , defaultProvider
   ) where
 
 import Data.Maybe (fromMaybe)
@@ -20,9 +19,8 @@ import Network.URI
 import Network.URI.Static
 import Web.Hyperbole
 import Web.Hyperbole.Data.Encoded (encodedToText)
-import Web.Hyperbole.HyperView (ViewId (toViewId), onSubmit)
-import Web.Hyperbole.HyperView.Forms (FormFields (FormFields), Input (Input))
-import App.Common.Types
+import Web.Hyperbole.HyperView
+import Web.Hyperbole.HyperView.Forms
 
 homeUrl :: URI
 homeUrl = [relativeReference|/|]
@@ -57,6 +55,3 @@ select :: View (Input id a) () -> View (Input id a) ()
 select x = do
   Input (FieldName nm) <- context
   tag "select" @ name nm $ x
-
-defaultProvider :: Provider
-defaultProvider = OllamaProvider "gemma3"

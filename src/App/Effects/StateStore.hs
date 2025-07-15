@@ -18,24 +18,28 @@ module App.Effects.StateStore
   , StateStoreEff (..)
   , runStateStoreIO
   , useState
-  , StateStoreMap 
+  , StateStoreMap
   , getProviderInfo
   , getStreamState
   , modifyState
   , getState
+  , getAvailableOllamaModels
   ) where
 
+import App.Common.Types
 import Control.Concurrent.MVar
+import Control.Monad (void)
 import Data.Aeson
 import qualified Data.Map.Strict as HM
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.UUID (UUID)
 import qualified Data.UUID.V4 as UUID
 import Effectful
 import Effectful.Dispatch.Dynamic
+import qualified Ollama as Ollama
 import Web.Hyperbole
-import App.Common.Types 
-import App.Common.Utils
 
 data StreamState = InProgress Text | Complete Text
   deriving (Show, Eq)
@@ -45,6 +49,7 @@ data StateStore = StateStore
   , currentPrompt :: Text
   , streamContent :: HM.Map Int StreamState
   , providerInfo :: Provider
+  , availableOllamaModels :: [Text]
   }
   deriving (Show, Eq)
 
@@ -94,11 +99,14 @@ getOrCreateStateStore storeMap = do
     case HM.lookup uuid hm of
       Just stStore -> pure (hm, stStore)
       Nothing -> do
-        let f = StateStore 0 mempty HM.empty defaultProvider
+        let f = StateStore 0 mempty HM.empty (OllamaProvider "Select Model") []
         x <- newMVar f
+        void $ addAvailableOllamaModels x
         pure (HM.insert uuid x hm, x)
 
-modifyState :: (StateStoreEff :> es, IOE :> es) => (StateStore -> StateStore) -> Eff es ()
+modifyState ::
+  (StateStoreEff :> es, IOE :> es) =>
+  (StateStore -> StateStore) -> Eff es ()
 modifyState f = do
   storeVar <- useState
   liftIO $ modifyMVar_ storeVar $ \s -> pure $ f s
@@ -109,7 +117,35 @@ getState = liftIO . readMVar =<< useState
 getProviderInfo :: (StateStoreEff :> es, IOE :> es) => Eff es Provider
 getProviderInfo = providerInfo <$> getState
 
-getStreamState :: (StateStoreEff :> es, IOE :> es) => Int -> Eff es (Maybe StreamState)
+getAvailableOllamaModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
+getAvailableOllamaModels = availableOllamaModels <$> getState
+
+getStreamState ::
+  (StateStoreEff :> es, IOE :> es) =>
+  Int -> Eff es (Maybe StreamState)
 getStreamState chatId = do
   store <- getState
   pure $ HM.lookup chatId (streamContent store)
+
+addAvailableOllamaModels :: MVar StateStore -> IO ()
+addAvailableOllamaModels st = do
+  eVersion <- Ollama.getVersion
+  case eVersion of
+    Left _ -> putStrLn "Ollama not seems to be installed."
+    Right (Ollama.Version v) -> do
+      putStrLn $ "Ollama version: " <> T.unpack v
+      eModelInfo <- Ollama.list Nothing
+      case eModelInfo of
+        Left err -> putStrLn (show err)
+        Right (Ollama.Models modelInfoList) -> do
+          let modelNames = map (Ollama.name) modelInfoList
+          modifyMVar_ st $
+            ( \s ->
+                pure $
+                  s
+                    { providerInfo =
+                        OllamaProvider
+                          (fromMaybe "Select Model" $ listToMaybe modelNames)
+                    , availableOllamaModels = modelNames
+                    }
+            )

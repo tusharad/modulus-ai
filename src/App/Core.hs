@@ -20,7 +20,7 @@ import Web.Scotty (ScottyM, files, get, post, status, scottyApp)
 import qualified Web.Scotty as Scotty
 import Network.Wai.Parse
 import qualified Data.ByteString.Char8 as BC
-import App.Effects.StateStore 
+import App.Effects.StateStore
 
 toDocument :: BL.ByteString -> BL.ByteString
 toDocument cnt =
@@ -31,15 +31,19 @@ toDocument cnt =
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript">#{scriptEmbed}</script>
         <style type="text/css">#{cssResetEmbed}</style>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" 
-        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" 
+        rel="stylesheet" 
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" 
+        crossorigin="anonymous">
+        <link rel="stylesheet" 
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
         crossorigin="anonymous" referrerpolicy="no-referrer" />
       </head>
       <body data-bs-theme="light">#{cnt}</body>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" 
-      integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+      integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" 
+      crossorigin="anonymous"></script>
     </html>|]
 
 router :: (IOE :> es, Hyperbole :> es, StateStoreEff :> es) => AppRoute -> Eff es Response
@@ -61,7 +65,7 @@ mainApp :: StateStoreMap -> Application -> Application
 mainApp stateMap scottyAppInst req respond = do
   case pathInfo req of
     ("api" : _) -> scottyAppInst req respond
-    _ -> app stateMap req respond
+    _ -> app stateMap req respond    
 
 scottySubApp :: ScottyM ()
 scottySubApp = do
@@ -82,6 +86,7 @@ runApp = do
   stateMap <- initStateStoreMap
   putStrLn $ "Starting Examples on http://localhost:" <> show port
   scottyAppInstance <- scottyApp scottySubApp
+  -- stateMap <- addAvailableOllamaModels stateMap_
   run port $
     staticPolicy (addBase "public/static") $
       mainApp stateMap scottyAppInstance 

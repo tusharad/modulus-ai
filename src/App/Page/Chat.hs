@@ -5,7 +5,6 @@ import App.Effects.StateStore
 import App.View.Chat
 import App.View.GenerateReply
 import App.View.PromptInput
-import Control.Concurrent.MVar
 import Effectful
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -28,7 +27,8 @@ page ::
          ]
     )
 page chatId = do
-  StateStore {providerInfo} <- (liftIO . readMVar) =<< useState
+  providerInfo <- getProviderInfo
+  ollamaModels <- getAvailableOllamaModels
   pure $ do
     stylesheet "/style.css"
     el ~ cls "main-container" $ do
@@ -39,8 +39,7 @@ page chatId = do
       el ~ cls "main-content" $ do
         el ~ cls "top-bar" $ do
           renderTopBarLeft
-          myHyper (ModelProviders 1) $
-            renderProviderListView providerInfo
+          myHyper (ModelProviders 1) $ renderProviderListView providerInfo ollamaModels
         hyper (ChatMessagesView chatId) $ renderLoadingMessages
         myHyper (PromptInputView chatId) $ renderPromptInputArea genFields
     script "/chat_page.js"

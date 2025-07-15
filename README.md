@@ -47,8 +47,6 @@ The application will be available at: [http://localhost:3000](http://localhost:3
    * The model selector in the dropdown is currently hardcoded.
    * Ensure you have [Ollama](https://ollama.com) installed and the following models pulled:
 
-     * `gemma3`
-     * `qwen3:0.6b`
      * `nomic-embed-text` (used for embedding uploaded documents)
 
 2. **Package Versions**:
