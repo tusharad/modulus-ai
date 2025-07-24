@@ -35,6 +35,7 @@ library
       App.Effects.StateStore
       App.LLM
       App.MarkdownParser
+      App.OpenRouter.Models
       App.Page.Chat
       App.View.Chat
       App.View.ChatMessageView
@@ -72,6 +73,8 @@ library
     , bytestring
     , containers
     , effectful-core
+    , http-client
+    , http-client-tls
     , http-types
     , hyperbole
     , langchain-hs
@@ -121,6 +124,8 @@ executable ai-chatbot-hs-exe
     , bytestring
     , containers
     , effectful-core
+    , http-client
+    , http-client-tls
     , http-types
     , hyperbole
     , langchain-hs
@@ -171,6 +176,8 @@ test-suite ai-chatbot-hs-test
     , bytestring
     , containers
     , effectful-core
+    , http-client
+    , http-client-tls
     , http-types
     , hyperbole
     , langchain-hs

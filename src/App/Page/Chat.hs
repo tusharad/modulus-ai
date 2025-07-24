@@ -29,6 +29,7 @@ page ::
 page chatId = do
   providerInfo <- getProviderInfo
   ollamaModels <- getAvailableOllamaModels
+  orModels <- getAvailableORModels
   pure $ do
     stylesheet "/style.css"
     el ~ cls "main-container" $ do
@@ -39,7 +40,8 @@ page chatId = do
       el ~ cls "main-content" $ do
         el ~ cls "top-bar" $ do
           renderTopBarLeft
-          myHyper (ModelProviders 1) $ renderProviderListView providerInfo ollamaModels
+          myHyper (ModelProviders 1) $ 
+            renderProviderListView providerInfo ollamaModels orModels
         hyper (ChatMessagesView chatId) $ renderLoadingMessages
         myHyper (PromptInputView chatId) $ renderPromptInputArea genFields
     script "/chat_page.js"

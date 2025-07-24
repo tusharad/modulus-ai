@@ -39,6 +39,8 @@ dependencies:
 - transformers
 - wai-extra
 - string-interpolate
+- http-client
+- http-client-tls
 
 default-extensions:
  - DataKinds 

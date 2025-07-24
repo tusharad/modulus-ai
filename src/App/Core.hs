@@ -6,23 +6,25 @@
 module App.Core (runApp) where
 
 import App.Common.Types
+import App.Common.Utils (listAvailableOllamaModels)
+import App.Effects.StateStore
+import App.OpenRouter.Models (OpenRouterModel (..), getOpenRouterModelList)
 import qualified App.Page.Chat as Chat
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL
+import Data.Either (fromRight)
 import Data.Maybe (fromMaybe)
 import Data.String.Interpolate (i)
+import Data.Text (Text)
 import qualified Data.Text.Lazy as TL
 import Effectful
 import Network.HTTP.Types (status400)
 import Network.Wai (pathInfo)
 import Network.Wai.Middleware.Static
-import Web.Hyperbole
-import Web.Scotty (ScottyM, files, get, post, status, scottyApp)
-import qualified Web.Scotty as Scotty
 import Network.Wai.Parse
-import qualified Data.ByteString.Char8 as BC
-import App.Effects.StateStore
-import App.Common.Utils (listAvailableOllamaModels)
-import Data.Text (Text)
+import Web.Hyperbole
+import Web.Scotty (ScottyM, files, get, post, scottyApp, status)
+import qualified Web.Scotty as Scotty
 
 toDocument :: BL.ByteString -> BL.ByteString
 toDocument cnt =
@@ -48,26 +50,28 @@ toDocument cnt =
       crossorigin="anonymous"></script>
     </html>|]
 
-router :: (IOE :> es, Hyperbole :> es, StateStoreEff :> es) => AppRoute -> Eff es Response
+router ::
+  (IOE :> es, Hyperbole :> es, StateStoreEff :> es) =>
+  AppRoute -> Eff es Response
 router r = do
   case r of
     Main -> redirect (routeUri $ Chat Nothing)
     Chat mbChatId -> runPage $ Chat.page (fromMaybe 0 mbChatId)
 
-app :: StateStoreMap -> [Text] -> Application
-app stateMap ollamaModelList =
+app :: StateStoreMap -> [Text] -> [Text] -> Application
+app stateMap ollamaModelList orModelList =
   liveApp
     toDocument
     (runM . routeRequest $ router)
   where
     runM :: (IOE :> es, Hyperbole :> es) => Eff (StateStoreEff : es) a -> Eff es a
-    runM = runStateStoreIO stateMap ollamaModelList
+    runM = runStateStoreIO stateMap ollamaModelList orModelList
 
-mainApp :: StateStoreMap -> [Text] -> Application -> Application
-mainApp stateMap ollamaModelList scottyAppInst req respond = do
+mainApp :: StateStoreMap -> [Text] -> [Text] -> Application -> Application
+mainApp stateMap ollamaModelList orModelList scottyAppInst req respond = do
   case pathInfo req of
     ("api" : _) -> scottyAppInst req respond
-    _ -> app stateMap ollamaModelList req respond    
+    _ -> app stateMap ollamaModelList orModelList req respond
 
 scottySubApp :: ScottyM ()
 scottySubApp = do
@@ -87,9 +91,11 @@ runApp = do
   let port = 3000
   stateMap <- initStateStoreMap
   ollamaModelList <- listAvailableOllamaModels
+  openRouterModels <-
+    (\x -> map modelId $ take 5 $ fromRight [] x)
+      <$> getOpenRouterModelList
   putStrLn $ "Starting Examples on http://localhost:" <> show port
   scottyAppInstance <- scottyApp scottySubApp
-  -- stateMap <- addAvailableOllamaModels stateMap_
   run port $
     staticPolicy (addBase "public/static") $
-      mainApp stateMap ollamaModelList scottyAppInstance 
+      mainApp stateMap ollamaModelList openRouterModels scottyAppInstance

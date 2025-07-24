@@ -36,7 +36,8 @@ updateProvider ::
 updateProvider p = do
   modifyState $ \st -> st {providerInfo = p}
   ollamaModels <- getAvailableOllamaModels
-  pure $ renderProviderListView p ollamaModels
+  orModels <- getAvailableORModels
+  pure $ renderProviderListView p ollamaModels orModels
 
 updateOllamaModel ::
   (StateStoreEff :> es, IOE :> es) =>
@@ -45,7 +46,8 @@ updateOllamaModel model = do
   let p = OllamaProvider model
   modifyState $ \st -> st {providerInfo = p}
   ollamaModels <- getAvailableOllamaModels
-  pure $ renderProviderListView p ollamaModels
+  orModels <- getAvailableORModels
+  pure $ renderProviderListView p ollamaModels orModels
 
 updateOpenRouterModel ::
   (StateStoreEff :> es, IOE :> es) =>
@@ -57,29 +59,39 @@ updateOpenRouterModel model = do
         OpenRouterProvider _ apiKey -> OpenRouterProvider model apiKey
   modifyState $ \s -> s {providerInfo = newP}
   ollamaModels <- getAvailableOllamaModels
-  pure $ renderProviderListView newP ollamaModels
+  orModels <- getAvailableORModels
+  pure $ renderProviderListView newP ollamaModels orModels
 
 updateOpenRouterApiKey ::
   (StateStoreEff :> es, IOE :> es) => Text -> Eff es (View ModelProviders ())
 updateOpenRouterApiKey apiKey = do
   st <- getState
   let newP = case providerInfo st of
-        OllamaProvider _ -> OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
+        OllamaProvider _ -> 
+            OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
         OpenRouterProvider model _ -> OpenRouterProvider model apiKey
   modifyState $ \s -> s {providerInfo = newP}
   ollamaModels <- getAvailableOllamaModels
-  pure $ renderProviderListView newP ollamaModels
+  orModels <- getAvailableORModels
+  pure $ renderProviderListView newP ollamaModels orModels
 
-renderProviderListView :: Provider -> [Text] -> View ModelProviders ()
-renderProviderListView providerInfo ollamaModels = do
+renderProviderListView :: Provider -> [Text] -> [Text] -> View ModelProviders ()
+renderProviderListView providerInfo ollamaModels orModels = do
   el ~ cls "top-bar-right" $ do
     text "Provider"
     dropdown SetProvider (== providerInfo) ~ cls "form-select model-select" $ do
       showOllamaProviderOption ollamaModels
-      option (OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" "") "OpenRouter"
+      showORProviderOption orModels
     case providerInfo of
       OllamaProvider modelName -> renderOllamaModelsView modelName ollamaModels
-      OpenRouterProvider modelName _ -> renderOpenRouterModelsView modelName
+      OpenRouterProvider modelName _ -> renderOpenRouterModelsView modelName orModels
+
+showORProviderOption :: 
+  ViewAction (Action id) =>
+  [Text] -> View (Option Provider id) ()
+showORProviderOption [] = none
+showORProviderOption (firstModel : _) =
+    option (OpenRouterProvider firstModel "") "OpenRouter"
 
 showOllamaProviderOption ::
   ViewAction (Action id) =>
@@ -94,12 +106,12 @@ renderOllamaModelsView modelName ollamaModels = do
     forM_ ollamaModels $ \model -> do
       option model (text model)
 
-renderOpenRouterModelsView :: Text -> View ModelProviders ()
-renderOpenRouterModelsView modelName = do
+renderOpenRouterModelsView :: Text -> [Text] -> View ModelProviders ()
+renderOpenRouterModelsView modelName orModels = do
   text "Model"
   dropdown SetOpenRouterModel (== modelName) ~ cls "form-select model-select w-auto" $ do
-    option "mistralai/mistral-small-3.2-24b-instruct:free" "Mistral"
-    option "deepseek/deepseek-chat-v3-0324:free" "Deepseek"
+    forM_ orModels $ \model -> do
+      option model (text model)
   tag "input"
     ~ cls "form-control"
       @ att "type" "password"

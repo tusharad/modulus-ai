@@ -24,6 +24,7 @@ module App.Effects.StateStore
   , modifyState
   , getState
   , getAvailableOllamaModels
+  , getAvailableORModels
   ) where
 
 import App.Common.Types
@@ -47,6 +48,7 @@ data StateStore = StateStore
   , streamContent :: HM.Map Int StreamState
   , providerInfo :: Provider
   , availableOllamaModels :: [Text]
+  , availableORModels :: [Text]
   }
   deriving (Show, Eq)
 
@@ -70,11 +72,12 @@ runStateStoreIO ::
   (IOE :> es, Hyperbole :> es) =>
   StateStoreMap ->
   [Text] ->
+  [Text] ->
   Eff (StateStoreEff : es) a ->
   Eff es a
-runStateStoreIO globalMap ollamaModelList =
+runStateStoreIO globalMap ollamaModelList orModelList =
   interpret $ \_ -> \case
-    UseState -> getOrCreateStateStore globalMap ollamaModelList
+    UseState -> getOrCreateStateStore globalMap ollamaModelList orModelList
 
 useState :: (StateStoreEff :> es) => Eff es (MVar StateStore)
 useState = send UseState
@@ -83,8 +86,9 @@ getOrCreateStateStore ::
   (IOE :> es, Hyperbole :> es) =>
   StateStoreMap ->
   [Text] ->
+  [Text] ->
   Eff es (MVar StateStore)
-getOrCreateStateStore storeMap ollamaModelList = do
+getOrCreateStateStore storeMap ollamaModelList orModelList = do
   mbSid <- lookupSession @SessionUUID
   sid <- case mbSid of
     Nothing -> do
@@ -106,6 +110,7 @@ getOrCreateStateStore storeMap ollamaModelList = do
                 (OllamaProvider
                     (fromMaybe "Select Model" $ listToMaybe ollamaModelList))
                 ollamaModelList
+                orModelList
         x <- newMVar f
         pure (HM.insert uuid x hm, x)
 
@@ -124,6 +129,9 @@ getProviderInfo = providerInfo <$> getState
 
 getAvailableOllamaModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
 getAvailableOllamaModels = availableOllamaModels <$> getState
+
+getAvailableORModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
+getAvailableORModels = availableORModels <$> getState
 
 getStreamState ::
   (StateStoreEff :> es, IOE :> es) =>
