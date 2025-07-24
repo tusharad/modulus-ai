@@ -21,12 +21,14 @@ import qualified Web.Scotty as Scotty
 import Network.Wai.Parse
 import qualified Data.ByteString.Char8 as BC
 import App.Effects.StateStore
+import App.Common.Utils (listAvailableOllamaModels)
+import Data.Text (Text)
 
 toDocument :: BL.ByteString -> BL.ByteString
 toDocument cnt =
   [i|<html>
       <head>
-        <title>Langchain Examples</title>
+        <title>AI Chatbot</title>
         <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript">#{scriptEmbed}</script>
@@ -52,20 +54,20 @@ router r = do
     Main -> redirect (routeUri $ Chat Nothing)
     Chat mbChatId -> runPage $ Chat.page (fromMaybe 0 mbChatId)
 
-app :: StateStoreMap -> Application
-app stateMap =
+app :: StateStoreMap -> [Text] -> Application
+app stateMap ollamaModelList =
   liveApp
     toDocument
     (runM . routeRequest $ router)
   where
     runM :: (IOE :> es, Hyperbole :> es) => Eff (StateStoreEff : es) a -> Eff es a
-    runM = runStateStoreIO stateMap
+    runM = runStateStoreIO stateMap ollamaModelList
 
-mainApp :: StateStoreMap -> Application -> Application
-mainApp stateMap scottyAppInst req respond = do
+mainApp :: StateStoreMap -> [Text] -> Application -> Application
+mainApp stateMap ollamaModelList scottyAppInst req respond = do
   case pathInfo req of
     ("api" : _) -> scottyAppInst req respond
-    _ -> app stateMap req respond    
+    _ -> app stateMap ollamaModelList req respond    
 
 scottySubApp :: ScottyM ()
 scottySubApp = do
@@ -84,9 +86,10 @@ runApp :: IO ()
 runApp = do
   let port = 3000
   stateMap <- initStateStoreMap
+  ollamaModelList <- listAvailableOllamaModels
   putStrLn $ "Starting Examples on http://localhost:" <> show port
   scottyAppInstance <- scottyApp scottySubApp
   -- stateMap <- addAvailableOllamaModels stateMap_
   run port $
     staticPolicy (addBase "public/static") $
-      mainApp stateMap scottyAppInstance 
+      mainApp stateMap ollamaModelList scottyAppInstance 

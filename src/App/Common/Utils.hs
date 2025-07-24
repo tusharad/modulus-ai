@@ -10,6 +10,7 @@ module App.Common.Utils
   , myForm
   , inputFile
   , select
+  , listAvailableOllamaModels 
   ) where
 
 import Data.Maybe (fromMaybe)
@@ -19,6 +20,7 @@ import Network.URI
 import Network.URI.Static
 import Web.Hyperbole
 import Web.Hyperbole.Data.Encoded (encodedToText)
+import qualified Ollama as Ollama
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
 
@@ -55,3 +57,19 @@ select :: View (Input id a) () -> View (Input id a) ()
 select x = do
   Input (FieldName nm) <- context
   tag "select" @ name nm $ x
+
+listAvailableOllamaModels :: IO [Text]
+listAvailableOllamaModels = do
+  eVersion <- Ollama.getVersion
+  case eVersion of
+    Left _ -> do 
+        putStrLn "Ollama not seems to be installed."
+        pure []
+    Right (Ollama.Version v) -> do
+      putStrLn $ "Ollama version: " <> T.unpack v
+      eModelInfo <- Ollama.list Nothing
+      case eModelInfo of
+        Left err -> putStrLn (show err) >> pure []
+        Right (Ollama.Models modelInfoList) -> do
+          let modelNames = map (Ollama.name) modelInfoList
+          pure modelNames

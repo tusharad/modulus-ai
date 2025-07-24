@@ -9,7 +9,6 @@ import App.Common.Utils
 import App.View.ChatMessageView
 import Data.Text (Text)
 import qualified Data.Text as T
-import Effectful
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -25,7 +24,7 @@ data PromptForm f = PromptForm
 
 deriving instance Show (PromptForm Identity)
 
-instance (IOE :> es) => HyperView PromptInputView es where
+instance HyperView PromptInputView es where
   data Action PromptInputView = SubmitPrompt
     deriving (Generic, ViewAction)
 
@@ -33,8 +32,7 @@ instance (IOE :> es) => HyperView PromptInputView es where
 
   update SubmitPrompt = do
     (PromptInputView chatId) <- viewId
-    f@PromptForm{..} <- formData @(PromptForm Identity)
-    liftIO $ putStrLn $ "form submitted: " <> show f
+    f@PromptForm {..} <- formData @(PromptForm Identity)
     let validatedForm = validateForm f
     if anyInvalid validatedForm
       then pure $ renderPromptInputArea validatedForm
@@ -42,7 +40,12 @@ instance (IOE :> es) => HyperView PromptInputView es where
 
 -- Form validation
 anyInvalid :: PromptForm Validated -> Bool
-anyInvalid PromptForm {..} = or [isInvalid prompt, isInvalid hasFile, isInvalid selectedTool]
+anyInvalid PromptForm {..} =
+  or
+    [ isInvalid prompt
+    , isInvalid hasFile
+    , isInvalid selectedTool
+    ]
 
 validateForm :: PromptForm Identity -> PromptForm Validated
 validateForm PromptForm {..} =
@@ -63,11 +66,14 @@ renderPromptInputArea p = do
           _ -> none
         el ~ cls "input-wrapper" $ do
           field (prompt f) $ do
-            textarea Nothing ~ cls "message-input" @ placeholder "Type your message..."
+            textarea Nothing
+              ~ cls "message-input"
+                @ placeholder "Type your message..."
                 . att "rows" "3"
           el ~ cls "input-actions" $ do
             submit ~ cls "send-btn" @ att "id" "send-btn" $
-              tag "i" ~ cls "fas fa-paper-plane" $ none
+              tag "i" ~ cls "fas fa-paper-plane" $
+                none
         el ~ cls "input-options" $ do
           tag "input" @ att "type" "file" @ att "id" "document-upload" $ none
           field (hasFile f) $ input TextInput @ att "hidden" "" . value ""

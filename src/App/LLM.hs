@@ -7,6 +7,7 @@ import App.Common.Types
   ( AvailableTool (..)
   , Provider (..)
   )
+import qualified App.DB as DB
 import Control.Monad (void)
 import Control.Monad.Trans.Except
 import Data.Aeson
@@ -32,16 +33,15 @@ import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
 import Langchain.VectorStore.InMemory
-import qualified App.DB as DB
 
 toLLMMessage :: DB.ChatMessage -> Message
-toLLMMessage DB.ChatMessage{..} = Message (toRole msgRole) msgContent defaultMessageData
+toLLMMessage DB.ChatMessage {..} = Message (toRole msgRole) msgContent defaultMessageData
   where
     toRole :: DB.CRole -> Role
     toRole = \case
-                DB.User -> User
-                DB.Assistant -> Assistant
-                DB.System  -> System
+      DB.User -> User
+      DB.Assistant -> Assistant
+      DB.System -> System
 
 runPrompt ::
   Provider ->
@@ -54,13 +54,12 @@ runPrompt ::
 runPrompt providerInfo sh chatId prompt mbFilePath mbTool = do
   contextMessages <- DB.withDatabase "chat.db" $ \conn ->
     reverse . drop 1 . take 10 . reverse <$> DB.getConversationMessages conn chatId
-    -- ^ taking last 10 messages, dropping the last one since it's going to be prompt
+  -- \^ taking last 10 messages, dropping the last one since it's going to be prompt
   let chatHistory = map toLLMMessage contextMessages
   preparedMessage <- prepareMessages prompt mbFilePath
   let msgList = case chatHistory of
-            [] -> preparedMessage
-            _ -> NE.fromList chatHistory `NE.append` preparedMessage
-  print ("msgList " :: String, msgList)
+        [] -> preparedMessage
+        _ -> NE.fromList chatHistory `NE.append` preparedMessage
   result <- selectAndRunProvider providerInfo msgList sh mbTool
   case result of
     Left err -> do
