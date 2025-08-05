@@ -31,6 +31,7 @@ library
       Modulus.BE.Api.Server
       Modulus.BE.Api.Types
       Modulus.BE.Api.V1
+      Modulus.BE.Auth.JwtAuthCombinator
       Modulus.BE.Common.Types
       Modulus.BE.DB
       Modulus.BE.DB.Internal.Config
@@ -78,6 +79,7 @@ library
     , transformers
     , unliftio
     , uuid
+    , wai
     , warp
   default-language: Haskell2010
 
@@ -113,6 +115,7 @@ executable modulus-ai-exe
     , transformers
     , unliftio
     , uuid
+    , wai
     , warp
   default-language: Haskell2010
 
@@ -152,5 +155,6 @@ test-suite modulus-ai-test
     , transformers
     , unliftio
     , uuid
+    , wai
     , warp
   default-language: Haskell2010

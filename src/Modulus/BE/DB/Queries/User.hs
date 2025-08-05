@@ -2,6 +2,7 @@ module Modulus.BE.DB.Queries.User (
         getUserByEmailQ
       , addUser
       , updateUser
+      , getUser
     ) where
 
 import Orville.PostgreSQL 
@@ -19,3 +20,6 @@ addUser = insertAndReturnEntity userTable
 
 updateUser :: MonadOrville m => UserID -> UserWrite -> m ()
 updateUser = updateEntity userTable
+
+getUser :: MonadOrville m => UserID -> m (Maybe UserRead)
+getUser = findEntity userTable

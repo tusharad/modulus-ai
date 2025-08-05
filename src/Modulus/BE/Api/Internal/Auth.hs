@@ -7,7 +7,10 @@ module Modulus.BE.Api.Internal.Auth
 
 import Modulus.BE.Api.Types
 import Servant
+import Data.Text (Text)
+import Modulus.BE.Auth.JwtAuthCombinator 
 
 type AuthAPI =
   "register" :> ReqBody '[JSON] RegisterRequest :> Post '[JSON] UserProfile
     :<|> "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthTokens
+    :<|> WithJWTAuth :> "me" :> Get '[JSON] Text

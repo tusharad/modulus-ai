@@ -38,6 +38,7 @@ dependencies:
   - transformers
   - unliftio
   - uuid
+  - wai
   - warp
 
 ghc-options:

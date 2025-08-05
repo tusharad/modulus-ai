@@ -8,12 +8,16 @@ module Modulus.BE.Monad.Utils
   , catchAppError
   , handleAppError
   , withResource
+  , hmacJwk
   ) where
 
 import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.Reader (MonadIO (liftIO), asks)
+import Crypto.JOSE.Types
+import Crypto.JWT
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Modulus.BE.Common.Types (LogLevel (Debug))
 import Modulus.BE.DB.Internal.Config (mkConnectionPoolFromEnv)
 import Modulus.BE.Monad.AppM
@@ -23,6 +27,13 @@ import qualified Orville.PostgreSQL as O
 import System.Environment (lookupEnv)
 import System.Log.FastLogger (defaultBufSize, newStdoutLoggerSet)
 import UnliftIO (UnliftIO (unliftIO), askUnliftIO, bracket)
+
+hmacJwk :: T.Text -> JWK
+hmacJwk secret =
+  fromKeyMaterial
+    ( OctKeyMaterial . OctKeyParameters . Base64Octets $
+        TE.encodeUtf8 secret
+    )
 
 -- | Create AppConfig from environment variables
 mkAppConfigFromEnv :: IO (Either Text AppConfig)

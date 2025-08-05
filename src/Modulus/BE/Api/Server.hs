@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Modulus.BE.Api.Server
   ( appToServer
   ) where
@@ -13,10 +15,12 @@ serverV1 = authServer
 
 appToServer :: AppConfig -> Application
 appToServer cfg =
-  serve
+  serveWithContext
     (Proxy :: Proxy API_V1)
-    ( hoistServer
+    (cfg :. EmptyContext)
+    ( hoistServerWithContext
         (Proxy :: Proxy API_V1)
+        (Proxy :: Proxy '[AppConfig])
         (appMToHandler cfg)
         serverV1
     )

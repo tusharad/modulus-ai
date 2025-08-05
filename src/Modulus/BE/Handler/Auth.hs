@@ -11,7 +11,6 @@ import Control.Lens
 import Control.Monad (unless, void, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Reader (asks)
-import Crypto.JOSE.Types
 import Crypto.JWT
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Char (isAsciiLower, isAsciiUpper, isDigit)
@@ -27,6 +26,7 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4
 import Modulus.BE.Api.Internal.Auth (AuthAPI)
 import Modulus.BE.Api.Types
+import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
 import Modulus.BE.DB.Internal.Model
   ( EmailVerificationOTP (..)
   , RefreshToken (..)
@@ -40,13 +40,20 @@ import Modulus.BE.DB.Queries.User (addUser, getUserByEmailQ, updateUser)
 import Modulus.BE.Log (logDebug, logInfo)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error
+import Modulus.BE.Monad.Utils
 import Modulus.BE.Service.Email.Core (sendVerificationEmail)
 import Servant
 import System.Random
 import Text.Email.Validate
 
 authServer :: ServerT AuthAPI AppM
-authServer = registerHandler :<|> loginHandler
+authServer = registerHandler :<|> loginHandler :<|> meHandler
+
+meHandler :: AuthResult -> AppM T.Text
+meHandler (Authenticated user) = return $ "Hello, " <> userEmail user
+meHandler TokenExpired = throwError $ AuthenticationError "Token expired"
+meHandler InvalidToken = throwError $ AuthenticationError "Invalid token"
+meHandler r = throwError $ AuthenticationError $ "User not found " <> T.pack (show r)
 
 isValidPassword :: String -> Bool
 isValidPassword pwd =
@@ -102,7 +109,7 @@ sendEmailAsync apiKey email otp = do
         result <- sendVerificationEmail apiKey email otp
         case result of
           Right _ -> print $ "Successfully sent verification email to " <> email
-          Left err -> do 
+          Left err -> do
             print ("mailgun api error:" :: String, err)
             threadDelay 20000
             trySend (attemptsLeft - 1)
@@ -180,15 +187,6 @@ mkClaims userID = do
       & claimIat ?~ NumericDate t
       & claimExp ?~ NumericDate expiry
       & claimSub ?~ Str.fromString (UUID.toString userID)
-
-hmacJwk :: T.Text -> JWK
-hmacJwk secret =
-  fromKeyMaterial
-    ( OctKeyMaterial
-        ( OctKeyParameters
-            (Base64Octets $ TE.encodeUtf8 secret)
-        )
-    )
 
 generateJWT :: UserID -> AppM BSL.ByteString
 generateJWT (UserID uID) = do
