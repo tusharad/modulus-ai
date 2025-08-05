@@ -1,3 +1,5 @@
 .stack-work/
 *~
 chat.db
+wiki
+.env.local

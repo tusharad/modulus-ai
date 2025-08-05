@@ -1,96 +1,79 @@
-name:                ai-chatbot-hs
-version:             0.1.0.0
-github:              "tusharad/ai-chatbot-hs"
-license:             MIT
-author:              "tushar"
-maintainer:          "tusharadhatrao@gmail.com"
-copyright:           "2025 tushar"
+name: modulus-ai
+version: 0.0.1.0
+github: "tusharad/modulus-ai"
+license: MIT
+author: "tushar"
+maintainer: "tusharadhatrao@gmail.com"
+copyright: "2025 tushar"
 
 extra-source-files:
-- README.md
-- CHANGELOG.md
+  - README.md
+  - CHANGELOG.md
 
-# Metadata used when publishing your package
-synopsis:            A AI chatbot clone
-category:            Web
-
-description:         Please see the README on GitHub at <https://github.com/tusharad/ai-chatbot-hs#readme>
+synopsis: An AI chatbot that lets you interact with LLMs from different providers.
+category: Web
+description: Please see the README on GitHub at <https://github.com/tusharad/modulus-ai#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- hyperbole
-- text
-- aeson
-- bytestring
-- wai-middleware-static
-- atomic-css
-- containers
-- effectful-core
-- network-uri
-- sqlite-simple
-- langchain-hs
-- wai
-- http-types
-- scotty
-- ollama-haskell >= 0.2
-- uuid
-- megaparsec
-- time
-- transformers
-- wai-extra
-- string-interpolate
-- http-client
-- http-client-tls
-
-default-extensions:
- - DataKinds 
- - DeriveAnyClass 
- - DeriveGeneric 
- - FlexibleContexts 
- - FlexibleInstances 
- - LambdaCase 
- - MultiParamTypeClasses 
- - NamedFieldPuns 
- - OverloadedStrings 
- - RecordWildCards 
- - StandaloneDeriving 
- - TypeApplications 
- - TypeFamilies 
- - TypeOperators 
- - UndecidableInstances 
+  - base >= 4.7 && < 5
+  - aeson
+  - bytestring
+  - containers
+  - email-validate
+  - fast-logger
+  - http-client
+  - http-client-tls
+  - http-types
+  - jose
+  - lens
+  - mtl
+  - orville-postgresql
+  - password
+  - random
+  - req
+  - servant-server
+  - string-interpolate
+  - text
+  - time
+  - transformers
+  - unliftio
+  - uuid
+  - warp
 
 ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
 
 library:
   source-dirs: src
 
 executables:
-  ai-chatbot-hs-exe:
-    main:                Main.hs
-    source-dirs:         app
+  modulus-ai-exe:
+    main: Main.hs
+    source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - ai-chatbot-hs
+      - modulus-ai
 
 tests:
-  ai-chatbot-hs-test:
-    main:                Spec.hs
-    source-dirs:         test
+  modulus-ai-test:
+    main: Spec.hs
+    source-dirs: test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - ai-chatbot-hs
+      - modulus-ai
+      - tasty
+      - tasty-hunit

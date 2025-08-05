@@ -1,0 +1,156 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.38.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           modulus-ai
+version:        0.0.1.0
+synopsis:       An AI chatbot that lets you interact with LLMs from different providers.
+description:    Please see the README on GitHub at <https://github.com/tusharad/modulus-ai#readme>
+category:       Web
+homepage:       https://github.com/tusharad/modulus-ai#readme
+bug-reports:    https://github.com/tusharad/modulus-ai/issues
+author:         tushar
+maintainer:     tusharadhatrao@gmail.com
+copyright:      2025 tushar
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/tusharad/modulus-ai
+
+library
+  exposed-modules:
+      Modulus.BE.Api.Internal.Auth
+      Modulus.BE.Api.Server
+      Modulus.BE.Api.Types
+      Modulus.BE.Api.V1
+      Modulus.BE.Common.Types
+      Modulus.BE.DB
+      Modulus.BE.DB.Internal.Config
+      Modulus.BE.DB.Internal.Index
+      Modulus.BE.DB.Internal.Marshaller
+      Modulus.BE.DB.Internal.Model
+      Modulus.BE.DB.Internal.Schema
+      Modulus.BE.DB.Internal.Table
+      Modulus.BE.DB.Queries.EmailVerification
+      Modulus.BE.DB.Queries.RefreshTokens
+      Modulus.BE.DB.Queries.User
+      Modulus.BE.Handler
+      Modulus.BE.Handler.Auth
+      Modulus.BE.Log
+      Modulus.BE.Monad.AppM
+      Modulus.BE.Monad.Error
+      Modulus.BE.Monad.Utils
+      Modulus.BE.Service.Email.Core
+  other-modules:
+      Paths_modulus_ai
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , email-validate
+    , fast-logger
+    , http-client
+    , http-client-tls
+    , http-types
+    , jose
+    , lens
+    , mtl
+    , orville-postgresql
+    , password
+    , random
+    , req
+    , servant-server
+    , string-interpolate
+    , text
+    , time
+    , transformers
+    , unliftio
+    , uuid
+    , warp
+  default-language: Haskell2010
+
+executable modulus-ai-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_modulus_ai
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , email-validate
+    , fast-logger
+    , http-client
+    , http-client-tls
+    , http-types
+    , jose
+    , lens
+    , modulus-ai
+    , mtl
+    , orville-postgresql
+    , password
+    , random
+    , req
+    , servant-server
+    , string-interpolate
+    , text
+    , time
+    , transformers
+    , unliftio
+    , uuid
+    , warp
+  default-language: Haskell2010
+
+test-suite modulus-ai-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      DB
+      Paths_modulus_ai
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , email-validate
+    , fast-logger
+    , http-client
+    , http-client-tls
+    , http-types
+    , jose
+    , lens
+    , modulus-ai
+    , mtl
+    , orville-postgresql
+    , password
+    , random
+    , req
+    , servant-server
+    , string-interpolate
+    , tasty
+    , tasty-hunit
+    , text
+    , time
+    , transformers
+    , unliftio
+    , uuid
+    , warp
+  default-language: Haskell2010

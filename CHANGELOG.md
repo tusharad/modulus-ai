@@ -1,4 +1,4 @@
-# Changelog for `ai-chatbot-hs`
+# Changelog for `modulus-ai`
 
 All notable changes to this project will be documented in this file.
 

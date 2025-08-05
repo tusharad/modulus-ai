@@ -1,0 +1,41 @@
+name: modulus-local-stack
+
+services:
+  modulus-local-db:
+    image: postgres:17.5-alpine3.22
+    container_name: modulus-local-db
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    environment:
+      # Compose will fail fast if the password isn't provided in .env.local
+      POSTGRES_DB: ${MODULUS_DB_NAME:-modulus_local_db}
+      POSTGRES_USER: ${MODULUS_DB_USER_NAME:-modulus_local_user}
+      POSTGRES_PASSWORD: ${MODULUS_DB_PASSWORD?err:You must set MODULUS_LOCAL_DB_PASSWORD in .env.local}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: Asia/Kolkata
+    ports:
+      - "${MODULUS_LOCAL_DB_PORT:-5432}:5432"
+    volumes:
+      - modulus_local_db_data:/var/lib/postgresql/data
+      - ./scripts/db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - modulus_local_net
+    labels:
+      org.opencontainers.image.title: "modulus-local-db"
+      org.opencontainers.image.version: "17.5-alpine3.22"
+      org.opencontainers.image.description: "Local Postgres for the Modulus project"
+
+networks:
+  modulus_local_net:
+    driver: bridge
+
+volumes:
+  modulus_local_db_data:
+    name: modulus_local_db_data
