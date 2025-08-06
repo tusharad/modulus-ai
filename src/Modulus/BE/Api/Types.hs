@@ -8,6 +8,7 @@ module Modulus.BE.Api.Types
   , UserProfile (..)
   , AuthTokens (..)
   , OTPVerifyRequest (..)
+  , RefreshTokenRequest (..)
   ) where
 
 import Data.Aeson
@@ -33,6 +34,10 @@ data OTPVerifyRequest = OTPVerifyRequest
   , verifyOTP :: Int
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+data RefreshTokenRequest = RefreshTokenRequest
+  { refreshToken :: Text
+  } deriving (Generic, FromJSON)
 
 data UserProfile = UserProfile
   { userProfileId :: UserID

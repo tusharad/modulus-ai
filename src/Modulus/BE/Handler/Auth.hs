@@ -39,8 +39,8 @@ import Modulus.BE.DB.Queries.EmailVerification
   , deleteOtp
   , getEmailVerificationOTPByUserId
   )
-import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken)
-import Modulus.BE.DB.Queries.User (addUser, getUserByEmailQ, updateUser)
+import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken, deleteRefreshToken, getRefreshToken)
+import Modulus.BE.DB.Queries.User (addUser, getUser, getUserByEmailQ, updateUser)
 import Modulus.BE.Log (logDebug, logInfo)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error
@@ -56,7 +56,34 @@ authServer =
   registerHandler
     :<|> loginHandler
     :<|> verifyOTPHandler
+    :<|> refreshTokenHandler
     :<|> meHandler
+
+refreshTokenHandler :: RefreshTokenRequest -> AppM AuthTokens
+refreshTokenHandler RefreshTokenRequest {..} = do
+  mbRefreshToken <- getRefreshToken refreshToken
+  case mbRefreshToken of
+    Nothing -> throwError $ ValidationError "Token not found"
+    Just RefreshToken {..} -> do
+      logDebug $ "refresh token for user: " <> T.pack (show refreshTokenUserID)
+      t <- liftIO getCurrentTime
+      when
+        (refreshTokenExpiresAt < t || refreshTokenIsRevoked)
+        ( do
+            deleteRefreshToken refreshTokenID
+            throwError $ ValidationError "Token Expired or revoked"
+        )
+      mbUser <- getUser refreshTokenUserID
+      case mbUser of
+        Nothing -> throwError $ ValidationError "User not found for token"
+        Just User {..} -> do
+          jwtToken <- generateJWT userID
+          refreshToken_ <- generateAndStoreRefreshToken userID
+          pure $
+            AuthTokens
+              { accessToken = TE.decodeUtf8 $ BSL.toStrict jwtToken
+              , refreshToken = refreshToken_
+              }
 
 verifyUser :: UserRead -> AppM ()
 verifyUser user = do
@@ -269,14 +296,12 @@ generateJWT (UserID uID) = do
 generateAndStoreRefreshToken :: UserID -> AppM T.Text
 generateAndStoreRefreshToken uID = do
   someUUID <- liftIO nextRandom
-  (PasswordHash hashed) <-
-    hashPassword . mkPassword . T.pack $ UUID.toString someUUID
   now <- liftIO getCurrentTime
   let expiry = addUTCTime (7 * 24 * 3600) now -- 7 days
   let rt =
         RefreshToken
           { refreshTokenUserID = uID
-          , refreshTokenTokenHash = hashed
+          , refreshTokenTokenHash = T.pack $ UUID.toString someUUID
           , refreshTokenExpiresAt = expiry
           , refreshTokenIsRevoked = False
           , refreshTokenID = ()
