@@ -34,7 +34,11 @@ import Modulus.BE.DB.Internal.Model
   , UserID (..)
   , UserRead
   )
-import Modulus.BE.DB.Queries.EmailVerification (addEmailVerificationOTP)
+import Modulus.BE.DB.Queries.EmailVerification
+  ( addEmailVerificationOTP
+  , deleteOtp
+  , getEmailVerificationOTPByUserId
+  )
 import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken)
 import Modulus.BE.DB.Queries.User (addUser, getUserByEmailQ, updateUser)
 import Modulus.BE.Log (logDebug, logInfo)
@@ -42,12 +46,60 @@ import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error
 import Modulus.BE.Monad.Utils
 import Modulus.BE.Service.Email.Core (sendVerificationEmail)
+import qualified Orville.PostgreSQL as Orville
 import Servant
 import System.Random
 import Text.Email.Validate
 
 authServer :: ServerT AuthAPI AppM
-authServer = registerHandler :<|> loginHandler :<|> meHandler
+authServer =
+  registerHandler
+    :<|> loginHandler
+    :<|> verifyOTPHandler
+    :<|> meHandler
+
+verifyUser :: UserRead -> AppM ()
+verifyUser user = do
+  let updatedUser =
+        user
+          { userID = ()
+          , userCreatedAt = ()
+          , userUpdatedAt = ()
+          , userIsEmailVerified = True
+          }
+  updateUser (userID user) updatedUser
+
+verifyOTPSanityCheck :: OTPVerifyRequest -> AppM ()
+verifyOTPSanityCheck OTPVerifyRequest {..} = do
+  mbUser <- getUserByEmailQ verifyEmail
+  case mbUser of
+    Nothing -> throwError $ ValidationError "User not found"
+    Just user@User {..} -> do
+      when userIsEmailVerified (throwError $ ValidationError "User already verified")
+      mbEmailVerification <- getEmailVerificationOTPByUserId userID
+      case mbEmailVerification of
+        Nothing -> throwError $ ValidationError "OTP not found"
+        Just EmailVerificationOTP {..} -> do
+          t <- liftIO getCurrentTime
+          when
+            (t > emailVerificationOTPExpiresAt)
+            (throwError $ ValidationError "Verification code has expired.")
+          let passwordMatches =
+                checkPassword
+                  (mkPassword . T.pack $ show verifyOTP)
+                  (PasswordHash emailVerificationOTPOtpHash)
+          if passwordMatches == PasswordCheckSuccess
+            then do
+              logDebug $ "OTP verified: " <> userEmail
+              Orville.withTransaction $ do
+                verifyUser user
+                deleteOtp emailVerificationOTPID
+            else throwError $ ValidationError "Invalid verification code."
+
+verifyOTPHandler :: OTPVerifyRequest -> AppM T.Text
+verifyOTPHandler otpVerifyReq = do
+  verifyOTPSanityCheck otpVerifyReq
+  pure "Email verified successfully. You may now log in."
 
 meHandler :: AuthResult -> AppM T.Text
 meHandler (Authenticated user) = return $ "Hello, " <> userEmail user
@@ -176,6 +228,19 @@ incrementFailedAttempt user = do
           }
   updateUser (userID user) updatedUser
 
+lockUser :: UserRead -> AppM ()
+lockUser user = do
+  t <- liftIO getCurrentTime
+  let expiry = addUTCTime 600 t -- 10 minutes
+  let updatedUser =
+        user
+          { userID = ()
+          , userCreatedAt = ()
+          , userUpdatedAt = ()
+          , userLockedUntil = Just expiry
+          }
+  updateUser (userID user) updatedUser
+
 mkClaims :: UUID -> IO ClaimsSet
 mkClaims userID = do
   t <- getCurrentTime
@@ -204,7 +269,8 @@ generateJWT (UserID uID) = do
 generateAndStoreRefreshToken :: UserID -> AppM T.Text
 generateAndStoreRefreshToken uID = do
   someUUID <- liftIO nextRandom
-  (PasswordHash hashed) <- hashPassword (mkPassword (T.pack $ UUID.toString someUUID))
+  (PasswordHash hashed) <-
+    hashPassword . mkPassword . T.pack $ UUID.toString someUUID
   now <- liftIO getCurrentTime
   let expiry = addUTCTime (7 * 24 * 3600) now -- 7 days
   let rt =
@@ -253,6 +319,7 @@ loginSanityCheck LoginRequest {..} = do
       pure user
     else do
       incrementFailedAttempt user
+      when (userFailedLoginAttempts + 1 > 5) (lockUser user)
       throwError $ AuthenticationError "Invalid cred"
 
 loginHandler :: LoginRequest -> AppM AuthTokens
@@ -260,7 +327,7 @@ loginHandler loginReq = do
   logInfo "New user login attempt"
   user@User {..} <- loginSanityCheck loginReq
   -- Reset failed attempts on success
-  resetFailedLoginAttempts user
+  when (userFailedLoginAttempts > 0) (resetFailedLoginAttempts user)
   -- Generate tokens
   jwtToken <- generateJWT userID
   refreshToken <- generateAndStoreRefreshToken userID

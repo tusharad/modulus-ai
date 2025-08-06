@@ -7,6 +7,7 @@ module Modulus.BE.Api.Types
   , LoginRequest (..)
   , UserProfile (..)
   , AuthTokens (..)
+  , OTPVerifyRequest (..)
   ) where
 
 import Data.Aeson
@@ -24,6 +25,12 @@ data RegisterRequest = RegisterRequest
 data LoginRequest = LoginRequest
   { loginEmail :: Text
   , loginPassword :: Text
+  }
+  deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+data OTPVerifyRequest = OTPVerifyRequest
+  { verifyEmail :: Text
+  , verifyOTP :: Int
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
