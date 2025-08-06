@@ -25,11 +25,10 @@ import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
 import Modulus.BE.DB.Internal.Model (UserID (UserID), UserRead)
 import Modulus.BE.DB.Queries.User (getUser)
-import Modulus.BE.Monad.AppM (AppConfig (..))
+import Modulus.BE.Log (logDebug, logError)
+import Modulus.BE.Monad.AppM (AppConfig (..), AppM, runAppM)
 import Network.HTTP.Types (hAuthorization)
 import Network.Wai (requestHeaders)
-import qualified Orville.PostgreSQL as Orville
-import qualified Orville.PostgreSQL.OrvilleState as Orville
 import Servant
 import Servant.Server.Internal
   ( DelayedIO
@@ -81,7 +80,7 @@ jwtAuthCheck appCfg = do
   mAuthHeader <- asks (lookup hAuthorization . requestHeaders)
   case mAuthHeader >>= (parseBearerToken . BSL.fromStrict) of
     Nothing -> do
-      logError "Authorization header missing or invalid format"
+      liftIO $ runAppM appCfg $ logError "Authorization header missing or invalid format"
       pure TokenNotFound
     Just rawToken -> do
       let key = fromOctets $ TE.encodeUtf8 (configJwtSecret appCfg)
@@ -89,28 +88,24 @@ jwtAuthCheck appCfg = do
 
       case eClaims of
         Left (_ :: JWTError) -> do
-          logError "JWT verification failed"
+          liftIO $ runAppM appCfg $ logError "JWT verification failed"
           pure InvalidToken
-        Right claims -> handleClaims claims
+        Right claims -> liftIO $ runAppM appCfg (handleClaims claims)
   where
     verifyJWT_ key token = do
       jwt <- decodeCompact token
       verifyClaims (defaultJWTValidationSettings audCheck) key jwt
 
-    handleClaims :: ClaimsSet -> DelayedIO AuthResult
+    handleClaims :: ClaimsSet -> AppM AuthResult
     handleClaims claims =
       case extractSubject claims >>= UUID.fromText of
         Nothing -> do
-          logError $ "Could not extract valid UUID from subject: " <> show claims
+          logError $ "Could not extract valid UUID from subject: " <> T.pack (show claims)
           pure InvalidToken
         Just uuid -> fetchUser (UserID uuid)
 
-    fetchUser :: UserID -> DelayedIO AuthResult
+    fetchUser :: UserID -> AppM AuthResult
     fetchUser uid = do
-      let pool = Orville.orvilleConnectionPool (configOrvilleState appCfg)
-      liftIO $ putStrLn $ "Looking up user ID: " <> show uid
-      result <- liftIO $ Orville.runOrville pool (getUser uid)
+      logDebug $ "Looking up user ID: " <> T.pack (show uid)
+      result <- getUser uid
       pure $ maybe UserNotFound Authenticated result
-
-    logError :: String -> DelayedIO ()
-    logError = liftIO . putStrLn

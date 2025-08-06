@@ -18,13 +18,14 @@ module Modulus.BE.Monad.AppM
   , AppConfig (..)
   , appErrorToServerError
   , appMToHandler
+  , runAppM
   ) where
 
 import Control.Monad.Except
 import Control.Monad.Reader
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import Data.Text
+import Data.Text (Text)
 import GHC.Generics
 import Modulus.BE.Common.Types
 import Modulus.BE.Monad.Error
@@ -151,3 +152,10 @@ appMToHandler config action = do
   case result of
     Left err -> throwError $ appErrorToServerError err
     Right a -> pure a
+
+runAppM :: AppConfig -> AppM a -> IO a
+runAppM cfg action = do
+  result <- runExceptT . runMyExceptT $ runReaderT (unAppM action) cfg
+  case result of
+    Left err -> error $ "AppM failed during jwtAuthCheck: " <> show err
+    Right val -> pure val

@@ -66,13 +66,11 @@ refreshTokenHandler RefreshTokenRequest {..} = do
     Nothing -> throwError $ ValidationError "Token not found"
     Just RefreshToken {..} -> do
       logDebug $ "refresh token for user: " <> T.pack (show refreshTokenUserID)
+      deleteRefreshToken refreshTokenID
       t <- liftIO getCurrentTime
       when
         (refreshTokenExpiresAt < t || refreshTokenIsRevoked)
-        ( do
-            deleteRefreshToken refreshTokenID
-            throwError $ ValidationError "Token Expired or revoked"
-        )
+        (throwError $ ValidationError "Token Expired or revoked")
       mbUser <- getUser refreshTokenUserID
       case mbUser of
         Nothing -> throwError $ ValidationError "User not found for token"
