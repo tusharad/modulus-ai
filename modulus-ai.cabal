@@ -37,9 +37,20 @@ library
       Modulus.BE.DB.Internal.Config
       Modulus.BE.DB.Internal.Index
       Modulus.BE.DB.Internal.Marshaller
+      Modulus.BE.DB.Internal.Marshaller.AuditLog
+      Modulus.BE.DB.Internal.Marshaller.ChatMessage
+      Modulus.BE.DB.Internal.Marshaller.Conversation
+      Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
+      Modulus.BE.DB.Internal.Marshaller.Message
+      Modulus.BE.DB.Internal.Marshaller.Organization
+      Modulus.BE.DB.Internal.Marshaller.OrganizationMember
+      Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
+      Modulus.BE.DB.Internal.Marshaller.User
+      Modulus.BE.DB.Internal.Marshaller.UserSubscription
       Modulus.BE.DB.Internal.Model
       Modulus.BE.DB.Internal.Schema
       Modulus.BE.DB.Internal.Table
+      Modulus.BE.DB.Internal.Utils
       Modulus.BE.DB.Queries.EmailVerification
       Modulus.BE.DB.Queries.RefreshTokens
       Modulus.BE.DB.Queries.User
