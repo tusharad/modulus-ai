@@ -5,13 +5,15 @@ module Modulus.BE.Api.Server
   ) where
 
 import Modulus.BE.Api.V1
-import Modulus.BE.Monad.AppM
-import Servant
 import Modulus.BE.Handler
+import Modulus.BE.Monad.AppM
+import Modulus.Common.Types
+import Servant
 
 serverV1 :: ServerT API_V1 AppM
-serverV1 = authServer
-    :<|> healthCheckHandler 
+serverV1 =
+  authServer
+    :<|> healthCheckHandler
 
 appToServer :: AppConfig -> Application
 appToServer cfg =

@@ -50,6 +50,7 @@ import qualified Orville.PostgreSQL as Orville
 import Servant
 import System.Random
 import Text.Email.Validate
+import Modulus.Common.Types (AppConfig(configMailGunApiKey, configJwtSecret))
 
 authServer :: ServerT AuthAPI AppM
 authServer =

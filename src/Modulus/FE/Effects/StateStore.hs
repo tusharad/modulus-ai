@@ -89,12 +89,13 @@ getOrCreateStateStore storeMap = do
     case HM.lookup uuid hm of
       Just stStore -> pure (hm, stStore)
       Nothing -> do
-        let f =
-              StateStore
-                0
-                mempty
-                HM.empty
-        x <- newMVar f
+        x <-
+          newMVar
+            StateStore
+              { counter = 0
+              , currentPrompt = mempty
+              , streamContent = HM.empty
+              }
         pure (HM.insert uuid x hm, x)
 
 modifyState ::

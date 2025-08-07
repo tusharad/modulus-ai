@@ -15,7 +15,6 @@ It will have attached:
 -}
 module Modulus.BE.Monad.AppM
   ( AppM (..)
-  , AppConfig (..)
   , appErrorToServerError
   , appMToHandler
   , runAppM
@@ -26,14 +25,11 @@ import Control.Monad.Reader
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Text (Text)
-import GHC.Generics
-import Modulus.BE.Common.Types
 import Modulus.BE.Monad.Error
-import qualified Network.HTTP.Client as HTTP
+import Modulus.Common.Types
 import qualified Orville.PostgreSQL as O
 import qualified Orville.PostgreSQL.UnliftIO as OrvilleUnliftIO
 import Servant
-import System.Log.FastLogger
 import UnliftIO
 
 newtype MyExceptT e m a = MyExceptT
@@ -46,22 +42,6 @@ newtype MyExceptT e m a = MyExceptT
     , MonadIO
     , MonadError e
     )
-
--- | Application configuration
-data AppConfig = AppConfig
-  { configHttpManager :: HTTP.Manager
-  , configPort :: Int
-  , configLogLevel :: Text
-  , configEnvironment :: Text -- "development", "staging", "production"
-  , configRedisUrl :: Maybe Text
-  , configJwtSecret :: Text
-  , configExternalApiTimeout :: Int -- seconds
-  , configLoggerSet :: LoggerSet
-  , configMinLogLevel :: MinLogLevel
-  , configOrvilleState :: O.OrvilleState
-  , configMailGunApiKey :: Text
-  }
-  deriving (Generic)
 
 {- | The main application monad stack
   ReaderT for configuration (immutable)

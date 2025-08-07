@@ -18,10 +18,10 @@ import Crypto.JWT
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Modulus.BE.Common.Types (LogLevel (Debug))
 import Modulus.BE.DB.Internal.Config (mkConnectionPoolFromEnv)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error (AppError)
+import Modulus.Common.Types (LogLevel (Debug), AppConfig(..))
 import qualified Network.HTTP.Client.TLS as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Environment (lookupEnv)

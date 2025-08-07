@@ -9,9 +9,12 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe)
 import Data.String.Interpolate (i)
 import Effectful
+import Modulus.Common.Types (AppConfig)
 import Modulus.FE.Common.Types
+import Modulus.FE.Effects.AppConfig
 import Modulus.FE.Effects.StateStore
 import qualified Modulus.FE.Page.Chat as Chat
+import qualified Modulus.FE.Page.Register as Register
 import Web.Hyperbole
 
 toDocument :: BL.ByteString -> BL.ByteString
@@ -30,14 +33,17 @@ toDocument cnt =
 router :: (Hyperbole :> es) => AppRoute -> Eff es Response
 router r = do
   case r of
-    Main -> redirect (routeUrl $ Chat Nothing)
+    Main -> redirect (routeUri $ Chat Nothing)
+    Register -> runPage Register.page
     Chat mbChatId -> runPage $ Chat.page (fromMaybe 0 mbChatId)
 
-app :: StateStoreMap -> Application
-app stateMap =
+app :: StateStoreMap -> AppConfig -> Application
+app stateMap appCfg =
   liveApp
     toDocument
     (runM . routeRequest $ router)
   where
-    runM :: (IOE :> es, Hyperbole :> es) => Eff (StateStoreEff : es) a -> Eff es a
-    runM = runStateStoreIO stateMap
+    runM ::
+      (IOE :> es, Hyperbole :> es) =>
+      Eff (StateStoreEff : AppConfigEff : es) a -> Eff es a
+    runM = runAppConfigIO appCfg . runStateStoreIO stateMap

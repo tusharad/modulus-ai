@@ -1,7 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
-
-module Modulus.BE.Common.Types
-  ( LogLevel (..)
+{-
+`Modulus.Common` module stores types and function that shall be used by both FE and BE module.
+ It is not necessary that every function and type that is used by both must be present here.
+-}
+module Modulus.Common.Types
+  ( AppConfig (..)
+  , LogLevel (..)
   , parseLogLevel
   , MinLogLevel
   , LogEntry (..)
@@ -11,8 +14,30 @@ import Data.Aeson hiding (Error)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import GHC.Generics
+import qualified Network.HTTP.Client as HTTP
+import qualified Orville.PostgreSQL as O
+import System.Log.FastLogger
+
+-- | Application configuration
+data AppConfig = AppConfig
+  { configHttpManager :: HTTP.Manager -- TODO: We probably won't need this as
+  -- we'll directly calling handler functions from Hyperbole
+  , configPort :: Int
+  , configLogLevel :: Text
+  , configEnvironment :: Text -- "development", "staging", "production"
+  , configRedisUrl :: Maybe Text
+  , configJwtSecret :: Text
+  , configExternalApiTimeout :: Int -- seconds
+  , configLoggerSet :: LoggerSet
+  , configMinLogLevel :: MinLogLevel
+  , configOrvilleState :: O.OrvilleState
+  , configMailGunApiKey :: Text
+  }
+  deriving (Generic)
 
 ---------LOGS-----------------
+
 -- | Log severity levels
 data LogLevel = Debug | Info | Warn | Error
   deriving (Show, Eq, Ord, Enum, Bounded)
@@ -57,4 +82,5 @@ instance ToJSON LogEntry where
       , "level" .= logLevel entry
       , "message" .= logMessage entry
       ]
+
 ---------LOGS-----------------

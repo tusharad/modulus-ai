@@ -33,7 +33,6 @@ library
       Modulus.BE.Api.V1
       Modulus.BE.Auth.JwtAuthCombinator
       Modulus.BE.Client.V1
-      Modulus.BE.Common.Types
       Modulus.BE.DB
       Modulus.BE.DB.Internal.Config
       Modulus.BE.DB.Internal.Index
@@ -63,10 +62,15 @@ library
       Modulus.BE.Monad.Error
       Modulus.BE.Monad.Utils
       Modulus.BE.Service.Email.Core
+      Modulus.Common.Types
       Modulus.FE.Common.Types
       Modulus.FE.Core
+      Modulus.FE.CSS
+      Modulus.FE.Effects.AppConfig
       Modulus.FE.Effects.StateStore
+      Modulus.FE.Layout
       Modulus.FE.Page.Chat
+      Modulus.FE.Page.Register
   other-modules:
       Paths_modulus_ai
   hs-source-dirs:

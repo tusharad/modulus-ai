@@ -8,4 +8,4 @@ page :: Int -> Eff es (Page '[])
 page _ = do
   pure $ do
     stylesheet "/style.css"
-    el_ $ text "hello world"
+    el $ text "hello world"

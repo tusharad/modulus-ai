@@ -27,7 +27,8 @@ import GHC.Generics (Generic)
 import Modulus.BE.DB.Internal.Model (UserID (UserID), UserRead)
 import Modulus.BE.DB.Queries.User (getUser)
 import Modulus.BE.Log (logDebug, logError)
-import Modulus.BE.Monad.AppM (AppConfig (..), AppM, runAppM)
+import Modulus.BE.Monad.AppM (AppM, runAppM)
+import Modulus.Common.Types
 import Network.HTTP.Types (hAuthorization)
 import Network.Wai (requestHeaders)
 import Servant

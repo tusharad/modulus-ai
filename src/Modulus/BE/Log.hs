@@ -11,7 +11,7 @@ import Data.Text (Text)
 import Data.Time
 import Modulus.BE.Monad.AppM
 import System.Log.FastLogger
-import Modulus.BE.Common.Types
+import Modulus.Common.Types
 import Modulus.BE.Monad.Utils (askConfig)
 import Data.Aeson (encode)
 
