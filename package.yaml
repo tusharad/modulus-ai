@@ -32,6 +32,8 @@ dependencies:
   - random
   - req
   - servant-server
+  - servant-client
+  - servant-client-core
   - string-interpolate
   - text
   - time

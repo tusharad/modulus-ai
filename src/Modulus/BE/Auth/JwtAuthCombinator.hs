@@ -20,6 +20,7 @@ import Crypto.JWT
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as TE
 import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
@@ -30,6 +31,8 @@ import Modulus.BE.Monad.AppM (AppConfig (..), AppM, runAppM)
 import Network.HTTP.Types (hAuthorization)
 import Network.Wai (requestHeaders)
 import Servant
+import Servant.Client
+import Servant.Client.Core.Request as ClientCore (Request, addHeader)
 import Servant.Server.Internal
   ( DelayedIO
   , addAuthCheck
@@ -42,6 +45,21 @@ data AuthResult
   | TokenNotFound
   | UserNotFound
   deriving (Show, Generic, ToJSON)
+
+-- | Authenticate a request using Bearer Authentication
+bearerAuthReq :: T.Text -> Request -> Request
+bearerAuthReq token req =
+  let authText = decodeUtf8 ("Bearer " <> TE.encodeUtf8 token)
+   in ClientCore.addHeader "Authorization" authText req
+
+instance HasClient m api => HasClient m (WithJWTAuth :> api) where
+  type Client m (WithJWTAuth :> api) = T.Text -> Client m api
+
+  clientWithRoute pm Proxy req val =
+    clientWithRoute pm (Proxy :: Proxy api) (bearerAuthReq val req)
+
+  hoistClientMonad pm _ f cl bauth =
+    hoistClientMonad pm (Proxy :: Proxy api) f (cl bauth)
 
 data WithJWTAuth
 

@@ -37,7 +37,7 @@ data OTPVerifyRequest = OTPVerifyRequest
 
 data RefreshTokenRequest = RefreshTokenRequest
   { refreshToken :: Text
-  } deriving (Generic, FromJSON)
+  } deriving (Generic, FromJSON, ToJSON)
 
 data UserProfile = UserProfile
   { userProfileId :: UserID

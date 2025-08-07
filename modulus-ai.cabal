@@ -32,6 +32,7 @@ library
       Modulus.BE.Api.Types
       Modulus.BE.Api.V1
       Modulus.BE.Auth.JwtAuthCombinator
+      Modulus.BE.Client.V1
       Modulus.BE.Common.Types
       Modulus.BE.DB
       Modulus.BE.DB.Internal.Config
@@ -84,6 +85,8 @@ library
     , password
     , random
     , req
+    , servant-client
+    , servant-client-core
     , servant-server
     , string-interpolate
     , text
@@ -120,6 +123,8 @@ executable modulus-ai-exe
     , password
     , random
     , req
+    , servant-client
+    , servant-client-core
     , servant-server
     , string-interpolate
     , text
@@ -158,6 +163,8 @@ test-suite modulus-ai-test
     , password
     , random
     , req
+    , servant-client
+    , servant-client-core
     , servant-server
     , string-interpolate
     , tasty
