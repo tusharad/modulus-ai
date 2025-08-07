@@ -63,21 +63,44 @@ library
       Modulus.BE.Monad.Error
       Modulus.BE.Monad.Utils
       Modulus.BE.Service.Email.Core
+      Modulus.FE.Common.Types
+      Modulus.FE.Core
+      Modulus.FE.Effects.StateStore
+      Modulus.FE.Page.Chat
   other-modules:
       Paths_modulus_ai
   hs-source-dirs:
       src
+  default-extensions:
+      DataKinds
+      DeriveAnyClass
+      DeriveGeneric
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      MultiParamTypeClasses
+      NamedFieldPuns
+      OverloadedStrings
+      RecordWildCards
+      StandaloneDeriving
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
+    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
+    , effectful-core
     , email-validate
     , fast-logger
     , http-client
     , http-client-tls
     , http-types
+    , hyperbole
     , jose
     , lens
     , mtl
@@ -95,6 +118,8 @@ library
     , unliftio
     , uuid
     , wai
+    , wai-extra
+    , wai-middleware-static
     , warp
   default-language: Haskell2010
 
@@ -104,17 +129,36 @@ executable modulus-ai-exe
       Paths_modulus_ai
   hs-source-dirs:
       app
+  default-extensions:
+      DataKinds
+      DeriveAnyClass
+      DeriveGeneric
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      MultiParamTypeClasses
+      NamedFieldPuns
+      OverloadedStrings
+      RecordWildCards
+      StandaloneDeriving
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
+    , effectful-core
     , email-validate
     , fast-logger
     , http-client
     , http-client-tls
     , http-types
+    , hyperbole
     , jose
     , lens
     , modulus-ai
@@ -133,6 +177,8 @@ executable modulus-ai-exe
     , unliftio
     , uuid
     , wai
+    , wai-extra
+    , wai-middleware-static
     , warp
   default-language: Haskell2010
 
@@ -144,17 +190,36 @@ test-suite modulus-ai-test
       Paths_modulus_ai
   hs-source-dirs:
       test
+  default-extensions:
+      DataKinds
+      DeriveAnyClass
+      DeriveGeneric
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      MultiParamTypeClasses
+      NamedFieldPuns
+      OverloadedStrings
+      RecordWildCards
+      StandaloneDeriving
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
+    , effectful-core
     , email-validate
     , fast-logger
     , http-client
     , http-client-tls
     , http-types
+    , hyperbole
     , jose
     , lens
     , modulus-ai
@@ -175,5 +240,7 @@ test-suite modulus-ai-test
     , unliftio
     , uuid
     , wai
+    , wai-extra
+    , wai-middleware-static
     , warp
   default-language: Haskell2010

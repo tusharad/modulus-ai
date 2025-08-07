@@ -17,9 +17,16 @@ packages:
     commit: 267cca9ec3b42c682fcd0dbc9402e9600c681e55
     git: https://github.com/flipstone/orville
     subdir: orville-postgresql
+- completed:
+    hackage: atomic-css-0.1.0@sha256:03ba814e13675adae02254c58ed65e88f333f0102037c5d1bc913b396ed2e02f,3106
+    pantry-tree:
+      sha256: ac00508b8693f829e30090de76de14e50c4951a41473e73ec854933e2fbe8bef
+      size: 1931
+  original:
+    hackage: atomic-css-0.1.0@sha256:03ba814e13675adae02254c58ed65e88f333f0102037c5d1bc913b396ed2e02f,3106
 snapshots:
 - completed:
-    sha256: 93512fb7c02b8b3db26799bd40d8bfb7d60979f9089c587ca34d877c2fbd1bca
-    size: 671437
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/7/26.yaml
-  original: nightly-2025-07-26
+    sha256: f5c5c81f00156f57e6ba5aca3ad1ddf37e79171b73fdca2d839d9875b8d4dd97
+    size: 675542
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/8/7.yaml
+  original: nightly-2025-08-07

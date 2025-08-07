@@ -1,4 +1,4 @@
-snapshot: nightly-2025-07-26
+snapshot: nightly-2025-08-07
 
 packages:
 - .
@@ -8,3 +8,5 @@ extra-deps:
     commit: 267cca9ec3b42c682fcd0dbc9402e9600c681e55
     subdirs:
       - orville-postgresql
+
+  - atomic-css-0.1.0@sha256:03ba814e13675adae02254c58ed65e88f333f0102037c5d1bc913b396ed2e02f,3106

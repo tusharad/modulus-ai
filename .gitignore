@@ -2,4 +2,5 @@
 *~
 chat.db
 wiki/
+node_modules/
 .env.local
