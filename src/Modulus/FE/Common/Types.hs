@@ -11,6 +11,7 @@ import Web.Hyperbole
 data AppRoute
   = Main
   | Register
+  | Verify
   | Chat (Maybe Int)
   deriving (Eq, Generic, Show)
 

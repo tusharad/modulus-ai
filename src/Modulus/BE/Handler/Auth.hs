@@ -5,6 +5,7 @@
 module Modulus.BE.Handler.Auth
   ( authServer
   , registerHandler 
+  , verifyOTPHandler
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)

@@ -40,7 +40,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView RegistrationFormView es wh
     | GoToVerify Text
     deriving (Generic, ViewAction)
     
-  update (GoToVerify _) = redirect homeUrl
+  update (GoToVerify userEmail) = redirect $ verifyUrl userEmail
 
   update (RegisterNewUser RegistrationForm {..}) = do
     let reqBody =
@@ -84,7 +84,8 @@ validateForm RegistrationForm {..} =
         validate
           (isLeft $ EmailValidate.validate $ TE.encodeUtf8 email)
           "Email is invalid"
-    , password = validate (not $ isValidPassword (T.unpack password)) "Password not valid"
+    , password = validate 
+        (not $ isValidPassword (T.unpack password)) "Password not valid"
     , confirmPassword =
         validate
           (password /= confirmPassword)

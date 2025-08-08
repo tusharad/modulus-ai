@@ -71,8 +71,10 @@ library
       Modulus.FE.Layout
       Modulus.FE.Page.Chat
       Modulus.FE.Page.Register
+      Modulus.FE.Page.Verify
       Modulus.FE.Utils
       Modulus.FE.View.RegistrationFormView
+      Modulus.FE.View.VerifyOTPFormView
   other-modules:
       Paths_modulus_ai
   hs-source-dirs:
