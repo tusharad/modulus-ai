@@ -50,6 +50,7 @@ library
       Modulus.BE.DB.Internal.Schema
       Modulus.BE.DB.Internal.Table
       Modulus.BE.DB.Internal.Utils
+      Modulus.BE.DB.Queries.ChatMessage
       Modulus.BE.DB.Queries.Conversation
       Modulus.BE.DB.Queries.EmailVerification
       Modulus.BE.DB.Queries.RefreshTokens

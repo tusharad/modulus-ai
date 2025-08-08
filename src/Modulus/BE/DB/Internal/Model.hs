@@ -129,6 +129,7 @@ import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics
 import GHC.Int (Int32, Int64)
+import Servant (FromHttpApiData)
 
 -- Organization Model
 newtype OrganizationID = OrganizationID UUID
@@ -180,7 +181,7 @@ newtype ConversationID = ConversationID Int64
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
 
 newtype ConversationPublicID = ConversationPublicID UUID
-  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON, FromHttpApiData)
 
 data Conversation a b c = Conversation
   { conversationID :: a
@@ -188,7 +189,7 @@ data Conversation a b c = Conversation
   , conversationUserID :: Maybe UserID
   , conversationTitle :: Text
   , conversationCreatedAt :: c
-  , conversationUpdatedAt :: c
+  , conversationUpdatedAt :: c --TODO: updated at should be able to write
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 

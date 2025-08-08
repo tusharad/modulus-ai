@@ -1,26 +1,31 @@
 {-# LANGUAGE DataKinds #-}
 
 module Modulus.BE.Client.V1
-  ( registerClient
-  , loginClient
-  , verifyOTPClient
-  , meClient
-  , healthCheckClient
-  , refreshTokenClient
-  , addConversationClient
-  , getConversationsClient
+  ( {-
+      registerClient
+    , loginClient
+    , verifyOTPClient
+    , meClient
+    , healthCheckClient
+    , refreshTokenClient
+    , addConversationClient
+    , getConversationsClient
+    -}
+
     -- * Exporting some handler function for FE.
 
   -- FE should only use this module for interacting with BE
-  , registerHandler
+    registerHandler
   , loginHandler
   , verifyOTPHandler
   ) where
 
+import Modulus.BE.Handler (loginHandler, registerHandler, verifyOTPHandler)
+
+{-
 import Data.Text (Text)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
-import Modulus.BE.Handler (loginHandler, registerHandler, verifyOTPHandler)
 import Servant
 import Servant.Client
 import Modulus.BE.DB.Internal.Model (ConversationPublicID, ConversationRead)
@@ -43,3 +48,4 @@ healthCheckClient :: ClientM String
            :<|> getConversationsClient
          )
   :<|> healthCheckClient = client (Proxy :: Proxy API_V1)
+  -}

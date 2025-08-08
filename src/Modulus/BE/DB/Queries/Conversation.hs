@@ -1,17 +1,25 @@
-module Modulus.BE.DB.Queries.Conversation (
-    addConversation
-  , getConversationsByUserID 
-) where
+module Modulus.BE.DB.Queries.Conversation
+  ( addConversation
+  , getConversationsByUserID
+  , getConversationsByPublicID
+  ) where
 
-import Orville.PostgreSQL 
-import Modulus.BE.DB.Internal.Model 
+import Modulus.BE.DB.Internal.Marshaller.Conversation
+import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table (conversationTable)
-import Modulus.BE.DB.Internal.Marshaller.Conversation (conversationUserIDField)
+import Orville.PostgreSQL
 
 addConversation :: MonadOrville m => ConversationWrite -> m ConversationRead
 addConversation = insertAndReturnEntity conversationTable
 
 getConversationsByUserID :: MonadOrville m => UserID -> m [ConversationRead]
-getConversationsByUserID userID = 
-    findEntitiesBy conversationTable $ 
-        where_ (fieldEquals conversationUserIDField (Just userID))
+getConversationsByUserID userID =
+  findEntitiesBy conversationTable $
+    where_ (fieldEquals conversationUserIDField (Just userID))
+
+getConversationsByPublicID ::
+  MonadOrville m =>
+  ConversationPublicID -> m (Maybe ConversationRead)
+getConversationsByPublicID convPublicId =
+  findFirstEntityBy conversationTable $
+    where_ (fieldEquals conversationPublicIDField convPublicId)

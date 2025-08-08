@@ -10,6 +10,7 @@ module Modulus.BE.Api.Types
   , OTPVerifyRequest (..)
   , RefreshTokenRequest (..)
   , AddConversationRequest (..)
+  , AddMessageRequest (..)
   ) where
 
 import Data.Aeson
@@ -49,4 +50,10 @@ data UserProfile = UserProfile
 
 data AddConversationRequest = AddConversationRequest {
     conversationTitle :: Text
+} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+
+data AddMessageRequest = AddMessageRequest {
+    messageContent :: Text
+  , messageRole :: MessageRole
+  , messageModelUsed :: Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)
