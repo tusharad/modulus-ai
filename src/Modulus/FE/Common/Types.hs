@@ -12,6 +12,7 @@ data AppRoute
   = Main
   | Register
   | Verify
+  | Login
   | Chat (Maybe Int)
   deriving (Eq, Generic, Show)
 

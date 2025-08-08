@@ -15,6 +15,7 @@ import Modulus.FE.Effects.AppConfig
 import Modulus.FE.Effects.StateStore
 import qualified Modulus.FE.Page.Chat as Chat
 import qualified Modulus.FE.Page.Register as Register
+import qualified Modulus.FE.Page.Login as Login
 import qualified Modulus.FE.Page.Verify as Verify
 import Web.Hyperbole
 
@@ -45,6 +46,7 @@ router r = do
   case r of
     Main -> redirect (routeUri $ Chat Nothing)
     Register -> runPage Register.page
+    Login -> runPage Login.page
     Verify -> runPage Verify.page
     Chat mbChatId -> runPage $ Chat.page (fromMaybe 0 mbChatId)
 

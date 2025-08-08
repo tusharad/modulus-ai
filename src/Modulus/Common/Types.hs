@@ -8,6 +8,7 @@ module Modulus.Common.Types
   , parseLogLevel
   , MinLogLevel
   , LogEntry (..)
+  , AuthTokens (..)
   ) where
 
 import Data.Aeson hiding (Error)
@@ -18,6 +19,8 @@ import GHC.Generics
 import qualified Network.HTTP.Client as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
+import Web.Hyperbole 
+import Web.Hyperbole.Data.URI (Path(..))
 
 -- | Application configuration
 data AppConfig = AppConfig
@@ -84,3 +87,13 @@ instance ToJSON LogEntry where
       ]
 
 ---------LOGS-----------------
+
+data AuthTokens = AuthTokens
+  { accessToken :: Text
+  , refreshToken :: Text
+  }
+  deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+instance Session AuthTokens where
+  sessionKey = "authTokens"
+  cookiePath = Just (Path True [])

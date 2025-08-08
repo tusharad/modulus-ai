@@ -14,6 +14,7 @@ module Modulus.BE.Api.Types
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
+import Modulus.Common.Types (AuthTokens (..))
 import Modulus.BE.DB.Internal.Model
 
 data RegisterRequest = RegisterRequest
@@ -42,11 +43,5 @@ data RefreshTokenRequest = RefreshTokenRequest
 data UserProfile = UserProfile
   { userProfileId :: UserID
   , userProfileEmail :: Text
-  }
-  deriving (Show, Eq, Generic, FromJSON, ToJSON)
-
-data AuthTokens = AuthTokens
-  { accessToken :: Text
-  , refreshToken :: Text
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
