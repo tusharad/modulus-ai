@@ -4,7 +4,6 @@
 module Modulus.BE.DB.Internal.Marshaller.UserSubscription
   ( -- * User Subscription Marshallers
     userSubscriptionIDField
-  , userSubscriptionOrganizationIDField
   , userSubscriptionPlanIDField
   , userSubscriptionStripeSubscriptionIDField
   , userSubscriptionCurrentPeriodEndsAtField
@@ -14,13 +13,12 @@ module Modulus.BE.DB.Internal.Marshaller.UserSubscription
   ) where
 
 import Data.Text (Text)
-import Modulus.BE.DB.Internal.Model
-import Orville.PostgreSQL
 import Data.Time (UTCTime)
-import Modulus.BE.DB.Internal.Utils (genRandomUuidDefault)
-import Modulus.BE.DB.Internal.Marshaller.OrganizationMember
-import Modulus.BE.DB.Internal.Marshaller.Organization
 import Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan (subscriptionStatusField)
+import Modulus.BE.DB.Internal.Marshaller.User (userUpdatedAtField)
+import Modulus.BE.DB.Internal.Model
+import Modulus.BE.DB.Internal.Utils (genRandomUuidDefault)
+import Orville.PostgreSQL
 
 -- User Subscription Fields
 userSubscriptionIDField :: FieldDefinition NotNull UserSubscriptionID
@@ -28,9 +26,6 @@ userSubscriptionIDField =
   coerceField $
     setDefaultValue genRandomUuidDefault $
       uuidField "id"
-
-userSubscriptionOrganizationIDField :: FieldDefinition NotNull OrganizationID
-userSubscriptionOrganizationIDField = coerceField $ uuidField "organization_id"
 
 userSubscriptionPlanIDField :: FieldDefinition NotNull SubscriptionPlanID
 userSubscriptionPlanIDField = coerceField $ boundedTextField "plan_id" 255
@@ -44,10 +39,10 @@ userSubscriptionCurrentPeriodEndsAtField =
   nullableField $ utcTimestampField "current_period_ends_at"
 
 userSubscriptionCreatedAtField :: FieldDefinition NotNull UTCTime
-userSubscriptionCreatedAtField = organizationMemberCreatedAtField
+userSubscriptionCreatedAtField = userUpdatedAtField
 
 userSubscriptionUpdatedAtField :: FieldDefinition NotNull UTCTime
-userSubscriptionUpdatedAtField = organizationUpdatedAtField
+userSubscriptionUpdatedAtField = userUpdatedAtField
 
 -- User Subscription Marshaller
 userSubscriptionMarshaller :: SqlMarshaller UserSubscriptionWrite UserSubscriptionRead
@@ -58,9 +53,6 @@ userSubscriptionMarshaller =
           (\UserSubscription {..} -> userSubscriptionID)
           userSubscriptionIDField
       )
-    <*> marshallField
-      (\UserSubscription {..} -> userSubscriptionOrganizationID)
-      userSubscriptionOrganizationIDField
     <*> marshallField
       (\UserSubscription {..} -> userSubscriptionPlanID)
       userSubscriptionPlanIDField

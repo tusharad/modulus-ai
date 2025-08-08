@@ -9,10 +9,12 @@ import Modulus.BE.Handler
 import Modulus.BE.Monad.AppM
 import Modulus.Common.Types
 import Servant
+import Modulus.BE.Handler.Conversations (conversationsServer)
 
 serverV1 :: ServerT API_V1 AppM
 serverV1 =
   authServer
+    :<|> conversationsServer
     :<|> healthCheckHandler
 
 appToServer :: AppConfig -> Application

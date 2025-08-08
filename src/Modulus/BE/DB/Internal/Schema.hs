@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-{-|
+{- |
 Module      : Modulus.BE.DB.Internal.Schema
 Copyright   : (c) 2025 Tushar
 License     : All Rights Reserved
@@ -14,29 +14,27 @@ to make sure database schema is up to date.
 -}
 module Modulus.BE.DB.Internal.Schema
   ( autoMigrate
-   , autoMigrateQ
+  , autoMigrateQ
   ) where
 
+import Control.Monad.IO.Class (liftIO)
+import qualified Data.ByteString.Char8 as BS
 import Modulus.BE.DB.Internal.Table
   ( auditLogTable
   , chatMessageTable
   , conversationTable
   , emailVerificationOTPTable
   , messageAttachmentTable
-  , organizationMemberTable
-  , organizationTable
+  , refreshTokenTable
   , subscriptionPlanTable
   , userSubscriptionTable
   , userTable
-  , refreshTokenTable
   )
-import Control.Monad.IO.Class (liftIO)
+import Orville.PostgreSQL (ConnectionPool)
 import qualified Orville.PostgreSQL as Orville
 import Orville.PostgreSQL.AutoMigration
 import qualified Orville.PostgreSQL.AutoMigration as AutoMigration
-import Orville.PostgreSQL (ConnectionPool)
 import qualified Orville.PostgreSQL.Raw.RawSql as RawSql
-import qualified Data.ByteString.Char8 as BS
 
 autoMigrate :: ConnectionPool -> IO ()
 autoMigrate pool = Orville.runOrville pool autoMigrateQ
@@ -56,14 +54,11 @@ autoMigrate pool = Orville.runOrville pool autoMigrateQ
 -}
 autoMigrateQ :: Orville.MonadOrville m => m ()
 autoMigrateQ = do
-  let
-      pgcryptoExtensionId = Orville.nameToExtensionId "pgcrypto"
+  let pgcryptoExtensionId = Orville.nameToExtensionId "pgcrypto"
       schemaItems :: [SchemaItem]
       schemaItems =
         [ SchemaExtension pgcryptoExtensionId
-        , SchemaTable organizationTable
         , SchemaTable userTable
-        , SchemaTable organizationMemberTable
         , SchemaTable conversationTable
         , SchemaTable chatMessageTable
         , SchemaTable messageAttachmentTable
@@ -81,7 +76,6 @@ autoMigrateQ = do
     mapM_ (putStrLn . ("- " ++) . schemaItemSummary) schemaItems
     putStrLn "========================================"
     putStrLn "Starting auto-migration..."
-
 
   plan <- AutoMigration.generateMigrationPlan AutoMigration.defaultOptions schemaItems
   let steps = AutoMigration.migrationPlanSteps plan

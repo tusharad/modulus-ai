@@ -1,4 +1,4 @@
-{-|
+{- |
 Module      : Modulus.BE.DB.Internal.Index
 Copyright   : (c) 2025 Tushar
 License     : All Rights Reserved
@@ -53,45 +53,25 @@ the correct tables.
     as it runs outside the main migration transaction.
 -}
 module Modulus.BE.DB.Internal.Index
-  ( -- * Organizations Indexes
-    idxOrganizationsCreatedAt,
-
-    -- * Users Indexes
-    idxUsersEmail,
-
-    -- * Organization Members Indexes
-    idxOrganizationMembersUserId,
-
-    -- * Conversations Indexes
-    idxConversationsOrganizationId,
-    idxConversationsUserId,
+  ( -- * Users Indexes
+    idxUsersEmail
+  , idxConversationsUserId
 
     -- * Chat Messages Indexes
-    idxChatMessagesConversationId,
-    idxChatMessagesOrganizationId,
+  , idxChatMessagesConversationId
 
     -- * Message Attachments Indexes
-    idxMessageAttachmentsMessageId,
+  , idxMessageAttachmentsMessageId
 
     -- * Audit Log Indexes
-    idxAuditLogOrganizationId,
-    idxAuditLogUserId,
-    idxAuditLogAction
+  , idxAuditLogUserId
+  , idxAuditLogAction
   ) where
 
-import Modulus.BE.DB.Internal.Marshaller
 import Data.List.NonEmpty (NonEmpty (..))
+import Modulus.BE.DB.Internal.Marshaller
 import Orville.PostgreSQL
 import qualified Orville.PostgreSQL.Schema.IndexDefinition as IndexDefinition
-
------------------------------------------------------------------------------
--- Organizations Indexes
------------------------------------------------------------------------------
-
--- CREATE INDEX idx_organizations_created_at ON organizations(created_at);
-idxOrganizationsCreatedAt :: IndexDefinition
-idxOrganizationsCreatedAt =
-  IndexDefinition.nonUniqueIndex (fieldName organizationCreatedAtField :| [])
 
 -----------------------------------------------------------------------------
 -- Users Indexes
@@ -103,23 +83,8 @@ idxUsersEmail =
   IndexDefinition.nonUniqueIndex (fieldName userEmailField :| [])
 
 -----------------------------------------------------------------------------
--- Organization Members Indexes
------------------------------------------------------------------------------
-
--- CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
-idxOrganizationMembersUserId :: IndexDefinition
-idxOrganizationMembersUserId =
-  IndexDefinition.nonUniqueIndex (fieldName organizationMemberUserIDField :| [])
-
------------------------------------------------------------------------------
 -- Conversations Indexes
 -----------------------------------------------------------------------------
-
--- CREATE INDEX idx_conversations_organization_id ON conversations(organization_id);
-idxConversationsOrganizationId :: IndexDefinition
-idxConversationsOrganizationId =
-  IndexDefinition.nonUniqueIndex (fieldName conversationOrganizationIDField :| [])
-
 -- CREATE INDEX idx_conversations_user_id ON conversations(user_id);
 idxConversationsUserId :: IndexDefinition
 idxConversationsUserId =
@@ -134,11 +99,6 @@ idxChatMessagesConversationId :: IndexDefinition
 idxChatMessagesConversationId =
   IndexDefinition.nonUniqueIndex (fieldName chatMessageConversationIDField :| [])
 
--- CREATE INDEX idx_chat_messages_organization_id ON chat_messages(organization_id);
-idxChatMessagesOrganizationId :: IndexDefinition
-idxChatMessagesOrganizationId =
-  IndexDefinition.nonUniqueIndex (fieldName chatMessageOrganizationIDField :| [])
-
 -----------------------------------------------------------------------------
 -- Message Attachments Indexes
 -----------------------------------------------------------------------------
@@ -151,11 +111,6 @@ idxMessageAttachmentsMessageId =
 -----------------------------------------------------------------------------
 -- Audit Log Indexes
 -----------------------------------------------------------------------------
-
--- CREATE INDEX idx_audit_log_organization_id ON audit_log(organization_id);
-idxAuditLogOrganizationId :: IndexDefinition
-idxAuditLogOrganizationId =
-  IndexDefinition.nonUniqueIndex (fieldName auditLogOrganizationIDField :| [])
 
 -- CREATE INDEX idx_audit_log_user_id ON audit_log(user_id);
 idxAuditLogUserId :: IndexDefinition

@@ -4,7 +4,6 @@
 module Modulus.BE.DB.Internal.Marshaller.Message
   ( messageAttachmentIDField
   , messageAttachmentMessageIDField
-  , messageAttachmentOrganizationIDField
   , messageAttachmentFileNameField
   , messageAttachmentFileTypeField
   , messageAttachmentFileSizeBytesField
@@ -16,9 +15,9 @@ module Modulus.BE.DB.Internal.Marshaller.Message
 import Control.Lens.Internal.CTypes (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Modulus.BE.DB.Internal.Marshaller.Organization (organizationCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Orville.PostgreSQL
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Message Attachment Fields
 messageAttachmentIDField :: FieldDefinition NotNull MessageAttachmentID
@@ -26,9 +25,6 @@ messageAttachmentIDField = coerceField $ bigSerialField "id"
 
 messageAttachmentMessageIDField :: FieldDefinition NotNull ChatMessageID
 messageAttachmentMessageIDField = coerceField $ bigIntegerField "message_id"
-
-messageAttachmentOrganizationIDField :: FieldDefinition NotNull OrganizationID
-messageAttachmentOrganizationIDField = coerceField $ uuidField "organization_id"
 
 messageAttachmentFileNameField :: FieldDefinition NotNull Text
 messageAttachmentFileNameField = unboundedTextField "file_name"
@@ -43,7 +39,7 @@ messageAttachmentStoragePathField :: FieldDefinition NotNull Text
 messageAttachmentStoragePathField = unboundedTextField "storage_path"
 
 messageAttachmentCreatedAtField :: FieldDefinition NotNull UTCTime
-messageAttachmentCreatedAtField = organizationCreatedAtField
+messageAttachmentCreatedAtField = userCreatedAtField
 
 -- Message Attachment Marshaller
 messageAttachmentMarshaller ::
@@ -58,9 +54,6 @@ messageAttachmentMarshaller =
     <*> marshallField
       (\MessageAttachment {..} -> messageAttachmentMessageID)
       messageAttachmentMessageIDField
-    <*> marshallField
-      (\MessageAttachment {..} -> messageAttachmentOrganizationID)
-      messageAttachmentOrganizationIDField
     <*> marshallField
       (\MessageAttachment {..} -> messageAttachmentFileName)
       messageAttachmentFileNameField

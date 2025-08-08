@@ -52,14 +52,8 @@ and by query execution logic in other `Modulus.BE.DB.Internal.*` modules (e.g.,
     foreign key relationships between tables within this module.
 -}
 module Modulus.BE.DB.Internal.Table
-  ( -- * Organization Table
-    organizationTable
-
-    -- * User Table
-  , userTable
-
-    -- * Organization Member Table
-  , organizationMemberTable
+  ( -- * User Table
+    userTable
 
     -- * Conversation Table
   , conversationTable
@@ -81,7 +75,7 @@ module Modulus.BE.DB.Internal.Table
 
     -- * Email Verification OTP Table
   , emailVerificationOTPTable
-  , refreshTokenTable 
+  , refreshTokenTable
   ) where
 
 import Data.List.NonEmpty (NonEmpty (..))
@@ -90,16 +84,6 @@ import Modulus.BE.DB.Internal.Index
 import Modulus.BE.DB.Internal.Marshaller
 import Modulus.BE.DB.Internal.Model
 import Orville.PostgreSQL
-
--- ORGANIZATION TABLE
-organizationTable ::
-  TableDefinition (HasKey OrganizationID) OrganizationWrite OrganizationRead
-organizationTable =
-  addTableIndexes [idxOrganizationsCreatedAt] $
-    mkTableDefinition
-      "organizations"
-      (primaryKey organizationIDField)
-      organizationMarshaller
 
 -- USER TABLE
 userTable :: TableDefinition (HasKey UserID) UserWrite UserRead
@@ -114,67 +98,13 @@ userTable =
           userMarshaller
       )
 
--- ORGANIZATION MEMBER TABLE
--- Composite primary key: (organization_id, user_id)
-organizationMemberKey :: PrimaryKey (OrganizationID, UserID)
-organizationMemberKey =
-  compositePrimaryKey
-    (primaryKeyPart fst organizationMemberOrganizationIDField)
-    [primaryKeyPart snd organizationMemberUserIDField]
-
-organizationMemberTable ::
-  TableDefinition
-    (HasKey (OrganizationID, UserID))
-    OrganizationMemberWrite
-    OrganizationMemberRead
-organizationMemberTable =
-  addTableIndexes [idxOrganizationMembersUserId] $
-    addTableConstraints
-      [ fkOrganizationMemberToOrganization
-      , fkOrganizationMemberToUser
-      ]
-      ( mkTableDefinition
-          "organization_members"
-          organizationMemberKey
-          organizationMemberMarshaller
-      )
-  where
-    fkOrganizationMemberToOrganization =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier organizationTable)
-        ( foreignReference
-            (fieldName organizationMemberOrganizationIDField)
-            (fieldName organizationIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
-    fkOrganizationMemberToUser =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier userTable)
-        ( foreignReference
-            (fieldName organizationMemberUserIDField)
-            (fieldName userIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
 -- CONVERSATION TABLE
 conversationTable ::
   TableDefinition (HasKey ConversationID) ConversationWrite ConversationRead
 conversationTable =
-  addTableIndexes [idxConversationsOrganizationId, idxConversationsUserId] $
+  addTableIndexes [idxConversationsUserId] $
     addTableConstraints
       [ uniqueConstraint (fieldName conversationPublicIDField :| [])
-      , fkConversationToOrganization
       , fkConversationToUser
       ]
       ( mkTableDefinition
@@ -183,20 +113,6 @@ conversationTable =
           conversationMarshaller
       )
   where
-    fkConversationToOrganization =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier organizationTable)
-        ( foreignReference
-            (fieldName conversationOrganizationIDField)
-            (fieldName organizationIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
     fkConversationToUser =
       foreignKeyConstraintWithOptions
         (tableIdentifier userTable)
@@ -215,11 +131,10 @@ conversationTable =
 chatMessageTable ::
   TableDefinition (HasKey ChatMessageID) ChatMessageWrite ChatMessageRead
 chatMessageTable =
-  addTableIndexes [idxChatMessagesConversationId, idxChatMessagesOrganizationId] $
+  addTableIndexes [idxChatMessagesConversationId] $
     addTableConstraints
       [ uniqueConstraint (fieldName chatMessagePublicIDField :| [])
       , fkChatMessageToConversation
-      , fkChatMessageToOrganization
       ]
       ( mkTableDefinition
           "chat_messages"
@@ -241,20 +156,6 @@ chatMessageTable =
             }
         )
 
-    fkChatMessageToOrganization =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier organizationTable)
-        ( foreignReference
-            (fieldName chatMessageOrganizationIDField)
-            (fieldName organizationIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
 -- MESSAGE ATTACHMENT TABLE
 messageAttachmentTable ::
   TableDefinition
@@ -265,7 +166,6 @@ messageAttachmentTable =
   addTableIndexes [idxMessageAttachmentsMessageId] $
     addTableConstraints
       [ fkMessageAttachmentToMessage
-      , fkMessageAttachmentToOrganization
       ]
       ( mkTableDefinition
           "message_attachments"
@@ -279,20 +179,6 @@ messageAttachmentTable =
         ( foreignReference
             (fieldName messageAttachmentMessageIDField)
             (fieldName chatMessageIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
-    fkMessageAttachmentToOrganization =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier organizationTable)
-        ( foreignReference
-            (fieldName messageAttachmentOrganizationIDField)
-            (fieldName organizationIDField)
             :| []
         )
         ( defaultForeignKeyOptions
@@ -315,10 +201,7 @@ userSubscriptionTable ::
   TableDefinition (HasKey UserSubscriptionID) UserSubscriptionWrite UserSubscriptionRead
 userSubscriptionTable =
   addTableConstraints
-    [ uniqueConstraint (fieldName userSubscriptionOrganizationIDField :| [])
-    , -- One subscription per org
-      fkUserSubscriptionToOrganization
-    , fkUserSubscriptionToPlan
+    [ fkUserSubscriptionToPlan
     ]
     ( mkTableDefinition
         "user_subscriptions"
@@ -326,20 +209,6 @@ userSubscriptionTable =
         userSubscriptionMarshaller
     )
   where
-    fkUserSubscriptionToOrganization =
-      foreignKeyConstraintWithOptions
-        (tableIdentifier organizationTable)
-        ( foreignReference
-            (fieldName userSubscriptionOrganizationIDField)
-            (fieldName organizationIDField)
-            :| []
-        )
-        ( defaultForeignKeyOptions
-            { foreignKeyOptionsOnUpdate = Cascade
-            , foreignKeyOptionsOnDelete = Cascade
-            }
-        )
-
     fkUserSubscriptionToPlan =
       foreignKeyConstraintWithOptions
         (tableIdentifier subscriptionPlanTable)
@@ -357,14 +226,11 @@ userSubscriptionTable =
 -- AUDIT LOG TABLE
 auditLogTable :: TableDefinition (HasKey AuditLogID) AuditLogWrite AuditLogRead
 auditLogTable =
-  addTableIndexes [idxAuditLogOrganizationId, idxAuditLogUserId, idxAuditLogAction] $
+  addTableIndexes [idxAuditLogUserId, idxAuditLogAction] $
     mkTableDefinition
       "audit_log"
       (primaryKey auditLogIDField)
       auditLogMarshaller
-
--- Note: Nullable FKs to organization and user are not enforced as constraints here
--- but are maintained by application logic.
 
 -- EMAIL VERIFICATION OTP TABLE
 emailVerificationOTPTable ::

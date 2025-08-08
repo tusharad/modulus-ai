@@ -7,7 +7,10 @@ module Modulus.BE.Client.V1
   , meClient
   , healthCheckClient
   , refreshTokenClient
-  -- * Exporting some handler function for FE. 
+  , addConversationClient
+  , getConversationsClient
+    -- * Exporting some handler function for FE.
+
   -- FE should only use this module for interacting with BE
   , registerHandler
   , loginHandler
@@ -17,15 +20,18 @@ module Modulus.BE.Client.V1
 import Data.Text (Text)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
+import Modulus.BE.Handler (loginHandler, registerHandler, verifyOTPHandler)
 import Servant
 import Servant.Client
-import Modulus.BE.Handler (registerHandler, loginHandler, verifyOTPHandler)
+import Modulus.BE.DB.Internal.Model (ConversationPublicID, ConversationRead)
 
 registerClient :: RegisterRequest -> ClientM UserProfile
 loginClient :: LoginRequest -> ClientM AuthTokens
 verifyOTPClient :: OTPVerifyRequest -> ClientM Text
 refreshTokenClient :: RefreshTokenRequest -> ClientM AuthTokens
 meClient :: Text -> ClientM Text
+addConversationClient :: Text -> AddConversationRequest -> ClientM ConversationPublicID
+getConversationsClient :: Text -> ClientM [ConversationRead]
 healthCheckClient :: ClientM String
 ( registerClient
     :<|> loginClient
@@ -33,4 +39,7 @@ healthCheckClient :: ClientM String
     :<|> refreshTokenClient
     :<|> meClient
   )
+  :<|> ( addConversationClient
+           :<|> getConversationsClient
+         )
   :<|> healthCheckClient = client (Proxy :: Proxy API_V1)

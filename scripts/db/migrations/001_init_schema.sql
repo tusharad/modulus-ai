@@ -11,22 +11,6 @@ CREATE TYPE message_role AS ENUM ('user', 'assistant', 'system', 'tool');
 CREATE TYPE subscription_status AS ENUM ('active', 'past_due', 'canceled', 'trialing');
 
 -- =============================================================================
--- ORGANIZATIONS & TENANCY
--- =============================================================================
--- The core of our multi-tenancy model. Every major resource will be tied to an
--- organization.
-
-CREATE TABLE organizations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Index for efficient lookup by creation date.
-CREATE INDEX idx_organizations_created_at ON organizations(created_at);
-
--- =============================================================================
 -- USERS & AUTHENTICATION
 -- =============================================================================
 
@@ -42,17 +26,6 @@ CREATE TABLE users (
 -- Index for efficient lookup by email.
 CREATE INDEX idx_users_email ON users(email);
 
--- Junction table to link users to organizations with a specific role.
-CREATE TABLE organization_members (
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role user_role NOT NULL DEFAULT 'member',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (organization_id, user_id)
-);
-
-CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
-
 -- =============================================================================
 -- CORE CHAT FUNCTIONALITY
 -- =============================================================================
@@ -60,7 +33,6 @@ CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
 CREATE TABLE conversations (
     id BIGSERIAL PRIMARY KEY,
     public_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), -- For external use
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
                             --User who started the conversation
     title TEXT NOT NULL,
@@ -68,7 +40,6 @@ CREATE TABLE conversations (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_conversations_organization_id ON conversations(organization_id);
 CREATE INDEX idx_conversations_user_id ON conversations(user_id);
 
 -- The chat_messages table is now a standard table with a foreign key.
@@ -76,8 +47,6 @@ CREATE TABLE chat_messages (
     id BIGSERIAL PRIMARY KEY,
     public_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, 
-        -- Denormalized for efficient RLS
     role message_role NOT NULL,
     content TEXT NOT NULL,
     model_used TEXT, -- e.g., 'gpt-4', 'claude-2'
@@ -85,12 +54,10 @@ CREATE TABLE chat_messages (
 );
 
 CREATE INDEX idx_chat_messages_conversation_id ON chat_messages(conversation_id);
-CREATE INDEX idx_chat_messages_organization_id ON chat_messages(organization_id);
 
 CREATE TABLE message_attachments (
     id BIGSERIAL PRIMARY KEY,
     message_id BIGINT NOT NULL,
-    organization_id UUID NOT NULL,
     file_name TEXT NOT NULL,
     file_type TEXT NOT NULL,
     file_size_bytes BIGINT NOT NULL,
@@ -113,7 +80,6 @@ CREATE TABLE subscription_plans (
 
 CREATE TABLE user_subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL UNIQUE REFERENCES organizations(id) ON DELETE CASCADE,
     plan_id TEXT NOT NULL REFERENCES subscription_plans(id),
     stripe_subscription_id TEXT UNIQUE,
     status subscription_status NOT NULL,
@@ -127,7 +93,6 @@ CREATE TABLE user_subscriptions (
 -- =============================================================================
 CREATE TABLE audit_log (
     id BIGSERIAL PRIMARY KEY,
-    organization_id UUID,
     user_id UUID,
     action TEXT NOT NULL, -- e.g., 'user.login', 'conversation.delete'
     details JSONB,
@@ -135,7 +100,6 @@ CREATE TABLE audit_log (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_log_organization_id ON audit_log(organization_id);
 CREATE INDEX idx_audit_log_user_id ON audit_log(user_id);
 CREATE INDEX idx_audit_log_action ON audit_log(action);
 

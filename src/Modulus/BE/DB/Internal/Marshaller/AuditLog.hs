@@ -4,7 +4,6 @@
 module Modulus.BE.DB.Internal.Marshaller.AuditLog
   ( -- * Audit Log Marshallers
     auditLogIDField
-  , auditLogOrganizationIDField
   , auditLogUserIDField
   , auditLogActionField
   , auditLogDetailsField
@@ -15,16 +14,14 @@ module Modulus.BE.DB.Internal.Marshaller.AuditLog
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Modulus.BE.DB.Internal.Marshaller.Organization
 import Modulus.BE.DB.Internal.Model
 import Orville.PostgreSQL
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Audit Log Fields
 auditLogIDField :: FieldDefinition NotNull AuditLogID
 auditLogIDField = coerceField $ bigSerialField "id"
 
-auditLogOrganizationIDField :: FieldDefinition Nullable (Maybe OrganizationID)
-auditLogOrganizationIDField = nullableField $ coerceField $ uuidField "organization_id"
 
 auditLogUserIDField :: FieldDefinition Nullable (Maybe UserID)
 auditLogUserIDField = nullableField $ coerceField $ uuidField "user_id"
@@ -39,16 +36,13 @@ auditLogIPAddressField :: FieldDefinition Nullable (Maybe Text)
 auditLogIPAddressField = nullableField $ unboundedTextField "ip_address"
 
 auditLogCreatedAtField :: FieldDefinition NotNull UTCTime
-auditLogCreatedAtField = organizationCreatedAtField
+auditLogCreatedAtField = userCreatedAtField
 
 -- Audit Log Marshaller
 auditLogMarshaller :: SqlMarshaller AuditLogWrite AuditLogRead
 auditLogMarshaller =
   AuditLog
     <$> marshallReadOnly (marshallField (\AuditLog {..} -> auditLogID) auditLogIDField)
-    <*> marshallField
-      (\AuditLog {..} -> auditLogOrganizationID)
-      auditLogOrganizationIDField
     <*> marshallField (\AuditLog {..} -> auditLogUserID) auditLogUserIDField
     <*> marshallField (\AuditLog {..} -> auditLogAction) auditLogActionField
     <*> marshallField (\AuditLog {..} -> auditLogDetails) auditLogDetailsField

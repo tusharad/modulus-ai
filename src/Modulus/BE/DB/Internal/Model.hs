@@ -62,14 +62,8 @@ build upon these types to provide the database access logic.
     mechanisms.
 -}
 module Modulus.BE.DB.Internal.Model
-  ( -- * Organization Types
-    OrganizationID (..)
-  , Organization (..)
-  , OrganizationRead
-  , OrganizationWrite
-
-    -- * User Types
-  , UserID (..)
+  ( -- * User Types
+    UserID (..)
   , User (..)
   , UserRead
   , UserWrite
@@ -78,11 +72,6 @@ module Modulus.BE.DB.Internal.Model
   , UserRole (..)
   , MessageRole (..)
   , SubscriptionStatus (..)
-
-    -- * Organization Membership Types
-  , OrganizationMember (..)
-  , OrganizationMemberRead
-  , OrganizationMemberWrite
 
     -- * Conversation Types
   , ConversationID (..)
@@ -153,9 +142,6 @@ data Organization a b = Organization
   }
   deriving (Show, Eq, Generic, ToJSON)
 
-type OrganizationRead = Organization OrganizationID UTCTime
-type OrganizationWrite = Organization () ()
-
 -- User Model
 newtype UserID = UserID UUID
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
@@ -189,9 +175,6 @@ data OrganizationMember a = OrganizationMember
   }
   deriving (Show, Eq, Generic, ToJSON)
 
-type OrganizationMemberRead = OrganizationMember UTCTime
-type OrganizationMemberWrite = OrganizationMember ()
-
 -- Conversation Model
 newtype ConversationID = ConversationID Int64
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
@@ -202,13 +185,12 @@ newtype ConversationPublicID = ConversationPublicID UUID
 data Conversation a b c = Conversation
   { conversationID :: a
   , conversationPublicID :: b
-  , conversationOrganizationID :: OrganizationID
   , conversationUserID :: Maybe UserID
   , conversationTitle :: Text
   , conversationCreatedAt :: c
   , conversationUpdatedAt :: c
   }
-  deriving (Show, Eq, Generic, ToJSON)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type ConversationRead = Conversation ConversationID ConversationPublicID UTCTime
 type ConversationWrite = Conversation () () ()
@@ -232,7 +214,6 @@ data ChatMessage a b c = ChatMessage
   { chatMessageID :: a
   , chatMessagePublicID :: b
   , chatMessageConversationID :: ConversationID
-  , chatMessageOrganizationID :: OrganizationID
   , chatMessageRole :: MessageRole
   , chatMessageContent :: Text
   , chatMessageModelUsed :: Maybe Text
@@ -250,7 +231,6 @@ newtype MessageAttachmentID = MessageAttachmentID Int64
 data MessageAttachment a b = MessageAttachment
   { messageAttachmentID :: a
   , messageAttachmentMessageID :: ChatMessageID
-  , messageAttachmentOrganizationID :: OrganizationID
   , messageAttachmentFileName :: Text
   , messageAttachmentFileType :: Text
   , messageAttachmentFileSizeBytes :: Int64
@@ -291,7 +271,6 @@ newtype UserSubscriptionID = UserSubscriptionID UUID
 
 data UserSubscription a b = UserSubscription
   { userSubscriptionID :: a
-  , userSubscriptionOrganizationID :: OrganizationID
   , userSubscriptionPlanID :: SubscriptionPlanID
   , userSubscriptionStripeSubscriptionID :: Maybe Text
   , userSubscriptionStatus :: SubscriptionStatus
@@ -310,7 +289,6 @@ newtype AuditLogID = AuditLogID Int64
 
 data AuditLog a b = AuditLog
   { auditLogID :: a
-  , auditLogOrganizationID :: Maybe OrganizationID
   , auditLogUserID :: Maybe UserID
   , auditLogAction :: Text
   , auditLogDetails :: Maybe Text -- JSONB field

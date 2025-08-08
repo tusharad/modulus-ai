@@ -9,7 +9,6 @@ module Modulus.BE.DB.Internal.Marshaller.ChatMessage
   , chatMessageIDField
   , chatMessagePublicIDField
   , chatMessageConversationIDField
-  , chatMessageOrganizationIDField
   , chatMessageRoleField
   , chatMessageContentField
   , chatMessageModelUsedField
@@ -20,10 +19,10 @@ module Modulus.BE.DB.Internal.Marshaller.ChatMessage
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Modulus.BE.DB.Internal.Marshaller.Organization (organizationCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils
 import Orville.PostgreSQL
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Chat Message Fields
 chatMessageIDField :: FieldDefinition NotNull ChatMessageID
@@ -38,8 +37,6 @@ chatMessagePublicIDField =
 chatMessageConversationIDField :: FieldDefinition NotNull ConversationID
 chatMessageConversationIDField = coerceField $ bigIntegerField "conversation_id"
 
-chatMessageOrganizationIDField :: FieldDefinition NotNull OrganizationID
-chatMessageOrganizationIDField = coerceField $ uuidField "organization_id"
 
 chatMessageRoleField :: FieldDefinition NotNull MessageRole
 chatMessageRoleField = messageRoleField
@@ -51,7 +48,7 @@ chatMessageModelUsedField :: FieldDefinition Nullable (Maybe Text)
 chatMessageModelUsedField = nullableField $ unboundedTextField "model_used"
 
 chatMessageCreatedAtField :: FieldDefinition NotNull UTCTime
-chatMessageCreatedAtField = organizationCreatedAtField
+chatMessageCreatedAtField = userCreatedAtField
 
 messageRoleSqlType :: SqlType MessageRole
 messageRoleSqlType =
@@ -91,9 +88,6 @@ chatMessageMarshaller =
     <*> marshallField
       (\ChatMessage {..} -> chatMessageConversationID)
       chatMessageConversationIDField
-    <*> marshallField
-      (\ChatMessage {..} -> chatMessageOrganizationID)
-      chatMessageOrganizationIDField
     <*> marshallField (\ChatMessage {..} -> chatMessageRole) chatMessageRoleField
     <*> marshallField (\ChatMessage {..} -> chatMessageContent) chatMessageContentField
     <*> marshallField

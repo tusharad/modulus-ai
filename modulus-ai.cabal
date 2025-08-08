@@ -42,8 +42,6 @@ library
       Modulus.BE.DB.Internal.Marshaller.Conversation
       Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
       Modulus.BE.DB.Internal.Marshaller.Message
-      Modulus.BE.DB.Internal.Marshaller.Organization
-      Modulus.BE.DB.Internal.Marshaller.OrganizationMember
       Modulus.BE.DB.Internal.Marshaller.RefreshToken
       Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
       Modulus.BE.DB.Internal.Marshaller.User
@@ -52,11 +50,13 @@ library
       Modulus.BE.DB.Internal.Schema
       Modulus.BE.DB.Internal.Table
       Modulus.BE.DB.Internal.Utils
+      Modulus.BE.DB.Queries.Conversation
       Modulus.BE.DB.Queries.EmailVerification
       Modulus.BE.DB.Queries.RefreshTokens
       Modulus.BE.DB.Queries.User
       Modulus.BE.Handler
       Modulus.BE.Handler.Auth
+      Modulus.BE.Handler.Conversations
       Modulus.BE.Log
       Modulus.BE.Monad.AppM
       Modulus.BE.Monad.Error
