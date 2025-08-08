@@ -133,9 +133,9 @@ appMToHandler config action = do
     Left err -> throwError $ appErrorToServerError err
     Right a -> pure a
 
-runAppM :: AppConfig -> AppM a -> IO a
+runAppM :: AppConfig -> AppM a -> IO (Either AppError a)
 runAppM cfg action = do
   result <- runExceptT . runMyExceptT $ runReaderT (unAppM action) cfg
   case result of
-    Left err -> error $ "AppM failed during jwtAuthCheck: " <> show err
-    Right val -> pure val
+    Left err -> pure $ Left err
+    Right val -> pure $ Right val

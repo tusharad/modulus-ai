@@ -71,6 +71,8 @@ library
       Modulus.FE.Layout
       Modulus.FE.Page.Chat
       Modulus.FE.Page.Register
+      Modulus.FE.Utils
+      Modulus.FE.View.RegistrationFormView
   other-modules:
       Paths_modulus_ai
   hs-source-dirs:
@@ -108,6 +110,7 @@ library
     , jose
     , lens
     , mtl
+    , network-uri
     , orville-postgresql
     , password
     , random
@@ -167,6 +170,7 @@ executable modulus-ai-exe
     , lens
     , modulus-ai
     , mtl
+    , network-uri
     , orville-postgresql
     , password
     , random
@@ -228,6 +232,7 @@ test-suite modulus-ai-test
     , lens
     , modulus-ai
     , mtl
+    , network-uri
     , orville-postgresql
     , password
     , random

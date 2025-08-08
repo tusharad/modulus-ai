@@ -22,7 +22,7 @@ main = do
       stateMap <- initStateStoreMap
       putStrLn $ "Running application on port " <> show (configPort conf)
       run (configPort conf) $
-        staticPolicy (addBase "public/static") $
+        staticPolicy (addBase "public") $
           mainApp stateMap conf (appToServer conf)
 
 mainApp :: StateStoreMap -> AppConfig -> Application -> Application

@@ -15,6 +15,7 @@ module Modulus.BE.Auth.JwtAuthCombinator
   ) where
 
 import Control.Lens (re, (^?), _Just)
+import Control.Monad (void)
 import Control.Monad.Reader (MonadIO (liftIO), asks)
 import Crypto.JWT
 import Data.Aeson
@@ -36,7 +37,7 @@ import Servant.Client
 import Servant.Client.Core.Request as ClientCore (Request, addHeader)
 import Servant.Server.Internal
   ( DelayedIO
-  , addAuthCheck
+  , addAuthCheck, delayedFailFatal
   )
 
 data AuthResult
@@ -99,7 +100,8 @@ jwtAuthCheck appCfg = do
   mAuthHeader <- asks (lookup hAuthorization . requestHeaders)
   case mAuthHeader >>= (parseBearerToken . BSL.fromStrict) of
     Nothing -> do
-      liftIO $ runAppM appCfg $ logError "Authorization header missing or invalid format"
+      void . liftIO . runAppM appCfg $ 
+        logError "Authorization header missing or invalid format"
       pure TokenNotFound
     Just rawToken -> do
       let key = fromOctets $ TE.encodeUtf8 (configJwtSecret appCfg)
@@ -107,9 +109,13 @@ jwtAuthCheck appCfg = do
 
       case eClaims of
         Left (_ :: JWTError) -> do
-          liftIO $ runAppM appCfg $ logError "JWT verification failed"
+          void . liftIO . runAppM appCfg $ logError "JWT verification failed"
           pure InvalidToken
-        Right claims -> liftIO $ runAppM appCfg (handleClaims claims)
+        Right claims -> do
+            eRes <- liftIO $ runAppM appCfg (handleClaims claims)
+            case eRes of
+              Right authRes -> pure authRes
+              Left _ -> delayedFailFatal err401
   where
     verifyJWT_ key token = do
       jwt <- decodeCompact token

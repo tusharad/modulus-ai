@@ -3,6 +3,7 @@
 module Modulus.FE.Effects.AppConfig
   ( AppConfigEff (..)
   , runAppConfigIO
+  , getAppCfg 
   ) where
 
 import Effectful
@@ -21,3 +22,6 @@ runAppConfigIO ::
 runAppConfigIO appCfg =
   interpret $ \_ -> \case
     UseState -> pure appCfg
+
+getAppCfg :: (AppConfigEff :> es) => Eff es AppConfig
+getAppCfg = send UseState

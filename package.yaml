@@ -30,6 +30,7 @@ dependencies:
   - jose
   - lens
   - mtl
+  - network-uri
   - orville-postgresql
   - password
   - random
