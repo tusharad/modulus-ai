@@ -8,16 +8,16 @@ import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Effectful (IOE, MonadIO (liftIO))
+import Effectful (IOE)
 import Modulus.BE.Api.Types (OTPVerifyRequest (..))
-import Modulus.BE.Handler.Auth (verifyOTPHandler)
+import Modulus.BE.Client.V1
 import Modulus.BE.Log (logDebug)
-import Modulus.BE.Monad.AppM (runAppM)
-import Modulus.FE.Effects.AppConfig (AppConfigEff, getAppCfg)
+import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.Common.Utils (runBE)
 
 data VerifyOTPFormView = VerifyOTPFormView Int
   deriving (Generic, ViewId)
@@ -43,16 +43,11 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView VerifyOTPFormView es where
   update (SubmitForm userEmail) = do
     f <- formData @(VerifyOTPForm Identity)
     let validatedForm = validateForm f
-    cfg <- getAppCfg
-    void . liftIO $ runAppM cfg $ logDebug $ "Reached here " <> T.pack (show f)
+    void . runBE $ logDebug $ "Reached here " <> T.pack (show f)
     if anyInvalid validatedForm
       || isLeft (EmailValidate.validate $ TE.encodeUtf8 userEmail)
       then do
-        void . liftIO $
-          runAppM cfg $
-            logDebug $
-              "error happend "
-                <> T.pack (show validatedForm)
+        void . runBE . logDebug $ "error happend " <> T.pack (show validatedForm)
         pure $ verifyOTPForm Nothing userEmail validatedForm
       else pure $ submitVerifyView f userEmail
   update (VerifyingOTP VerifyOTPForm {..} userEmail) = do
@@ -61,8 +56,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView VerifyOTPFormView es where
             { verifyEmail = userEmail
             , verifyOTP = otp
             }
-    cfg <- getAppCfg
-    eRes <- liftIO $ runAppM cfg $ verifyOTPHandler reqBody
+    eRes <- runBE $ verifyOTPHandler reqBody
     case eRes of
       Left err ->
         pure $

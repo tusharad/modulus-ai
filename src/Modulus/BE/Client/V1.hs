@@ -7,6 +7,11 @@ module Modulus.BE.Client.V1
   , meClient
   , healthCheckClient
   , refreshTokenClient
+  -- * Exporting some handler function for FE. 
+  -- FE should only use this module for interacting with BE
+  , registerHandler
+  , loginHandler
+  , verifyOTPHandler
   ) where
 
 import Data.Text (Text)
@@ -14,6 +19,7 @@ import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Servant
 import Servant.Client
+import Modulus.BE.Handler (registerHandler, loginHandler, verifyOTPHandler)
 
 registerClient :: RegisterRequest -> ClientM UserProfile
 loginClient :: LoginRequest -> ClientM AuthTokens

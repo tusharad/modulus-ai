@@ -4,7 +4,6 @@ module Modulus.FE.View.LoginFormView
   , loginFormView
   ) where
 
-import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import Data.Either (isLeft)
 import Data.Text (Text)
@@ -12,13 +11,13 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Api.Types
-import Modulus.BE.Handler.Auth
-import Modulus.BE.Monad.AppM (runAppM)
-import Modulus.FE.Effects.AppConfig (AppConfigEff, getAppCfg)
+import Modulus.BE.Client.V1
+import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.Common.Utils (runBE)
 
 data LoginFormView = LoginFormView Int
   deriving (Generic, ViewId)
@@ -48,8 +47,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView LoginFormView es where
             { loginEmail = email
             , loginPassword = password
             }
-    cfg <- getAppCfg
-    eRes <- liftIO $ runAppM cfg $ loginHandler reqBody
+    eRes <- runBE $ loginHandler reqBody
     case eRes of
       Left err -> pure $ loginFormView (Just . T.pack $ show err) genFields
       Right authTokens -> do 

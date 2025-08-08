@@ -3,7 +3,6 @@ module Modulus.FE.View.RegistrationFormView
   , registrationFormView
   ) where
 
-import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import Data.Either (isLeft)
 import Data.Text (Text)
@@ -11,13 +10,13 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Api.Types
-import Modulus.BE.Handler.Auth
-import Modulus.BE.Monad.AppM (runAppM)
-import Modulus.FE.Effects.AppConfig (AppConfigEff, getAppCfg)
+import Modulus.BE.Client.V1
+import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.Common.Utils (runBE)
 
 data RegistrationFormView = RegistrationFormView Int
   deriving (Generic, ViewId)
@@ -49,8 +48,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView RegistrationFormView es wh
             , registerPassword = password
             , registerConfirmPassword = confirmPassword
             }
-    cfg <- getAppCfg
-    eRes <- liftIO $ runAppM cfg $ registerHandler reqBody
+    eRes <- runBE $ registerHandler reqBody
     case eRes of
       Left err -> pure $ registrationFormView (Just . T.pack $ show err) genFields
       Right UserProfile{..} -> pure $ registrationSuccessView userProfileEmail 

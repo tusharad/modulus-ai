@@ -63,6 +63,7 @@ library
       Modulus.BE.Monad.Utils
       Modulus.BE.Service.Email.Core
       Modulus.Common.Types
+      Modulus.Common.Utils
       Modulus.FE.Common.Types
       Modulus.FE.Core
       Modulus.FE.CSS
