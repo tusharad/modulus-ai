@@ -217,7 +217,10 @@ data ChatMessage a b c = ChatMessage
   , chatMessageConversationID :: ConversationID
   , chatMessageRole :: MessageRole
   , chatMessageContent :: Text
-  , chatMessageModelUsed :: Maybe Text
+  , chatMessageModel :: Maybe Text
+  , chatMessageProvider :: Maybe Text
+  , chatMessagePromptTokens :: Maybe Int32
+  , chatMessageCompletionTokens :: Maybe Int32
   , chatMessageCreatedAt :: c
   }
   deriving (Show, Eq, Generic, ToJSON)

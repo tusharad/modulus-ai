@@ -58,6 +58,7 @@ library
       Modulus.BE.Handler
       Modulus.BE.Handler.Auth
       Modulus.BE.Handler.Conversations
+      Modulus.BE.LLM
       Modulus.BE.Log
       Modulus.BE.Monad.AppM
       Modulus.BE.Monad.Error
@@ -114,13 +115,16 @@ library
     , http-types
     , hyperbole
     , jose
+    , langchain-hs
     , lens
     , mtl
     , network-uri
+    , ollama-haskell
     , orville-postgresql
     , password
     , random
     , req
+    , servant
     , servant-client
     , servant-client-core
     , servant-server
@@ -173,14 +177,17 @@ executable modulus-ai-exe
     , http-types
     , hyperbole
     , jose
+    , langchain-hs
     , lens
     , modulus-ai
     , mtl
     , network-uri
+    , ollama-haskell
     , orville-postgresql
     , password
     , random
     , req
+    , servant
     , servant-client
     , servant-client-core
     , servant-server
@@ -235,14 +242,17 @@ test-suite modulus-ai-test
     , http-types
     , hyperbole
     , jose
+    , langchain-hs
     , lens
     , modulus-ai
     , mtl
     , network-uri
+    , ollama-haskell
     , orville-postgresql
     , password
     , random
     , req
+    , servant
     , servant-client
     , servant-client-core
     , servant-server

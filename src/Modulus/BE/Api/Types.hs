@@ -10,7 +10,9 @@ module Modulus.BE.Api.Types
   , OTPVerifyRequest (..)
   , RefreshTokenRequest (..)
   , AddConversationRequest (..)
-  , AddMessageRequest (..)
+  , AddUserMessageRequest (..)
+  , LLMRespStream (..)
+  , LLMRespStreamBody (..)
   ) where
 
 import Data.Aeson
@@ -52,8 +54,18 @@ data AddConversationRequest = AddConversationRequest {
     conversationTitle :: Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-data AddMessageRequest = AddMessageRequest {
+data AddUserMessageRequest = AddUserMessageRequest {
     messageContent :: Text
-  , messageRole :: MessageRole
-  , messageModelUsed :: Text
+} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+
+data LLMRespStream = LLMRespStream {
+    respContent :: Text
+  , promptToken :: Maybe Int
+  , inputToken :: Maybe Int
+} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+
+data LLMRespStreamBody = LLMRespStreamBody {
+    modelUsed :: Text,
+    provider :: Text,
+    apiKey :: Maybe Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)

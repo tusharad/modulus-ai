@@ -28,16 +28,19 @@ dependencies:
   - http-types
   - hyperbole
   - jose
+  - langchain-hs
   - lens
   - mtl
   - network-uri
   - orville-postgresql
+  - ollama-haskell
   - password
   - random
   - req
-  - servant-server
+  - servant
   - servant-client
   - servant-client-core
+  - servant-server
   - string-interpolate
   - text
   - time

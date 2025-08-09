@@ -28,8 +28,13 @@ type ConversationsAPI =
     :<|> WithJWTAuth :> Post '[JSON] [ConversationRead]
     :<|> WithJWTAuth 
         :> Capture "conversationID" ConversationPublicID 
-            :> ReqBody '[JSON] AddMessageRequest
+            :> ReqBody '[JSON] AddUserMessageRequest
                 :> Post '[JSON] ()
     :<|> WithJWTAuth 
         :> Capture "conversationID" ConversationPublicID 
                 :> Get '[JSON] [ChatMessageRead]
+    :<|> WithJWTAuth 
+          :> Capture "conversationID" ConversationPublicID 
+            :> "stream" 
+              :> ReqBody '[JSON] LLMRespStreamBody
+                :> StreamPost NewlineFraming JSON (SourceIO LLMRespStream)

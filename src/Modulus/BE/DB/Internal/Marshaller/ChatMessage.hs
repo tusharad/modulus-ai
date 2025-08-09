@@ -11,7 +11,7 @@ module Modulus.BE.DB.Internal.Marshaller.ChatMessage
   , chatMessageConversationIDField
   , chatMessageRoleField
   , chatMessageContentField
-  , chatMessageModelUsedField
+  , chatMessageModelField
   , chatMessageCreatedAtField
   , chatMessageMarshaller
   ) where
@@ -23,6 +23,7 @@ import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils
 import Orville.PostgreSQL
 import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
+import Control.Lens.Internal.CTypes (Int32)
 
 -- Chat Message Fields
 chatMessageIDField :: FieldDefinition NotNull ChatMessageID
@@ -44,8 +45,18 @@ chatMessageRoleField = messageRoleField
 chatMessageContentField :: FieldDefinition NotNull Text
 chatMessageContentField = unboundedTextField "content"
 
-chatMessageModelUsedField :: FieldDefinition Nullable (Maybe Text)
-chatMessageModelUsedField = nullableField $ unboundedTextField "model_used"
+chatMessageModelField :: FieldDefinition Nullable (Maybe Text)
+chatMessageModelField = nullableField $ unboundedTextField "model"
+
+chatMessageProviderField :: FieldDefinition Nullable (Maybe Text)
+chatMessageProviderField = nullableField $ unboundedTextField "provider"
+
+chatMessagePromptTokensField :: FieldDefinition Nullable (Maybe Int32)
+chatMessagePromptTokensField = nullableField $ integerField "prompt_tokens"
+
+chatMessageCompletionTokensField :: FieldDefinition Nullable (Maybe Int32)
+chatMessageCompletionTokensField = nullableField 
+    $ integerField "completion_tokens"
 
 chatMessageCreatedAtField :: FieldDefinition NotNull UTCTime
 chatMessageCreatedAtField = userCreatedAtField
@@ -89,10 +100,20 @@ chatMessageMarshaller =
       (\ChatMessage {..} -> chatMessageConversationID)
       chatMessageConversationIDField
     <*> marshallField (\ChatMessage {..} -> chatMessageRole) chatMessageRoleField
-    <*> marshallField (\ChatMessage {..} -> chatMessageContent) chatMessageContentField
+    <*> marshallField 
+        (\ChatMessage {..} -> chatMessageContent) chatMessageContentField
     <*> marshallField
-      (\ChatMessage {..} -> chatMessageModelUsed)
-      chatMessageModelUsedField
+      (\ChatMessage {..} -> chatMessageModel)
+      chatMessageModelField
+    <*> marshallField
+      (\ChatMessage {..} -> chatMessageProvider)
+      chatMessageProviderField
+    <*> marshallField
+      (\ChatMessage {..} -> chatMessagePromptTokens)
+      chatMessagePromptTokensField
+    <*> marshallField
+      (\ChatMessage {..} -> chatMessageCompletionTokens)
+      chatMessageCompletionTokensField
     <*> marshallReadOnly
       ( marshallField
           (\ChatMessage {..} -> chatMessageCreatedAt)
