@@ -18,9 +18,14 @@ module Modulus.BE.Client.V1
     registerHandler
   , loginHandler
   , verifyOTPHandler
+  , meHandler
+  , authenticateToken
+  , getConversationsHandler
   ) where
 
-import Modulus.BE.Handler (loginHandler, registerHandler, verifyOTPHandler)
+import Modulus.BE.Handler 
+import Modulus.BE.Auth.JwtAuthCombinator (authenticateToken)
+import Modulus.BE.Handler.Conversations
 
 {-
 import Data.Text (Text)

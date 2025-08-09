@@ -7,13 +7,14 @@ module Modulus.FE.Common.Types
 
 import GHC.Generics
 import Web.Hyperbole
+import Data.Text (Text)
 
 data AppRoute
   = Main
   | Register
   | Verify
   | Login
-  | Chat (Maybe Int)
+  | Chat (Maybe Text)
   deriving (Eq, Generic, Show)
 
 instance Route AppRoute where

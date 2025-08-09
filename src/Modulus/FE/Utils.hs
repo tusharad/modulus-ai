@@ -6,6 +6,8 @@ module Modulus.FE.Utils
   , notFoundUrl
   , loginUrl
   , verifyUrl 
+  , chatUrl 
+  , chatUrlNew 
   ) where
 
 import Data.Text (Text)
@@ -16,6 +18,8 @@ import Web.Hyperbole.HyperView.Forms
 import qualified Data.Text as T
 import Network.URI (parseRelativeReference, nullURI)
 import Data.Maybe (fromMaybe)
+import Modulus.BE.DB.Internal.Model (ConversationPublicID (ConversationPublicID))
+import qualified Data.UUID as UUID
 
 homeUrl :: URI
 homeUrl = [relativeReference|/|]
@@ -31,8 +35,18 @@ verifyUrl user_email =
   let str = "/verify?user_email=" <> user_email
    in fromMaybe nullURI $ parseRelativeReference (T.unpack str)
 
+chatUrlNew :: URI
+chatUrlNew = [relativeReference|/chat|]
+
+chatUrl :: ConversationPublicID -> URI
+chatUrl (ConversationPublicID cpID) =
+  let str = "/chat/" <> UUID.toText cpID
+   in fromMaybe nullURI $ parseRelativeReference (T.unpack str)
+
+
 -- form but without col css
-myForm :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
+myForm :: (ViewAction (Action id)) => 
+    Action id -> View (FormFields id) () -> View id ()
 myForm a cnt = do
   vid <- context
   tag "form" @ onSubmit a $ do

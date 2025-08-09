@@ -2,6 +2,7 @@
 `Modulus.Common` module stores types and function that shall be used by both FE and BE module.
  It is not necessary that every function and type that is used by both must be present here.
 -}
+{-# LANGUAGE GADTs #-}
 module Modulus.Common.Types
   ( AppConfig (..)
   , LogLevel (..)
@@ -9,6 +10,8 @@ module Modulus.Common.Types
   , MinLogLevel
   , LogEntry (..)
   , AuthTokens (..)
+  , StateStoreData (..)
+  , Provider (..)
   ) where
 
 import Data.Aeson hiding (Error)
@@ -97,3 +100,20 @@ data AuthTokens = AuthTokens
 instance Session AuthTokens where
   sessionKey = "authTokens"
   cookiePath = Just (Path True [])
+
+instance Default AuthTokens where
+  def = AuthTokens mempty mempty
+data StateStoreData = StateStoreData {
+    ollamaList :: [Text]
+  , openrouterList :: [Text]
+} deriving (Show, Eq)
+
+data Provider where
+  OllamaProvider :: Text -> Provider
+  OpenRouterProvider :: Text -> Text  -> Provider
+
+deriving instance Show Provider
+deriving instance Eq Provider
+deriving instance Generic Provider
+deriving instance ToJSON Provider
+deriving instance FromJSON Provider

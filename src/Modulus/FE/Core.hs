@@ -6,16 +6,15 @@
 module Modulus.FE.Core (app) where
 
 import qualified Data.ByteString.Lazy as BL
-import Data.Maybe (fromMaybe)
 import Data.String.Interpolate (i)
 import Effectful
-import Modulus.Common.Types (AppConfig)
+import Modulus.Common.Types
 import Modulus.FE.Common.Types
 import Modulus.FE.Effects.AppConfig
 import Modulus.FE.Effects.StateStore
 import qualified Modulus.FE.Page.Chat as Chat
-import qualified Modulus.FE.Page.Register as Register
 import qualified Modulus.FE.Page.Login as Login
+import qualified Modulus.FE.Page.Register as Register
 import qualified Modulus.FE.Page.Verify as Verify
 import Web.Hyperbole
 
@@ -40,7 +39,7 @@ toDocument cnt =
     </html>|]
 
 router ::
-  (Hyperbole :> es, IOE :> es, AppConfigEff :> es) =>
+  (Hyperbole :> es, IOE :> es, AppConfigEff :> es, StateStoreEff :> es) =>
   AppRoute -> Eff es Response
 router r = do
   case r of
@@ -48,10 +47,10 @@ router r = do
     Register -> runPage Register.page
     Login -> runPage Login.page
     Verify -> runPage Verify.page
-    Chat mbChatId -> runPage $ Chat.page (fromMaybe 0 mbChatId)
+    Chat mbChatId -> runPage $ Chat.page mbChatId
 
-app :: StateStoreMap -> AppConfig -> Application
-app stateMap appCfg =
+app :: StateStoreMap -> StateStoreData -> AppConfig -> Application
+app stateMap stData appCfg =
   liveApp
     toDocument
     (runM . routeRequest $ router)
@@ -59,4 +58,4 @@ app stateMap appCfg =
     runM ::
       (IOE :> es, Hyperbole :> es) =>
       Eff (StateStoreEff : AppConfigEff : es) a -> Eff es a
-    runM = runAppConfigIO appCfg . runStateStoreIO stateMap
+    runM = runAppConfigIO appCfg . runStateStoreIO stateMap stData

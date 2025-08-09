@@ -1,6 +1,7 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Modulus.FE.View.LoginFormView
-  ( 
-    LoginFormView (..)
+  ( LoginFormView (..)
   , loginFormView
   ) where
 
@@ -12,12 +13,12 @@ import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Api.Types
 import Modulus.BE.Client.V1
+import Modulus.Common.Utils (runBE)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.Common.Utils (runBE)
 
 data LoginFormView = LoginFormView Int
   deriving (Generic, ViewId)
@@ -40,8 +41,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView LoginFormView es where
     deriving (Generic, ViewAction)
 
   update GoToHome = redirect homeUrl
-
-  update (LoginUser LoginForm{..}) = do
+  update (LoginUser LoginForm {..}) = do
     let reqBody =
           LoginRequest
             { loginEmail = email
@@ -50,10 +50,9 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView LoginFormView es where
     eRes <- runBE $ loginHandler reqBody
     case eRes of
       Left err -> pure $ loginFormView (Just . T.pack $ show err) genFields
-      Right authTokens -> do 
+      Right authTokens -> do
         saveSession authTokens
         pure loginSuccessView
-
   update SubmitForm = do
     f <- formData @(LoginForm Identity)
     let validatedForm = validateForm f
@@ -63,10 +62,10 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView LoginFormView es where
       else pure $ submitLoginFormView f
 
 loginSuccessView :: View LoginFormView ()
-loginSuccessView = 
-  el ~ cls "mb-3" @ onLoad GoToHome 200 $ 
-      tag "label" ~ cls "form-label" $ text "Login successful"
-
+loginSuccessView =
+  el ~ cls "mb-3" @ onLoad GoToHome 200 $
+    tag "label" ~ cls "form-label" $
+      text "Login successful"
 
 isValidPassword :: String -> Bool
 isValidPassword pwd =
@@ -86,8 +85,10 @@ validateForm LoginForm {..} =
         validate
           (isLeft $ EmailValidate.validate $ TE.encodeUtf8 email)
           "Email is invalid"
-    , password = validate 
-        (not $ isValidPassword (T.unpack password)) "Password not valid"
+    , password =
+        validate
+          (not $ isValidPassword (T.unpack password))
+          "Password not valid"
     }
 
 {-
@@ -131,5 +132,3 @@ loginFormView mbErrorMsg r = do
       case x of
         Invalid errMsg -> el ~ cls "invalid-feedback d-block" $ text errMsg
         _ -> none
-
-

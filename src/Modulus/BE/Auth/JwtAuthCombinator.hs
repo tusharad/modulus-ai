@@ -12,6 +12,7 @@
 module Modulus.BE.Auth.JwtAuthCombinator
   ( WithJWTAuth
   , AuthResult (..)
+  , authenticateToken 
   ) where
 
 import Control.Lens (re, (^?), _Just)
@@ -37,7 +38,7 @@ import Servant.Client
 import Servant.Client.Core.Request as ClientCore (Request, addHeader)
 import Servant.Server.Internal
   ( DelayedIO
-  , addAuthCheck, delayedFailFatal
+  , addAuthCheck
   )
 
 data AuthResult
@@ -100,22 +101,25 @@ jwtAuthCheck appCfg = do
   mAuthHeader <- asks (lookup hAuthorization . requestHeaders)
   case mAuthHeader >>= (parseBearerToken . BSL.fromStrict) of
     Nothing -> do
-      void . liftIO . runAppM appCfg $ 
+      void . liftIO . runAppM appCfg $
         logError "Authorization header missing or invalid format"
       pure TokenNotFound
-    Just rawToken -> do
-      let key = fromOctets $ TE.encodeUtf8 (configJwtSecret appCfg)
-      eClaims <- liftIO $ runJOSE $ verifyJWT_ key rawToken
+    Just rawToken -> authenticateToken appCfg rawToken
 
-      case eClaims of
-        Left (_ :: JWTError) -> do
-          void . liftIO . runAppM appCfg $ logError "JWT verification failed"
-          pure InvalidToken
-        Right claims -> do
-            eRes <- liftIO $ runAppM appCfg (handleClaims claims)
-            case eRes of
-              Right authRes -> pure authRes
-              Left _ -> delayedFailFatal err401
+authenticateToken :: MonadIO m => AppConfig -> BSL.ByteString -> m AuthResult
+authenticateToken appCfg rawToken = do
+  let key = fromOctets $ TE.encodeUtf8 (configJwtSecret appCfg)
+  eClaims <- liftIO $ runJOSE $ verifyJWT_ key rawToken
+
+  case eClaims of
+    Left (_ :: JWTError) -> do
+      void . liftIO . runAppM appCfg $ logError "JWT verification failed"
+      pure InvalidToken
+    Right claims -> do
+      eRes <- liftIO $ runAppM appCfg (handleClaims claims)
+      case eRes of
+        Right authRes -> pure authRes
+        Left _ -> pure InvalidToken
   where
     verifyJWT_ key token = do
       jwt <- decodeCompact token
@@ -125,7 +129,9 @@ jwtAuthCheck appCfg = do
     handleClaims claims =
       case extractSubject claims >>= UUID.fromText of
         Nothing -> do
-          logError $ "Could not extract valid UUID from subject: " <> T.pack (show claims)
+          logError $
+            "Could not extract valid UUID from subject: "
+              <> T.pack (show claims)
           pure InvalidToken
         Just uuid -> fetchUser (UserID uuid)
 

@@ -5,6 +5,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -21,6 +22,8 @@ module Modulus.FE.Effects.StateStore
   , getStreamState
   , modifyState
   , getState
+  , getAvailableOllamaModels
+  , getAvailableORModels
   ) where
 
 import Control.Concurrent.MVar
@@ -31,7 +34,14 @@ import Data.UUID (UUID)
 import qualified Data.UUID.V4 as UUID
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Modulus.BE.Api.Types
+import Modulus.BE.DB.Internal.Model (User (..))
+import Modulus.Common.Utils (getUserOrGoToLogin)
+import Modulus.Common.Types
+import Modulus.FE.Effects.AppConfig (AppConfigEff)
+import Modulus.FE.Utils (loginUrl)
 import Web.Hyperbole
+import Web.Hyperbole.Data.URI (Path (..))
 
 data StreamState = InProgress Text | Complete Text
   deriving (Show, Eq)
@@ -40,6 +50,10 @@ data StateStore = StateStore
   { counter :: Int
   , currentPrompt :: Text
   , streamContent :: HM.Map Int StreamState
+  , userInfo :: UserProfile
+  , providerInfo :: Provider
+  , availableOllamaModels :: [Text]
+  , availableORModels :: [Text]
   }
   deriving (Show, Eq)
 
@@ -53,6 +67,7 @@ newtype SessionUUID = SessionUUID UUID
 
 instance Session SessionUUID where
   sessionKey = "session-uuid"
+  cookiePath = Just (Path True [])
 
 data StateStoreEff :: Effect where
   UseState :: StateStoreEff m (MVar StateStore)
@@ -60,43 +75,58 @@ data StateStoreEff :: Effect where
 type instance DispatchOf StateStoreEff = 'Dynamic
 
 runStateStoreIO ::
-  (IOE :> es, Hyperbole :> es) =>
+  (IOE :> es, Hyperbole :> es, AppConfigEff :> es) =>
   StateStoreMap ->
+  StateStoreData ->
   Eff (StateStoreEff : es) a ->
   Eff es a
-runStateStoreIO globalMap =
+runStateStoreIO globalMap stData =
   interpret $ \_ -> \case
-    UseState -> getOrCreateStateStore globalMap
+    UseState -> getOrCreateStateStore globalMap stData
 
 useState :: (StateStoreEff :> es) => Eff es (MVar StateStore)
 useState = send UseState
 
 getOrCreateStateStore ::
-  (IOE :> es, Hyperbole :> es) =>
+  (IOE :> es, Hyperbole :> es, AppConfigEff :> es) =>
   StateStoreMap ->
+  StateStoreData ->
   Eff es (MVar StateStore)
-getOrCreateStateStore storeMap = do
+getOrCreateStateStore storeMap stData = do
   mbSid <- lookupSession @SessionUUID
-  sid <- case mbSid of
-    Nothing -> do
-      newId <- liftIO UUID.nextRandom
-      let s = SessionUUID newId
-      saveSession s
-      pure s
-    Just sid -> pure sid
-  let SessionUUID uuid = sid
-  liftIO $ modifyMVar storeMap $ \hm -> do
-    case HM.lookup uuid hm of
-      Just stStore -> pure (hm, stStore)
-      Nothing -> do
-        x <-
-          newMVar
-            StateStore
-              { counter = 0
-              , currentPrompt = mempty
-              , streamContent = HM.empty
-              }
-        pure (HM.insert uuid x hm, x)
+  mbAuthTokens <- lookupSession @AuthTokens
+  case mbAuthTokens of
+    Nothing -> redirect loginUrl
+    Just authTokens -> do
+      user <- getUserOrGoToLogin authTokens
+      sid <- case mbSid of
+        Nothing -> do
+          newId <- liftIO UUID.nextRandom
+          let s = SessionUUID newId
+          saveSession s
+          pure s
+        Just sid -> pure sid
+      let SessionUUID uuid = sid
+      liftIO $ modifyMVar storeMap $ \hm -> do
+        case HM.lookup uuid hm of
+          Just stStore -> pure (hm, stStore)
+          Nothing -> do
+            x <-
+              newMVar
+                StateStore
+                  { counter = 0
+                  , currentPrompt = mempty
+                  , streamContent = HM.empty
+                  , userInfo =
+                      UserProfile
+                        { userProfileId = userID user
+                        , userProfileEmail = userEmail user
+                        }
+                  , providerInfo = OllamaProvider "qwen3:0.6b"
+                  , availableOllamaModels = ollamaList stData
+                  , availableORModels = openrouterList stData
+                  }
+            pure (HM.insert uuid x hm, x)
 
 modifyState ::
   (StateStoreEff :> es, IOE :> es) =>
@@ -112,3 +142,9 @@ getStreamState ::
   (StateStoreEff :> es, IOE :> es) =>
   Int -> Eff es (Maybe StreamState)
 getStreamState chatId = HM.lookup chatId . streamContent <$> getState
+
+getAvailableOllamaModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
+getAvailableOllamaModels = availableOllamaModels <$> getState
+
+getAvailableORModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
+getAvailableORModels = availableORModels <$> getState

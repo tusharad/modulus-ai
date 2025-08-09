@@ -129,7 +129,7 @@ import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics
 import GHC.Int (Int32, Int64)
-import Servant (FromHttpApiData)
+import Servant (FromHttpApiData, ToHttpApiData)
 
 -- Organization Model
 newtype OrganizationID = OrganizationID UUID
@@ -167,21 +167,12 @@ type UserWrite = User () ()
 data UserRole = UserRoleAdmin | UserRoleMember
   deriving (Show, Eq, Ord, Generic, ToJSON, FromJSON)
 
--- Organization Member Model
-data OrganizationMember a = OrganizationMember
-  { organizationMemberOrganizationID :: OrganizationID
-  , organizationMemberUserID :: UserID
-  , organizationMemberRole :: UserRole
-  , organizationMemberCreatedAt :: a
-  }
-  deriving (Show, Eq, Generic, ToJSON)
-
 -- Conversation Model
 newtype ConversationID = ConversationID Int64
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
 
 newtype ConversationPublicID = ConversationPublicID UUID
-  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON, FromHttpApiData)
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON, FromHttpApiData, ToHttpApiData)
 
 data Conversation a b c = Conversation
   { conversationID :: a
@@ -223,7 +214,7 @@ data ChatMessage a b c = ChatMessage
   , chatMessageCompletionTokens :: Maybe Int32
   , chatMessageCreatedAt :: c
   }
-  deriving (Show, Eq, Generic, ToJSON)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type ChatMessageRead = ChatMessage ChatMessageID ChatMessagePublicID UTCTime
 type ChatMessageWrite = ChatMessage () () ()

@@ -1,11 +1,13 @@
 module Modulus.BE.Handler.Conversations
   ( conversationsServer
+  , getConversationsHandler
   ) where
 
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
 import Control.Monad (void, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
@@ -24,13 +26,15 @@ import Modulus.BE.DB.Internal.Model
   , User (userID)
   , UserRead
   )
-import Modulus.BE.DB.Queries.ChatMessage (addChatMessage, getChatMessagesByConvID)
+import Modulus.BE.DB.Queries.ChatMessage
+  ( addChatMessage
+  , getChatMessagesByConvID
+  )
 import Modulus.BE.DB.Queries.Conversation
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Servant
 import qualified Servant.Types.SourceT as S
-import Data.Maybe (fromMaybe)
 
 conversationsServer :: ServerT ConversationsAPI AppM
 conversationsServer =
@@ -74,7 +78,12 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
               }
       case provider of
         "openrouter" -> do
-          let openRouterLLM = mkOpenRouter modelUsed [] Nothing (fromMaybe "" apiKey)
+          let openRouterLLM =
+                mkOpenRouter
+                  modelUsed
+                  []
+                  Nothing
+                  (fromMaybe "" apiKey)
           void . liftIO . forkIO $
             void $
               Langchain.stream openRouterLLM msgList st Nothing
@@ -104,7 +113,10 @@ getConvRead user convPublicId = do
     Just convRead -> do
       when
         (conversationUserID convRead /= Just (userID user))
-        (throwError $ AuthorizationError "You are not authorized to see this conversation")
+        ( throwError $
+            AuthorizationError
+              "You are not authorized to see this conversation"
+        )
       pure convRead
 
 getConversationMessagesHandler ::
@@ -114,7 +126,9 @@ getConversationMessagesHandler ::
 getConversationMessagesHandler (Authenticated user) convPublicId = do
   convRead <- getConvRead user convPublicId
   getChatMessagesByConvID (conversationID convRead)
-getConversationMessagesHandler _ _ = throwError $ AuthenticationError "Invalid token"
+getConversationMessagesHandler _ _ =
+  throwError $
+    AuthenticationError "Invalid token"
 
 addConversationMessageHandler ::
   AuthResult ->

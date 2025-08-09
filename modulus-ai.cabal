@@ -64,6 +64,7 @@ library
       Modulus.BE.Monad.Error
       Modulus.BE.Monad.Utils
       Modulus.BE.Service.Email.Core
+      Modulus.Common.Openrouter
       Modulus.Common.Types
       Modulus.Common.Utils
       Modulus.FE.Common.Types
@@ -78,7 +79,10 @@ library
       Modulus.FE.Page.Verify
       Modulus.FE.Utils
       Modulus.FE.View.LoginFormView
+      Modulus.FE.View.ModelProviderView
+      Modulus.FE.View.NavbarView
       Modulus.FE.View.RegistrationFormView
+      Modulus.FE.View.SidebarView
       Modulus.FE.View.VerifyOTPFormView
   other-modules:
       Paths_modulus_ai
