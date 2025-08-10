@@ -16,8 +16,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Auth.JwtAuthCombinator
-import Modulus.BE.DB.Internal.Model (UserRead)
-import Modulus.BE.Log (logError)
+import Modulus.BE.DB.Internal.Model (UserRead, User (userID))
+import Modulus.BE.Log (logError, logDebug)
 import Modulus.BE.Monad.AppM (AppM, runAppM)
 import Modulus.BE.Monad.Error (AppError)
 import Modulus.Common.Types (AuthTokens (..))
@@ -62,6 +62,8 @@ runBEAuth action = do
     Nothing -> redirect loginUrl
     Just authTokens -> do
       user <- getUserOrGoToLogin authTokens
+      _ <- liftIO $ runAppM cfg $ 
+        logDebug $ "running request for user: " <> T.pack (show $ userID user)
       liftIO $ runAppM cfg (action (Authenticated user))
 
 listAvailableOllamaModels :: IO [Text]

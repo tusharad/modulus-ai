@@ -31,15 +31,15 @@ navbarView p ollamaList orList =
       el ~ cls "ms-auto d-flex align-items-center gap-3" $ do 
         hyper (ModelProviders 1) (renderProviderListView p ollamaList orList)
         tag "dropdown" $ do 
-          tag "a" ~ cls "d-block link-light text-decoration-none dropdown-toggle" 
+          tag "i" ~ cls "d-block avatar bi bi-person-circle me-2 px-2 py-2" 
                   @ att "data-bs-toggle" "dropdown"
                   . att "aria-expanded" "false" 
-                  . att "href" "#" $ el ~ cls "avatar" $ none
+                  . att "href" "#" $ none
           tag "ul" ~ cls "dropdown-menu dropdown-menu-end text-small" $ do
-            tag "li" $ tag "a" ~ cls "dropdown-item" @ att "href" "#" $ tag "i" ~ cls "bi bi-person-circle me-2" $ "Profile"
-            tag "li" $ tag "a" ~ cls "dropdown-item" @ att "href" "#" $ tag "i" ~ cls "bi bi-gear me-2" $ "Settings"
+            tag "li" $ tag "a" 
+                ~ cls "dropdown-item" 
+                @ att "href" "#" $ tag "i" ~ cls "bi bi-gear me-2" $ "Settings"
             tag "li" $ tag "hr" ~ cls "dropdown-divider" $ none
-            tag "li" $ tag "a" ~ cls "dropdown-item" @ att "href" "#" $ tag "i" ~ cls "bi bi-box-arrow-right me-2" $ "Logout"
-
-
-
+            tag "li" $ tag "a" ~ cls "dropdown-item" 
+                            @ att "href" "#" $ tag "i" 
+                                ~ cls "bi bi-box-arrow-right me-2" $ "Logout"

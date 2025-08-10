@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Modulus.FE.Utils
   ( myForm
@@ -8,6 +9,7 @@ module Modulus.FE.Utils
   , verifyUrl 
   , chatUrl 
   , chatUrlNew 
+  , myHyper
   ) where
 
 import Data.Text (Text)
@@ -20,6 +22,7 @@ import Network.URI (parseRelativeReference, nullURI)
 import Data.Maybe (fromMaybe)
 import Modulus.BE.DB.Internal.Model (ConversationPublicID (ConversationPublicID))
 import qualified Data.UUID as UUID
+import Web.Hyperbole.Data.Encoded (encodedToText)
 
 homeUrl :: URI
 homeUrl = [relativeReference|/|]
@@ -51,3 +54,10 @@ myForm a cnt = do
   vid <- context
   tag "form" @ onSubmit a $ do
     addContext (FormFields vid) cnt
+
+myHyper ::
+  forall id ctx.
+  (ViewId id) => id -> View id () -> View ctx ()
+myHyper vid vw = do
+  tag "div" @ att "id" (encodedToText $ toViewId vid) $
+    addContext vid vw

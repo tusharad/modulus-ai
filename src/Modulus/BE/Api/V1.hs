@@ -23,8 +23,7 @@ type API =
 
 type ConversationsAPI =
   WithJWTAuth
-    :> ReqBody '[JSON] AddConversationRequest
-        :> Get '[JSON] ConversationPublicID
+    :> ReqBody '[JSON] AddConversationRequest :> Post '[JSON] ConversationPublicID
     :<|> WithJWTAuth :> Get '[JSON] [ConversationRead]
     :<|> WithJWTAuth 
         :> Capture "conversationID" ConversationPublicID 

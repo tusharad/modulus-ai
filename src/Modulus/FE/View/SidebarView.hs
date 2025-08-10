@@ -4,17 +4,18 @@ module Modulus.FE.View.SidebarView
   , chatDotsFilled
   ) where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, void)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Effectful (IOE)
 import Modulus.BE.Client.V1
 import Modulus.BE.DB.Internal.Model
-import Modulus.Common.Utils (runBEAuth)
+import Modulus.Common.Utils (runBEAuth, runBE)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.BE.Log (logDebug)
 
 data SidebarView = SidebarView Int
   deriving (Generic, ViewId)
@@ -27,7 +28,9 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView SidebarView es where
     eConversationList <- runBEAuth getConversationsHandler
     case eConversationList of
       Left err -> pure $ errorView (T.pack $ show err)
-      Right conversationLst -> pure $ sidebarView conversationLst
+      Right conversationLst -> do
+        void . runBE $ logDebug $ "fetched list for sidebar : " <> T.pack (show conversationLst)
+        pure $ sidebarView conversationLst
 
 errorView :: Text -> View c ()
 errorView err = tag "aside" $ do
@@ -52,7 +55,7 @@ chatDotsFilled = tag "i" ~ cls "bi bi-chat-dots-fill me-2" $ none
 
 sidebarView :: [ConversationRead] -> View SidebarView ()
 sidebarView convLst = do
-  tag "aside" $ do
+  tag "aside" ~ cls "my-sidebar" $ do
     el ~ cls "sidebar-header d-flex justify-content-between align-items-center" $ do
       tag "h5" ~ cls "mb-0" $ "History"
     el ~ cls "history-list" $ do

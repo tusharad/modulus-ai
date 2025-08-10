@@ -7,10 +7,10 @@ module Modulus.FE.View.ModelProviderView
 import Control.Monad (forM_)
 import Data.Text (Text)
 import Effectful
-import Web.Atomic.CSS
-import Web.Hyperbole
 import Modulus.Common.Types (Provider (OllamaProvider, OpenRouterProvider))
 import Modulus.FE.Effects.StateStore
+import Web.Atomic.CSS
+import Web.Hyperbole
 
 data ModelProviders = ModelProviders Int
   deriving (Generic, ViewId)
@@ -71,26 +71,32 @@ updateOpenRouterApiKey apiKey = do
 
 renderProviderListView :: Provider -> [Text] -> [Text] -> View ModelProviders ()
 renderProviderListView providerInfo ollamaModels orModels = do
-    dropdown SetProvider (== providerInfo) ~ cls "dropdown" $ do
+  dropdown SetProvider (== providerInfo)
+    ~ cls "dropdown"
+    $ do
       showOllamaProviderOption ollamaModels
       showORProviderOption orModels
-    case providerInfo of
-      OllamaProvider modelName -> renderOllamaModelsView modelName ollamaModels
-      OpenRouterProvider modelName _ -> renderOpenRouterModelsView modelName orModels
+  case providerInfo of
+    OllamaProvider modelName -> renderOllamaModelsView modelName ollamaModels
+    OpenRouterProvider modelName _ -> renderOpenRouterModelsView modelName orModels
 
 showORProviderOption ::
   ViewAction (Action id) =>
   [Text] -> View (Option Provider id) ()
 showORProviderOption [] = none
 showORProviderOption (firstModel : _) =
-    option (OpenRouterProvider firstModel "") ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ "OpenRouter"
+  option (OpenRouterProvider firstModel "")
+    ~ cls "btn btn-sm btn-outline-secondary"
+    $ "OpenRouter"
 
 showOllamaProviderOption ::
   ViewAction (Action id) =>
   [Text] -> View (Option Provider id) ()
 showOllamaProviderOption [] = none
-showOllamaProviderOption (firstModel : _) = option (OllamaProvider firstModel) 
-    ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ "Ollama"
+showOllamaProviderOption (firstModel : _) =
+  option (OllamaProvider firstModel)
+    ~ cls "btn btn-sm btn-outline-secondary"
+    $ "Ollama"
 
 renderOllamaModelsView :: Text -> [Text] -> View ModelProviders ()
 renderOllamaModelsView modelName ollamaModels = do
@@ -104,7 +110,7 @@ renderOpenRouterModelsView modelName orModels = do
     forM_ orModels $ \model -> do
       option model ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ text model
   tag "input"
-    ~ cls "form-control"
+    ~ cls "dropdown"
       @ att "type" "password"
       . placeholder "API Key"
       . onInput SetOpenRouterApiKey 1000
