@@ -1,6 +1,10 @@
 module Modulus.BE.Handler.Conversations
   ( conversationsServer
   , getConversationsHandler
+  , getConversationMessagesHandler
+  , addConversationHandler
+  , addConversationMessageHandler
+  , getLLMRespStreamHandler
   ) where
 
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
@@ -133,24 +137,33 @@ getConversationMessagesHandler _ _ =
 addConversationMessageHandler ::
   AuthResult ->
   ConversationPublicID ->
-  AddUserMessageRequest ->
+  AddMessageRequest ->
   AppM ()
-addConversationMessageHandler (Authenticated user) convPublicId AddUserMessageRequest {..} = do
-  convRead <- getConvRead user convPublicId
-  let chatMsgWrite =
-        ChatMessage
-          { chatMessageID = ()
-          , chatMessagePublicID = ()
-          , chatMessageConversationID = conversationID convRead
-          , chatMessageRole = MessageRoleUser
-          , chatMessageContent = messageContent
-          , chatMessageModel = Nothing
-          , chatMessageProvider = Nothing
-          , chatMessagePromptTokens = Nothing
-          , chatMessageCompletionTokens = Nothing
-          , chatMessageCreatedAt = ()
-          }
-  void $ addChatMessage chatMsgWrite
+addConversationMessageHandler
+  (Authenticated user)
+  convPublicId
+  AddMessageRequest {..} = do
+    convRead <- getConvRead user convPublicId
+    let role = case addMessageRole of
+          "user" -> MessageRoleUser
+          "assistant" -> MessageRoleAssistant
+          "system" -> MessageRoleSystem
+          "tool" -> MessageRoleTool
+          _ -> MessageRoleUser
+    let chatMsgWrite =
+          ChatMessage
+            { chatMessageID = ()
+            , chatMessagePublicID = ()
+            , chatMessageConversationID = conversationID convRead
+            , chatMessageRole = role
+            , chatMessageContent = messageContent
+            , chatMessageModel = addMessageModel
+            , chatMessageProvider = addMessageProvider
+            , chatMessagePromptTokens = Nothing
+            , chatMessageCompletionTokens = Nothing
+            , chatMessageCreatedAt = ()
+            }
+    void $ addChatMessage chatMsgWrite
 addConversationMessageHandler _ _ _ = throwError $ AuthenticationError "Invalid token"
 
 addConversationHandler :: AuthResult -> AddConversationRequest -> AppM ConversationPublicID

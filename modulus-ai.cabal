@@ -78,6 +78,8 @@ library
       Modulus.FE.Page.Register
       Modulus.FE.Page.Verify
       Modulus.FE.Utils
+      Modulus.FE.View.ChatInputView
+      Modulus.FE.View.ChatView
       Modulus.FE.View.LoginFormView
       Modulus.FE.View.ModelProviderView
       Modulus.FE.View.NavbarView

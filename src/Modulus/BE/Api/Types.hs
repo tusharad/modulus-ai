@@ -10,7 +10,7 @@ module Modulus.BE.Api.Types
   , OTPVerifyRequest (..)
   , RefreshTokenRequest (..)
   , AddConversationRequest (..)
-  , AddUserMessageRequest (..)
+  , AddMessageRequest (..)
   , LLMRespStream (..)
   , LLMRespStreamBody (..)
   ) where
@@ -54,8 +54,11 @@ data AddConversationRequest = AddConversationRequest {
     conversationTitle :: Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-data AddUserMessageRequest = AddUserMessageRequest {
+data AddMessageRequest = AddMessageRequest {
     messageContent :: Text
+  , addMessageRole :: Text
+  , addMessageProvider :: Maybe Text
+  , addMessageModel :: Maybe Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
 data LLMRespStream = LLMRespStream {

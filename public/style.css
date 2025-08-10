@@ -1,3 +1,84 @@
+/* Use Poppins font for the entire page */
+        /* The main registration form container with a "frosted glass" effect */
+        .registration-container {
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+            border-radius: 1rem; /* Rounded corners */
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px); /* The "frost" effect */
+            -webkit-backdrop-filter: blur(10px); /* For Safari */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 100%;
+        }
+
+        /* Styling for the form heading */
+        .registration-container h2 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        /* Custom styling for form inputs */
+        .form-control {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-weight: 300;
+        }
+
+        /* Remove the default white background on autofill */
+        .form-control:-webkit-autofill,
+        .form-control:-webkit-autofill:hover, 
+        .form-control:-webkit-autofill:focus, 
+        .form-control:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #2c2c54 inset !important; /* A color that matches the theme */
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
+        /* Placeholder text color */
+        .form-control::placeholder {
+            color: #bdbdbd;
+        }
+
+        /* Styling for input focus state */
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border-color: #8e44ad; /* A vibrant purple for focus */
+            box-shadow: 0 0 0 0.25rem rgba(142, 68, 173, 0.25);
+        }
+
+        /* The primary action button with a vibrant gradient */
+        .btn-register {
+            background-image: linear-gradient(to right, #8e44ad 0%, #c0392b 51%, #8e44ad 100%);
+            background-size: 200% auto;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: 0.5s;
+        }
+
+        /* Hover effect for the button */
+        .btn-register:hover {
+            background-position: right center; /* change the direction of the change here */
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        /* Styling for helper text and links */
+        .form-text a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .form-text a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
 
         /* Define color scheme and theme variables */
         :root {
@@ -16,7 +97,9 @@
             font-family: 'Poppins', sans-serif;
             background: var(--bg-gradient);
             color: var(--text-primary);
-            overflow: hidden; /* Prevent body scroll */
+                        justify-content: center;
+
+          overflow: hidden; /* Prevent body scroll */
         }
 
         /* Main layout structure */
@@ -291,6 +374,11 @@ div[id^="ModelProviders"] {
 }
 
 div[id^="SidebarView"] {
+    display: block !important;
+    flex: none !important;
+}
+
+div[id^="ChatView"] {
     display: block !important;
     flex: none !important;
 }

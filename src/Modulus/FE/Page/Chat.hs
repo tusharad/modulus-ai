@@ -10,6 +10,9 @@ import Modulus.FE.View.NavbarView
 import Modulus.FE.View.SidebarView
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.FE.View.ChatView (loadChatView, ChatView (ChatView), GenerateReplyView)
+import Modulus.FE.View.ChatInputView (ChatInputView (ChatInputView), chatInputView)
+import Data.Maybe (fromMaybe)
 
 --- Page
 page ::
@@ -21,11 +24,15 @@ page ::
         '[ SidebarView
          , NavbarView
          , ModelProviders
+         , ChatView
+         , ChatInputView
+         , GenerateReplyView
          ]
     )
-page _ = do
+page mbPublicConvId = do
   mbAuthTokens <- lookupSession @AuthTokens
   st <- getState
+  let publicConvID = fromMaybe "1" mbPublicConvId -- if convID is 1, means it's a new chat
   case mbAuthTokens of
     Nothing -> redirect loginUrl
     Just _ -> do
@@ -36,38 +43,12 @@ page _ = do
           el ~ cls "sidebar-overlay" $ none
           tag "main" ~ cls "main-content" $ do
             hyper
-              (NavbarView 1)
+              (NavbarView publicConvID)
               ( navbarView
                   (providerInfo st)
                   (availableOllamaModels st)
                   (availableORModels st)
               )
-            el ~ cls "chat-window" $ do
-              el ~ cls "message ai-message" $ do
-                text "ello! How can I help you today? I see you're interested in Rust and"
-                el ~ cls "message-meta" $ "AI Assistant &middot; 4:47 PM"
-              el ~ cls "message user-message" $ do
-                text "Can you give me a basic example of using wasmtime in Rust to run a simple WAT functi"
-                el ~ cls "message-meta" $ "AI Assistant &middot; 4:48 PM"
+            myHyper (ChatView publicConvID) (loadChatView mbPublicConvId)
             el ~ cls "input-area" $ do
-              tag "form" $ do
-                el ~ cls "input-wrapper" $ do
-                  tag "textarea"
-                    ~ cls "form-control userInput"
-                      @ att "placeholder" "Ask me anything..."
-                      . att "rows" "1"
-                    $ none
-                  tag "button" 
-                    ~ cls "btn btn-primary rounded-circle p-2 sendButton" $ 
-                        tag "i" ~ cls "bi bi-arrow-up" $ none
-              el ~ cls "tool-options" $ do
-                tag "button" ~ cls "btn tool-btn" $ tag "i" ~ cls "bi bi-paperclip" $ none
-                tag "button" ~ cls "btn tool-btn" $ do
-                  tag "i" ~ cls "bi bi-search me-1" $ none
-                  text "Web search"
-                tag "button" ~ cls "btn tool-btn active" $ do
-                  tag "i" ~ cls "bi bi-lightbulb me-1" $ none
-                  text "Thinking"
-                tag "button" ~ cls "btn tool-btn" $ do
-                  tag "i" ~ cls "bi bi-wikipedia me-1" $ none
-                  text "Wikipedia"
+              myHyper (ChatInputView publicConvID) chatInputView

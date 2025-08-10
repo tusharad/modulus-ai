@@ -10,7 +10,7 @@ import Web.Hyperbole
 import Modulus.Common.Types (Provider)
 import Modulus.FE.View.ModelProviderView
 
-data NavbarView = NavbarView Int
+data NavbarView = NavbarView Text
   deriving (Generic, ViewId)
 
 instance HyperView NavbarView es where
@@ -21,10 +21,10 @@ instance HyperView NavbarView es where
 
   update LoadNavbarView = undefined
 
+--TODO: add collapse sidebar
 navbarView :: Provider -> [Text] -> [Text] -> View NavbarView ()
 navbarView p ollamaList orList = 
    el ~ cls "top-navbar navbar navbar-expand navbar-dark" $ do 
-      -- <button class="btn btn-outline-light me-3 d-md-none" id="mobileSidebarToggle"><i class="bi bi-list"></i></button>
       link homeUrl ~ cls "navbar-brand d-none d-md-block" $ do 
           tag "i" ~ cls "bi bi-robot" $ none 
           text "Modulus AI"

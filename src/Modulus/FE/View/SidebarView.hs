@@ -2,6 +2,7 @@ module Modulus.FE.View.SidebarView
   ( SidebarView (..)
   , loadSidebarView
   , chatDotsFilled
+  , Action (..)
   ) where
 
 import Control.Monad (forM_, void)

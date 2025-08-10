@@ -7,7 +7,6 @@ module Modulus.FE.View.ModelProviderView
 import Control.Monad (forM_)
 import Data.Text (Text)
 import Effectful
-import Modulus.Common.Types (Provider (OllamaProvider, OpenRouterProvider))
 import Modulus.FE.Effects.StateStore
 import Web.Atomic.CSS
 import Web.Hyperbole

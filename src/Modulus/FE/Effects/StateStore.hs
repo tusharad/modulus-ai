@@ -24,6 +24,8 @@ module Modulus.FE.Effects.StateStore
   , getState
   , getAvailableOllamaModels
   , getAvailableORModels
+  , getProviderInfo
+  , Provider (..)
   ) where
 
 import Control.Concurrent.MVar
@@ -49,7 +51,7 @@ data StreamState = InProgress Text | Complete Text
 data StateStore = StateStore
   { counter :: Int
   , currentPrompt :: Text
-  , streamContent :: HM.Map Int StreamState
+  , streamContent :: HM.Map Text StreamState
   , userInfo :: UserProfile
   , providerInfo :: Provider
   , availableOllamaModels :: [Text]
@@ -140,7 +142,7 @@ getState = liftIO . readMVar =<< useState
 
 getStreamState ::
   (StateStoreEff :> es, IOE :> es) =>
-  Int -> Eff es (Maybe StreamState)
+  Text -> Eff es (Maybe StreamState)
 getStreamState chatId = HM.lookup chatId . streamContent <$> getState
 
 getAvailableOllamaModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
@@ -148,3 +150,6 @@ getAvailableOllamaModels = availableOllamaModels <$> getState
 
 getAvailableORModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]
 getAvailableORModels = availableORModels <$> getState
+
+getProviderInfo :: (StateStoreEff :> es, IOE :> es) => Eff es Provider
+getProviderInfo = providerInfo <$> getState
