@@ -381,4 +381,6 @@ div[id^="SidebarView"] {
 div[id^="ChatView"] {
     display: block !important;
     flex: none !important;
+    overflow: scroll;
+    height: 80vh;
 }
