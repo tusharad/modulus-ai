@@ -24,9 +24,6 @@ import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
 import Web.Hyperbole 
 import Web.Hyperbole.Data.URI (Path(..))
-import Langchain.Retriever.Core (VectorStoreRetriever)
-import Langchain.VectorStore.InMemory 
-import Langchain.Embeddings.Ollama 
 
 -- | Application configuration
 data AppConfig = AppConfig
@@ -42,8 +39,6 @@ data AppConfig = AppConfig
   , configMinLogLevel :: MinLogLevel
   , configOrvilleState :: O.OrvilleState
   , configMailGunApiKey :: Text
-  , configHEBRet :: VectorStoreRetriever (InMemory OllamaEmbeddings)
-  , configUnderRet :: VectorStoreRetriever (InMemory OllamaEmbeddings)
   }
   deriving (Generic)
 

@@ -62,7 +62,8 @@ updateOpenRouterApiKey ::
 updateOpenRouterApiKey apiKey = do
   st <- getState
   let newP = case providerInfo st of
-        OllamaProvider _ -> OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
+        OllamaProvider _ -> 
+            OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
         OpenRouterProvider model _ -> OpenRouterProvider model apiKey
   modifyState $ \s -> s {providerInfo = newP}
   ollamaModels <- getAvailableOllamaModels

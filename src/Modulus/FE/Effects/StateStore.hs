@@ -26,12 +26,13 @@ module Modulus.FE.Effects.StateStore
   , getAvailableORModels
   , getProviderInfo
   , Provider (..)
-  , VecStore (..)
   ) where
 
+import Control.Applicative ((<|>))
 import Control.Concurrent.MVar
 import Data.Aeson
 import qualified Data.Map.Strict as HM
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Text (Text)
 import Data.UUID (UUID)
 import qualified Data.UUID.V4 as UUID
@@ -39,8 +40,8 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Modulus.BE.Api.Types
 import Modulus.BE.DB.Internal.Model (User (..))
-import Modulus.Common.Utils (getUserOrGoToLogin)
 import Modulus.Common.Types
+import Modulus.Common.Utils (getUserOrGoToLogin)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils (loginUrl)
 import Web.Hyperbole
@@ -57,12 +58,8 @@ data StateStore = StateStore
   , providerInfo :: Provider
   , availableOllamaModels :: [Text]
   , availableORModels :: [Text]
-  , currVectorStore :: Maybe VecStore
   }
   deriving (Show, Eq)
-
-data VecStore = HEB | Underarmor
-  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type StateStoreMap = MVar (HM.Map UUID (MVar StateStore))
 
@@ -102,6 +99,10 @@ getOrCreateStateStore ::
 getOrCreateStateStore storeMap stData = do
   mbSid <- lookupSession @SessionUUID
   mbAuthTokens <- lookupSession @AuthTokens
+  let defaultProvider =
+        fromMaybe (OllamaProvider "No model or provider available") $
+          (OllamaProvider <$> listToMaybe (ollamaList stData))
+            <|> (flip OpenRouterProvider "" <$> listToMaybe (openrouterList stData))
   case mbAuthTokens of
     Nothing -> redirect loginUrl
     Just authTokens -> do
@@ -129,10 +130,9 @@ getOrCreateStateStore storeMap stData = do
                         { userProfileId = userID user
                         , userProfileEmail = userEmail user
                         }
-                  , providerInfo = OllamaProvider "qwen3:0.6b"
+                  , providerInfo = defaultProvider
                   , availableOllamaModels = ollamaList stData
                   , availableORModels = openrouterList stData
-                  , currVectorStore = Nothing
                   }
             pure (HM.insert uuid x hm, x)
 

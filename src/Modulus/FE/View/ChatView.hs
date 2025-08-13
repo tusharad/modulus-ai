@@ -59,7 +59,8 @@ instance
           runBEAuth (`getConversationMessagesHandler` ConversationPublicID convUUID)
         case eMsgList of
           Left err -> do
-            _ <- runBE $ logDebug $ "Error while fetching messages: " <> T.pack (show err)
+            _ <- runBE . logDebug $ 
+                "Error while fetching messages: " <> T.pack (show err)
             pure $ errorView (T.pack (show err))
           Right msgList -> pure $ chatView msgList
 
@@ -264,7 +265,6 @@ generateReply ::
   Eff es (View GenerateReplyView ())
 generateReply convID = do
   provider <- getProviderInfo
-  st <- getState
   let (model, p, mbApiKey) = case provider of
         OllamaProvider m -> (m, "ollama", Nothing)
         OpenRouterProvider m api -> (m, "openrouter", Just api)
@@ -273,7 +273,6 @@ generateReply convID = do
           { modelUsed = model
           , provider = p
           , apiKey = mbApiKey
-          , selectTool = T.pack . show <$> currVectorStore st
           }
   void . runBE $ logDebug $ "In generateReply function: " <> model <> p
   startGeneration convID reqBody

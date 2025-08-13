@@ -18,8 +18,8 @@ module Modulus.BE.Api.Types
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
-import Modulus.Common.Types (AuthTokens (..))
 import Modulus.BE.DB.Internal.Model
+import Modulus.Common.Types (AuthTokens (..))
 
 data RegisterRequest = RegisterRequest
   { registerEmail :: Text
@@ -42,7 +42,8 @@ data OTPVerifyRequest = OTPVerifyRequest
 
 data RefreshTokenRequest = RefreshTokenRequest
   { refreshToken :: Text
-  } deriving (Generic, FromJSON, ToJSON)
+  }
+  deriving (Generic, FromJSON, ToJSON)
 
 data UserProfile = UserProfile
   { userProfileId :: UserID
@@ -50,26 +51,29 @@ data UserProfile = UserProfile
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
-data AddConversationRequest = AddConversationRequest {
-    conversationTitle :: Text
-} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+data AddConversationRequest = AddConversationRequest
+  { conversationTitle :: Text
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-data AddMessageRequest = AddMessageRequest {
-    messageContent :: Text
+data AddMessageRequest = AddMessageRequest
+  { messageContent :: Text
   , addMessageRole :: Text
   , addMessageProvider :: Maybe Text
   , addMessageModel :: Maybe Text
-} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-data LLMRespStream = LLMRespStream {
-    respContent :: Text
+data LLMRespStream = LLMRespStream
+  { respContent :: Text
   , promptToken :: Maybe Int
   , inputToken :: Maybe Int
-} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-data LLMRespStreamBody = LLMRespStreamBody {
-    modelUsed :: Text,
-    provider :: Text,
-    apiKey :: Maybe Text,
-    selectTool :: Maybe Text
-} deriving (Eq, Show, Generic, FromJSON, ToJSON)
+data LLMRespStreamBody = LLMRespStreamBody
+  { modelUsed :: Text
+  , provider :: Text
+  , apiKey :: Maybe Text
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)

@@ -1,19 +1,10 @@
 module Modulus.FE.View.NavbarView
   ( navbarView
   , NavbarView (..)
-  , ToolSelectionView (..)
   ) where
 
 import Data.Text (Text)
-import Effectful (IOE)
 import Modulus.Common.Types (Provider)
-import Modulus.FE.Effects.StateStore
-  ( StateStore (currVectorStore)
-  , StateStoreEff
-  , VecStore (HEB, Underarmor)
-  , getState
-  , modifyState
-  )
 import Modulus.FE.Utils
 import Modulus.FE.View.ModelProviderView
 import Web.Atomic.CSS
@@ -26,19 +17,18 @@ instance HyperView NavbarView es where
   data Action NavbarView = LoadNavbarView
     deriving (Generic, ViewAction)
 
-  type Require NavbarView = '[ModelProviders, ToolSelectionView]
+  type Require NavbarView = '[ModelProviders]
 
   update LoadNavbarView = undefined
 
 -- TODO: add collapse sidebar
-navbarView :: Provider -> [Text] -> [Text] -> Maybe VecStore -> View NavbarView ()
-navbarView p ollamaList orList mbVecStore =
+navbarView :: Provider -> [Text] -> [Text] -> View NavbarView ()
+navbarView p ollamaList orList =
   el ~ cls "top-navbar navbar navbar-expand navbar-dark" $ do
     link homeUrl ~ cls "navbar-brand d-none d-md-block" $ do
       tag "i" ~ cls "bi bi-robot" $ none
       text "Modulus AI"
     el ~ cls "ms-auto d-flex align-items-center gap-3" $ do
-      hyper (ToolSelectionView 1) (setToolView mbVecStore)
       hyper (ModelProviders 1) (renderProviderListView p ollamaList orList)
       tag "dropdown" $ do
         tag "i"
@@ -62,47 +52,3 @@ navbarView p ollamaList orList mbVecStore =
             $ tag "i"
               ~ cls "bi bi-box-arrow-right me-2"
             $ "Logout"
-
-data ToolSelectionView = ToolSelectionView Int
-  deriving (Generic, ViewId)
-
-instance
-  ( IOE :> es
-  , StateStoreEff :> es
-  ) =>
-  HyperView ToolSelectionView es
-  where
-  data Action ToolSelectionView = SetTool VecStore
-    deriving (Generic, ViewAction)
-
-  update (SetTool vecStore) = do
-    st <- getState
-    res <-
-      if currVectorStore st == Just vecStore
-        then do
-          modifyState (\s -> s {currVectorStore = Nothing})
-          pure Nothing
-        else do
-          modifyState (\s -> s {currVectorStore = Just vecStore})
-          pure $ Just vecStore
-    pure $ setToolView res
-
-setToolView :: Maybe VecStore -> View ToolSelectionView ()
-setToolView mbStore = do
-  el ~ cls "tool-options" $ do
-    button (SetTool HEB)
-      ~ cls
-        ( "btn tool-btn "
-            <> (if mbStore == Just HEB then "active" else mempty)
-        )
-      $ do
-        tag "i" ~ cls "bi bi-shop me-1" $ none
-        text "HEB"
-    button (SetTool Underarmor)
-      ~ cls
-        ( "btn tool-btn "
-            <> (if mbStore == Just Underarmor then "active" else mempty)
-        )
-      $ do
-        tag "i" ~ cls "bi bi-dribbble me-1" $ none
-        text "Under Armour"

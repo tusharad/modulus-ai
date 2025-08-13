@@ -19,7 +19,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Modulus.BE.DB.Internal.Config (mkConnectionPoolFromEnv)
-import Modulus.BE.LLM (getRetriver)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error (AppError)
 import Modulus.Common.Types (AppConfig (..), LogLevel (Debug))
@@ -48,45 +47,38 @@ mkAppConfigFromEnv = do
   apiTimeout <- readEnvWithDefault "MODULUS_API_TIMEOUT" 30
   loggerSet <- newStdoutLoggerSet defaultBufSize
   eConnectionPool <- mkConnectionPoolFromEnv
-  eret1 <- getRetriver "/home/user/Downloads/Under.pdf"
-  eret2 <- getRetriver "/home/user/Downloads/abc_company.pdf"
-  case (eret1, eret2) of
-    (Right ret1, Right ret2) -> do
-      case eConnectionPool of
-        Left err -> pure $ Left (T.pack $ show err)
-        Right connPool -> do
-          case (ePort, eJwtSecret, eMailgunApi) of
-            (Just portStr, Just jwtSecret, Just mailGunApi) -> do
-              case reads portStr of
-                [(port, "")] -> do
-                  manager <- HTTP.newTlsManager
-                  let orvilleState = 
-                        O.newOrvilleState O.defaultErrorDetailLevel connPool
-                  pure $
-                    Right
-                      AppConfig
-                        { configHttpManager = manager
-                        , configPort = port
-                        , configLogLevel = maybe "INFO" T.pack eLogLevel
-                        , configEnvironment = maybe "development" T.pack eEnvironment
-                        , configRedisUrl = T.pack <$> eRedisUrl
-                        , configJwtSecret = T.pack jwtSecret
-                        , configExternalApiTimeout = apiTimeout
-                        , configLoggerSet = loggerSet
-                        , configMinLogLevel = Debug
-                        , configOrvilleState = orvilleState
-                        , configMailGunApiKey = T.pack mailGunApi
-                        , configHEBRet = ret2
-                        , configUnderRet = ret1
-                        }
-                _ -> pure $ Left "Invalid PORT environment variable"
-            _ ->
+  case eConnectionPool of
+    Left err -> pure $ Left (T.pack $ show err)
+    Right connPool -> do
+      case (ePort, eJwtSecret, eMailgunApi) of
+        (Just portStr, Just jwtSecret, Just mailGunApi) -> do
+          case reads portStr of
+            [(port, "")] -> do
+              manager <- HTTP.newTlsManager
+              let orvilleState =
+                    O.newOrvilleState O.defaultErrorDetailLevel connPool
               pure $
-                Left
-                  """
-                  Missing required environment variables: PORT, JWT_SECRET
-                  """
-    _ -> pure $ Left "vector store failed"
+                Right
+                  AppConfig
+                    { configHttpManager = manager
+                    , configPort = port
+                    , configLogLevel = maybe "INFO" T.pack eLogLevel
+                    , configEnvironment = maybe "development" T.pack eEnvironment
+                    , configRedisUrl = T.pack <$> eRedisUrl
+                    , configJwtSecret = T.pack jwtSecret
+                    , configExternalApiTimeout = apiTimeout
+                    , configLoggerSet = loggerSet
+                    , configMinLogLevel = Debug
+                    , configOrvilleState = orvilleState
+                    , configMailGunApiKey = T.pack mailGunApi
+                    }
+            _ -> pure $ Left "Invalid PORT environment variable"
+        _ ->
+          pure $
+            Left
+              """
+              Missing required environment variables: PORT, JWT_SECRET
+              """
   where
     readEnvWithDefault :: Read a => String -> a -> IO a
     readEnvWithDefault envVar defaultVal = do

@@ -27,7 +27,6 @@ page ::
          , ChatView
          , ChatInputView
          , GenerateReplyView
-         , ToolSelectionView
          ]
     )
 page mbPublicConvId = do
@@ -49,7 +48,6 @@ page mbPublicConvId = do
                   (providerInfo st)
                   (availableOllamaModels st)
                   (availableORModels st)
-                  (currVectorStore st)
               )
             myHyper (ChatView publicConvID) (loadChatView mbPublicConvId)
             el ~ cls "input-area" $ do
