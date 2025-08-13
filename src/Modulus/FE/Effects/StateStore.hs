@@ -26,6 +26,7 @@ module Modulus.FE.Effects.StateStore
   , getAvailableORModels
   , getProviderInfo
   , Provider (..)
+  , VecStore (..)
   ) where
 
 import Control.Concurrent.MVar
@@ -56,8 +57,12 @@ data StateStore = StateStore
   , providerInfo :: Provider
   , availableOllamaModels :: [Text]
   , availableORModels :: [Text]
+  , currVectorStore :: Maybe VecStore
   }
   deriving (Show, Eq)
+
+data VecStore = HEB | Underarmor
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type StateStoreMap = MVar (HM.Map UUID (MVar StateStore))
 
@@ -127,6 +132,7 @@ getOrCreateStateStore storeMap stData = do
                   , providerInfo = OllamaProvider "qwen3:0.6b"
                   , availableOllamaModels = ollamaList stData
                   , availableORModels = openrouterList stData
+                  , currVectorStore = Nothing
                   }
             pure (HM.insert uuid x hm, x)
 

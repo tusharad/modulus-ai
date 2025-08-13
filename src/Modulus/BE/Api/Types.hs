@@ -70,5 +70,6 @@ data LLMRespStream = LLMRespStream {
 data LLMRespStreamBody = LLMRespStreamBody {
     modelUsed :: Text,
     provider :: Text,
-    apiKey :: Maybe Text
+    apiKey :: Maybe Text,
+    selectTool :: Maybe Text
 } deriving (Eq, Show, Generic, FromJSON, ToJSON)

@@ -7,6 +7,7 @@ module Modulus.BE.Handler.Conversations
   , getLLMRespStreamHandler
   ) where
 
+import qualified Data.Map.Strict as HM
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
 import Control.Monad (void, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
@@ -16,7 +17,6 @@ import Data.Text (Text)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Ollama (Ollama (..))
-import Langchain.LLM.OpenAICompatible (mkOpenRouter)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
@@ -39,6 +39,16 @@ import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Servant
 import qualified Servant.Types.SourceT as S
+import Modulus.Common.Types (AppConfig(configHEBRet, configUnderRet))
+import Control.Monad.Reader (asks)
+import Control.Monad.Except (runExceptT, ExceptT (ExceptT))
+import qualified Data.Text as T
+import Langchain.Retriever.Core (Retriever(_get_relevant_documents))
+import Langchain.DocumentLoader.Core (Document(pageContent, metadata))
+import Langchain.PromptTemplate (renderPrompt, PromptTemplate (PromptTemplate))
+import Modulus.BE.LLM (systemTemplate)
+import Langchain.LLM.OpenAICompatible (mkOpenRouter)
+import Data.Either (fromRight)
 
 conversationsServer :: ServerT ConversationsAPI AppM
 conversationsServer =
@@ -65,7 +75,7 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
   case NE.nonEmpty chatMsgLst_ of
     Nothing -> throwError $ NotFoundError "Empty conversation"
     Just chatMsgLst -> do
-      let msgList =
+      let msgList_ =
             NE.map
               ( \ChatMessage {..} ->
                   Langchain.Message
@@ -74,6 +84,36 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
                     Langchain.defaultMessageData
               )
               chatMsgLst
+      msgList <- case selectTool of
+        Nothing -> pure msgList_
+        Just tool -> do
+          let pickRetriever =
+                case tool of
+                  "HEB"        -> Just <$> asks configHEBRet
+                  "Underarmor" -> Just <$> asks configUnderRet
+                  _            -> pure Nothing
+
+          mRetriever <- pickRetriever
+          case mRetriever of
+            Nothing -> pure msgList_
+            Just retriever -> do
+              eNewList <- runExceptT $ do
+                let lastMsg = NE.last msgList_
+                relevantDocs <- ExceptT $
+                  liftIO $ _get_relevant_documents retriever (Langchain.content lastMsg)
+                let context =
+                      mconcat $
+                        map (\doc -> pageContent doc <> T.pack (show $ metadata doc))
+                            relevantDocs
+                sysPrompt <- ExceptT . pure $
+                  renderPrompt
+                    (PromptTemplate systemTemplate)
+                    (HM.fromList [("context", context)])
+                let sysMsg = 
+                        Langchain.Message Langchain.System sysPrompt Langchain.defaultMessageData
+                pure (NE.fromList $ NE.init msgList_ <> [sysMsg, lastMsg])
+              pure $ fromRight msgList_ eNewList
+      liftIO $ print ("msg list " :: String , msgList)
       tokenChan <- liftIO newChan
       let st =
             StreamHandler

@@ -28,7 +28,7 @@ import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
 import Modulus.BE.DB.Internal.Model (UserID (UserID), UserRead)
 import Modulus.BE.DB.Queries.User (getUser)
-import Modulus.BE.Log (logDebug, logError)
+import Modulus.BE.Log (logError)
 import Modulus.BE.Monad.AppM (AppM, runAppM)
 import Modulus.Common.Types
 import Network.HTTP.Types (hAuthorization)
@@ -137,6 +137,5 @@ authenticateToken appCfg rawToken = do
 
     fetchUser :: UserID -> AppM AuthResult
     fetchUser uid = do
-      logDebug $ "Looking up user ID: " <> T.pack (show uid)
       result <- getUser uid
       pure $ maybe UserNotFound Authenticated result

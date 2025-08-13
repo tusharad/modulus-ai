@@ -73,6 +73,8 @@ library
       Modulus.FE.Effects.AppConfig
       Modulus.FE.Effects.StateStore
       Modulus.FE.Layout
+      Modulus.FE.MarkdownAtomic
+      Modulus.FE.MarkdownParser
       Modulus.FE.Page.Chat
       Modulus.FE.Page.Login
       Modulus.FE.Page.Register
@@ -123,6 +125,7 @@ library
     , jose
     , langchain-hs
     , lens
+    , megaparsec
     , mtl
     , network-uri
     , ollama-haskell
@@ -185,6 +188,7 @@ executable modulus-ai-exe
     , jose
     , langchain-hs
     , lens
+    , megaparsec
     , modulus-ai
     , mtl
     , network-uri
@@ -250,6 +254,7 @@ test-suite modulus-ai-test
     , jose
     , langchain-hs
     , lens
+    , megaparsec
     , modulus-ai
     , mtl
     , network-uri

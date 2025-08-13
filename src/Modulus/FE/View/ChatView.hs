@@ -26,6 +26,8 @@ import Modulus.FE.View.SidebarView (Action (LoadSidebar), SidebarView (SidebarVi
 import qualified Servant.Types.SourceT as S
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Modulus.FE.MarkdownAtomic (parseView)
+import Data.Maybe (fromMaybe)
 
 data ChatView = ChatView Text
   deriving (Generic, ViewId)
@@ -192,7 +194,7 @@ streamReply convID = do
     Just (Complete content) -> do 
       _ <- runBE $ logDebug $ "Streaming complte "
       handleCompleteStream convID content
-    Just (InProgress content) -> pure $ renderStreamingReply (Just content)
+    Just (InProgress content) -> pure $ renderStreamingReply (Just (parseView content))
     Nothing -> pure $ el ~ cls "message ai-message" $ "Something went wrong"
 
 handleCompleteStream ::
@@ -243,14 +245,14 @@ handleCompleteStream convID content = do
             Right msgList ->
               if length msgList > 2
                 then
-                  pure $ el ~ cls "message ai-message" $ text content
+                  pure $ el ~ cls "message ai-message" $ parseView content
                 else redirect $ chatUrl (ConversationPublicID publicConvID)
 
-renderStreamingReply :: Maybe Text -> View GenerateReplyView ()
+renderStreamingReply :: Maybe (View GenerateReplyView ()) -> View GenerateReplyView ()
 renderStreamingReply mbContent =
   el @ onLoad Stream 200 $
     el ~ cls "message ai-message" $
-      maybe spinner text mbContent
+      fromMaybe spinner mbContent
 
 generateReply ::
   ( StateStoreEff :> es
@@ -262,6 +264,7 @@ generateReply ::
   Eff es (View GenerateReplyView ())
 generateReply convID = do
   provider <- getProviderInfo
+  st <- getState
   let (model, p, mbApiKey) = case provider of
         OllamaProvider m -> (m, "ollama", Nothing)
         OpenRouterProvider m api -> (m, "openrouter", Just api)
@@ -270,6 +273,7 @@ generateReply convID = do
           { modelUsed = model
           , provider = p
           , apiKey = mbApiKey
+          , selectTool = T.pack . show <$> currVectorStore st
           }
   void . runBE $ logDebug $ "In generateReply function: " <> model <> p
   startGeneration convID reqBody

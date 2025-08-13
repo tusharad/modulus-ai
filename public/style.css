@@ -313,7 +313,7 @@
             background: var(--ai-bubble-bg);
             color: var(--text-secondary);
             border: 1px solid transparent;
-            font-size: 0.8rem;
+            font-size: 1.2rem;
             padding: 0.25rem 0.75rem;
         }
         .tool-btn:hover, .tool-btn.active {

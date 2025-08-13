@@ -13,6 +13,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS (tlsManagerSettings)
+import qualified Data.Text as T
 
 -- | Represents the top-level JSON response structure.
 newtype OpenRouterModelsResponse = ModelsResponse
@@ -122,4 +123,5 @@ getOpenRouterModelList = do
   let body = responseBody response :: ByteString
   case Aeson.eitherDecode body of
     Left err -> pure $ Left ("Error while parsing models: " <> err)
-    Right res -> pure $ Right (modelsData res)
+    Right res -> pure $ Right 
+        (filter (T.isInfixOf "free" . modelId) $ modelsData res)

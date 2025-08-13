@@ -30,6 +30,7 @@ dependencies:
   - jose
   - langchain-hs
   - lens
+  - megaparsec
   - mtl
   - network-uri
   - orville-postgresql
