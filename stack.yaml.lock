@@ -36,6 +36,17 @@ packages:
     commit: 99ccee5f698848844435a7e33ed8b06744d137b6
     git: https://github.com/seanhess/hyperbole
 - completed:
+    commit: fc21fd01d14c74dda9a9f3df8c01f8d7711c5087
+    git: https://github.com/tusharad/langchain-hs
+    name: langchain-hs
+    pantry-tree:
+      sha256: 9efb5961869d3a02f263041c094d005549c20a061a573d57fa0387c768998d25
+      size: 9170
+    version: 0.0.2.0
+  original:
+    commit: fc21fd01d14c74dda9a9f3df8c01f8d7711c5087
+    git: https://github.com/tusharad/langchain-hs
+- completed:
     commit: 05c7869652870a2a88bec259f501ee77cec79134
     git: https://github.com/tusharad/ollama-haskell
     name: ollama-haskell

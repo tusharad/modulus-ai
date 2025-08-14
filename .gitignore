@@ -4,3 +4,5 @@ chat.db
 wiki/
 node_modules/
 .env.local
+.env.prod
+modulus-ai-exe
