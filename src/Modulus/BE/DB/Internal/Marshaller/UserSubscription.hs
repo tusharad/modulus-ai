@@ -15,7 +15,7 @@ module Modulus.BE.DB.Internal.Marshaller.UserSubscription
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan (subscriptionStatusField)
-import Modulus.BE.DB.Internal.Marshaller.User (userUpdatedAtField)
+import Modulus.BE.DB.Internal.Marshaller.User (userUpdatedAtField, userCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils (genRandomUuidDefault)
 import Orville.PostgreSQL
@@ -39,7 +39,7 @@ userSubscriptionCurrentPeriodEndsAtField =
   nullableField $ utcTimestampField "current_period_ends_at"
 
 userSubscriptionCreatedAtField :: FieldDefinition NotNull UTCTime
-userSubscriptionCreatedAtField = userUpdatedAtField
+userSubscriptionCreatedAtField = userCreatedAtField
 
 userSubscriptionUpdatedAtField :: FieldDefinition NotNull UTCTime
 userSubscriptionUpdatedAtField = userUpdatedAtField
