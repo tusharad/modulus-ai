@@ -14,14 +14,13 @@ module Modulus.BE.DB.Internal.Marshaller.AuditLog
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Orville.PostgreSQL
-import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Audit Log Fields
 auditLogIDField :: FieldDefinition NotNull AuditLogID
 auditLogIDField = coerceField $ bigSerialField "id"
-
 
 auditLogUserIDField :: FieldDefinition Nullable (Maybe UserID)
 auditLogUserIDField = nullableField $ coerceField $ uuidField "user_id"

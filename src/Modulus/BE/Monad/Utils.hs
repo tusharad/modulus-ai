@@ -1,4 +1,3 @@
-{-# LANGUAGE MultilineStrings #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Modulus.BE.Monad.Utils
@@ -74,11 +73,7 @@ mkAppConfigFromEnv = do
                     }
             _ -> pure $ Left "Invalid PORT environment variable"
         _ ->
-          pure $
-            Left
-              """
-              Missing required environment variables: PORT, JWT_SECRET
-              """
+          pure $ Left "Missing required environment variables: PORT, JWT_SECRET"
   where
     readEnvWithDefault :: Read a => String -> a -> IO a
     readEnvWithDefault envVar defaultVal = do

@@ -15,9 +15,9 @@ module Modulus.BE.DB.Internal.Marshaller.Message
 import Control.Lens.Internal.CTypes (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Orville.PostgreSQL
-import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Message Attachment Fields
 messageAttachmentIDField :: FieldDefinition NotNull MessageAttachmentID

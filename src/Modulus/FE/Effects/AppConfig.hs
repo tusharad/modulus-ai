@@ -3,7 +3,7 @@
 module Modulus.FE.Effects.AppConfig
   ( AppConfigEff (..)
   , runAppConfigIO
-  , getAppCfg 
+  , getAppCfg
   ) where
 
 import Effectful

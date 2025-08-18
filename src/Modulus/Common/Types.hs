@@ -3,6 +3,7 @@
  It is not necessary that every function and type that is used by both must be present here.
 -}
 {-# LANGUAGE GADTs #-}
+
 module Modulus.Common.Types
   ( AppConfig (..)
   , LogLevel (..)
@@ -22,8 +23,8 @@ import GHC.Generics
 import qualified Network.HTTP.Client as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
-import Web.Hyperbole 
-import Web.Hyperbole.Data.URI (Path(..))
+import Web.Hyperbole
+import Web.Hyperbole.Data.URI (Path (..))
 
 -- | Application configuration
 data AppConfig = AppConfig
@@ -103,14 +104,15 @@ instance Session AuthTokens where
 
 instance Default AuthTokens where
   def = AuthTokens mempty mempty
-data StateStoreData = StateStoreData {
-    ollamaList :: [Text]
+data StateStoreData = StateStoreData
+  { ollamaList :: [Text]
   , openrouterList :: [Text]
-} deriving (Show, Eq)
+  }
+  deriving (Show, Eq)
 
 data Provider where
   OllamaProvider :: Text -> Provider
-  OpenRouterProvider :: Text -> Text  -> Provider
+  OpenRouterProvider :: Text -> Text -> Provider
 
 deriving instance Show Provider
 deriving instance Eq Provider

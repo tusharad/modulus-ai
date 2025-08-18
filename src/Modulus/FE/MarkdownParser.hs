@@ -117,7 +117,7 @@ bold = do
 italic :: Parser Inline
 italic = do
   void $ char '*'
-  notFollowedBy (char '*') 
+  notFollowedBy (char '*')
   content <- T.pack <$> someTill anySingle (char '*')
   return $ Italic content
 

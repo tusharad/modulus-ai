@@ -138,7 +138,8 @@ getOrCreateStateStore storeMap stData = do
 
 modifyState ::
   (StateStoreEff :> es, IOE :> es) =>
-  (StateStore -> StateStore) -> Eff es ()
+  (StateStore -> StateStore) ->
+  Eff es ()
 modifyState f = do
   storeVar <- useState
   liftIO $ modifyMVar_ storeVar $ \s -> pure $ f s
@@ -148,7 +149,8 @@ getState = liftIO . readMVar =<< useState
 
 getStreamState ::
   (StateStoreEff :> es, IOE :> es) =>
-  Text -> Eff es (Maybe StreamState)
+  Text ->
+  Eff es (Maybe StreamState)
 getStreamState chatId = HM.lookup chatId . streamContent <$> getState
 
 getAvailableOllamaModels :: (StateStoreEff :> es, IOE :> es) => Eff es [Text]

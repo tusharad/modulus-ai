@@ -23,8 +23,8 @@ module Modulus.BE.Client.V1
   , getConversationsHandler
   ) where
 
-import Modulus.BE.Handler 
 import Modulus.BE.Auth.JwtAuthCombinator (authenticateToken)
+import Modulus.BE.Handler
 import Modulus.BE.Handler.Conversations
 
 {-

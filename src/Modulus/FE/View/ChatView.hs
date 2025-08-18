@@ -8,6 +8,7 @@ module Modulus.FE.View.ChatView
 import Control.Concurrent (MVar, forkIO, modifyMVar_)
 import Control.Monad (forM_, void)
 import qualified Data.Map.Strict as HM
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime, defaultTimeLocale, formatTime)
@@ -20,14 +21,13 @@ import Modulus.BE.Log (logDebug)
 import Modulus.Common.Utils (runBE, runBEAuth)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Effects.StateStore
+import Modulus.FE.MarkdownAtomic (parseView)
 import Modulus.FE.Utils
 import Modulus.FE.View.ModelProviderView
 import Modulus.FE.View.SidebarView (Action (LoadSidebar), SidebarView (SidebarView))
 import qualified Servant.Types.SourceT as S
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.FE.MarkdownAtomic (parseView)
-import Data.Maybe (fromMaybe)
 
 data ChatView = ChatView Text
   deriving (Generic, ViewId)
@@ -59,7 +59,8 @@ instance
           runBEAuth (`getConversationMessagesHandler` ConversationPublicID convUUID)
         case eMsgList of
           Left err -> do
-            _ <- runBE . logDebug $ 
+            _ <-
+              runBE . logDebug $
                 "Error while fetching messages: " <> T.pack (show err)
             pure $ errorView (T.pack (show err))
           Right msgList -> pure $ chatView msgList
@@ -70,7 +71,9 @@ addUserPrompt ::
   , Hyperbole :> es
   , StateStoreEff :> es
   ) =>
-  ConversationPublicID -> Text -> Eff es (View ChatView ())
+  ConversationPublicID ->
+  Text ->
+  Eff es (View ChatView ())
 addUserPrompt convID currPrompt = do
   eRes <-
     runBEAuth
@@ -87,16 +90,18 @@ addUserPrompt convID currPrompt = do
       eMsgList <- runBEAuth (\auth -> getConversationMessagesHandler auth convID)
       case eMsgList of
         Left err -> pure $ errorView $ T.pack (show err)
-        Right msgList -> do 
-            void . runBE $ logDebug "Rerendered msg list: "
-            pure $ renderGeneratingReplyView convID msgList
+        Right msgList -> do
+          void . runBE $ logDebug "Rerendered msg list: "
+          pure $ renderGeneratingReplyView convID msgList
 
 resolveOrCreateConvoID ::
   ( IOE :> es
   , AppConfigEff :> es
   , Hyperbole :> es
   ) =>
-  Text -> Text -> Eff es ConversationPublicID
+  Text ->
+  Text ->
+  Eff es ConversationPublicID
 resolveOrCreateConvoID convID currPrompt = do
   if convID == "1"
     then do
@@ -188,11 +193,12 @@ streamReply ::
   , Hyperbole :> es
   , AppConfigEff :> es
   ) =>
-  Text -> Eff es (View GenerateReplyView ())
+  Text ->
+  Eff es (View GenerateReplyView ())
 streamReply convID = do
   streamState <- getStreamState convID
   case streamState of
-    Just (Complete content) -> do 
+    Just (Complete content) -> do
       _ <- runBE $ logDebug $ "Streaming complte "
       handleCompleteStream convID content
     Just (InProgress content) -> pure $ renderStreamingReply (Just (parseView content))
@@ -305,7 +311,7 @@ startGeneration convID body = do
           (ConversationPublicID publicConvID)
           body
       case eSrc of
-        Left err -> do 
+        Left err -> do
           _ <- runBE $ logDebug $ "Error while calling stream: " <> T.pack (show err)
           pure ()
         Right s -> do
@@ -315,15 +321,15 @@ processChunks :: MVar StateStore -> Text -> S.StepT IO LLMRespStream -> IO ()
 processChunks storeVar convID (S.Yield chunk nextStep) = do
   appendChunk storeVar convID chunk
   processChunks storeVar convID nextStep
-processChunks storeVar convID S.Stop = do 
-    putStrLn "streaming complete"
-    markComplete storeVar convID
-processChunks _ _ (S.Error err) = do 
-    putStrLn $ "Error in servant stream " <> show err
-processChunks storeVar convID (S.Skip s) = do 
-    processChunks storeVar convID s
-processChunks storeVar convID (S.Effect ms) = do 
-    ms >>= processChunks storeVar convID
+processChunks storeVar convID S.Stop = do
+  putStrLn "streaming complete"
+  markComplete storeVar convID
+processChunks _ _ (S.Error err) = do
+  putStrLn $ "Error in servant stream " <> show err
+processChunks storeVar convID (S.Skip s) = do
+  processChunks storeVar convID s
+processChunks storeVar convID (S.Effect ms) = do
+  ms >>= processChunks storeVar convID
 
 markComplete :: MVar StateStore -> Text -> IO ()
 markComplete storeVar convID =

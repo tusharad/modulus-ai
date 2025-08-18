@@ -5,9 +5,9 @@ module Modulus.FE.Common.Types
   ( AppRoute (..)
   ) where
 
+import Data.Text (Text)
 import GHC.Generics
 import Web.Hyperbole
-import Data.Text (Text)
 
 data AppRoute
   = Main

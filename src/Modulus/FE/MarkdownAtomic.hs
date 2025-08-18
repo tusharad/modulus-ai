@@ -1,9 +1,9 @@
 module Modulus.FE.MarkdownAtomic (markdownToView, parseView) where
 
-import Modulus.FE.MarkdownParser
 import Control.Monad (forM_)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Modulus.FE.MarkdownParser
 import Web.Atomic.CSS
 import Web.Atomic.Types.ClassName
 import Web.Hyperbole

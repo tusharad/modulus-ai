@@ -1,14 +1,14 @@
 module Modulus.BE.DB.Queries.EmailVerification
   ( addEmailVerificationOTP
   , getEmailVerificationOTPByUserId
-  , deleteOtp 
+  , deleteOtp
   ) where
 
+import Data.UUID (UUID)
 import Modulus.BE.DB.Internal.Marshaller (emailVerificationOTPUserIDField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table
 import Orville.PostgreSQL
-import Data.UUID (UUID)
 
 addEmailVerificationOTP :: MonadOrville m => EmailVerificationOTPWrite -> m ()
 addEmailVerificationOTP = insertEntity emailVerificationOTPTable

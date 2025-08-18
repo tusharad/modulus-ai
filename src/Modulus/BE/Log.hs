@@ -7,13 +7,13 @@ module Modulus.BE.Log
 
 import Control.Monad (when)
 import Control.Monad.IO.Class
+import Data.Aeson (encode)
 import Data.Text (Text)
 import Data.Time
 import Modulus.BE.Monad.AppM
-import System.Log.FastLogger
-import Modulus.Common.Types
 import Modulus.BE.Monad.Utils (askConfig)
-import Data.Aeson (encode)
+import Modulus.Common.Types
+import System.Log.FastLogger
 
 logDebug :: Text -> AppM ()
 logDebug msg = do
@@ -39,9 +39,10 @@ logger :: LoggerSet -> MinLogLevel -> LogLevel -> Text -> IO ()
 logger loggerSet_ minLogLevel_ logLevel0 msg = do
   when (logLevel0 >= minLogLevel_) $ do
     currTime <- getCurrentTime
-    let logEntry = LogEntry {
-        logTimestamp = currTime
-      , logLevel = logLevel0
-      , logMessage = msg
-    }
+    let logEntry =
+          LogEntry
+            { logTimestamp = currTime
+            , logLevel = logLevel0
+            , logMessage = msg
+            }
     pushLogStrLn loggerSet_ . toLogStr $ encode logEntry

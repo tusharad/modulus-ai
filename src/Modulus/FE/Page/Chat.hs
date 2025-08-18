@@ -1,18 +1,18 @@
 module Modulus.FE.Page.Chat (page) where
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Effectful
 import Modulus.Common.Types (AuthTokens (..))
-import Modulus.FE.Utils
 import Modulus.FE.Effects.StateStore (StateStore (..), StateStoreEff, getState)
+import Modulus.FE.Utils
+import Modulus.FE.View.ChatInputView (ChatInputView (ChatInputView), chatInputView)
+import Modulus.FE.View.ChatView (ChatView (ChatView), GenerateReplyView, loadChatView)
 import Modulus.FE.View.ModelProviderView (ModelProviders)
 import Modulus.FE.View.NavbarView
 import Modulus.FE.View.SidebarView
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.FE.View.ChatView (loadChatView, ChatView (ChatView), GenerateReplyView)
-import Modulus.FE.View.ChatInputView (ChatInputView (ChatInputView), chatInputView)
-import Data.Maybe (fromMaybe)
 
 --- Page
 page ::
@@ -51,4 +51,4 @@ page mbPublicConvId = do
               )
             myHyper (ChatView publicConvID) (loadChatView mbPublicConvId)
             el ~ cls "input-area" $ do
-              myHyper (ChatInputView publicConvID) chatInputView 
+              myHyper (ChatInputView publicConvID) chatInputView

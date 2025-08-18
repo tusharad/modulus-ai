@@ -11,12 +11,12 @@ import qualified Data.Text as T
 import Effectful (IOE)
 import Modulus.BE.Client.V1
 import Modulus.BE.DB.Internal.Model
-import Modulus.Common.Utils (runBEAuth, runBE)
+import Modulus.BE.Log (logDebug)
+import Modulus.Common.Utils (runBE, runBEAuth)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.BE.Log (logDebug)
 
 data SidebarView = SidebarView Int
   deriving (Generic, ViewId)

@@ -12,12 +12,12 @@ import Effectful (IOE)
 import Modulus.BE.Api.Types (OTPVerifyRequest (..))
 import Modulus.BE.Client.V1
 import Modulus.BE.Log (logDebug)
+import Modulus.Common.Utils (runBE)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.Common.Utils (runBE)
 
 data VerifyOTPFormView = VerifyOTPFormView Int
   deriving (Generic, ViewId)

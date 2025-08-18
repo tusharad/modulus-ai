@@ -180,7 +180,7 @@ data Conversation a b c = Conversation
   , conversationUserID :: Maybe UserID
   , conversationTitle :: Text
   , conversationCreatedAt :: c
-  , conversationUpdatedAt :: c --TODO: updated at should be able to write
+  , conversationUpdatedAt :: c -- TODO: updated at should be able to write
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 

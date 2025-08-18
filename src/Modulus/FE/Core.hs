@@ -41,7 +41,8 @@ toDocument cnt =
 
 router ::
   (Hyperbole :> es, IOE :> es, AppConfigEff :> es, StateStoreEff :> es) =>
-  AppRoute -> Eff es Response
+  AppRoute ->
+  Eff es Response
 router r = do
   case r of
     Main -> redirect (routeUri $ Chat Nothing)
@@ -58,5 +59,6 @@ app stateMap stData appCfg =
   where
     runM ::
       (IOE :> es, Hyperbole :> es) =>
-      Eff (StateStoreEff : AppConfigEff : es) a -> Eff es a
+      Eff (StateStoreEff : AppConfigEff : es) a ->
+      Eff es a
     runM = runAppConfigIO appCfg . runStateStoreIO stateMap stData

@@ -14,10 +14,10 @@ module Modulus.BE.DB.Internal.Marshaller.Conversation
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField, userUpdatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils
 import Orville.PostgreSQL
-import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField, userUpdatedAtField)
 
 -- Conversation Fields
 conversationIDField :: FieldDefinition NotNull ConversationID
@@ -28,7 +28,6 @@ conversationPublicIDField =
   coerceField $
     setDefaultValue genRandomUuidDefault $
       uuidField "public_id"
-
 
 conversationUserIDField :: FieldDefinition Nullable (Maybe UserID)
 conversationUserIDField = nullableField $ coerceField $ uuidField "user_id"

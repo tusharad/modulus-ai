@@ -30,7 +30,8 @@ instance (StateStoreEff :> es, IOE :> es) => HyperView ModelProviders es where
 
 updateProvider ::
   (StateStoreEff :> es, IOE :> es) =>
-  Provider -> Eff es (View ModelProviders ())
+  Provider ->
+  Eff es (View ModelProviders ())
 updateProvider p = do
   modifyState $ \st -> st {providerInfo = p}
   ollamaModels <- getAvailableOllamaModels
@@ -38,7 +39,8 @@ updateProvider p = do
 
 updateOllamaModel ::
   (StateStoreEff :> es, IOE :> es) =>
-  Text -> Eff es (View ModelProviders ())
+  Text ->
+  Eff es (View ModelProviders ())
 updateOllamaModel model = do
   let p = OllamaProvider model
   modifyState $ \st -> st {providerInfo = p}
@@ -47,7 +49,8 @@ updateOllamaModel model = do
 
 updateOpenRouterModel ::
   (StateStoreEff :> es, IOE :> es) =>
-  Text -> Eff es (View ModelProviders ())
+  Text ->
+  Eff es (View ModelProviders ())
 updateOpenRouterModel model = do
   st <- getState
   let newP = case providerInfo st of
@@ -62,8 +65,8 @@ updateOpenRouterApiKey ::
 updateOpenRouterApiKey apiKey = do
   st <- getState
   let newP = case providerInfo st of
-        OllamaProvider _ -> 
-            OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
+        OllamaProvider _ ->
+          OpenRouterProvider "deepseek/deepseek-chat-v3-0324:free" apiKey
         OpenRouterProvider model _ -> OpenRouterProvider model apiKey
   modifyState $ \s -> s {providerInfo = newP}
   ollamaModels <- getAvailableOllamaModels
@@ -82,7 +85,8 @@ renderProviderListView providerInfo ollamaModels orModels = do
 
 showORProviderOption ::
   ViewAction (Action id) =>
-  [Text] -> View (Option Provider id) ()
+  [Text] ->
+  View (Option Provider id) ()
 showORProviderOption [] = none
 showORProviderOption (firstModel : _) =
   option (OpenRouterProvider firstModel "")
@@ -91,7 +95,8 @@ showORProviderOption (firstModel : _) =
 
 showOllamaProviderOption ::
   ViewAction (Action id) =>
-  [Text] -> View (Option Provider id) ()
+  [Text] ->
+  View (Option Provider id) ()
 showOllamaProviderOption [] = none
 showOllamaProviderOption (firstModel : _) =
   option (OllamaProvider firstModel)

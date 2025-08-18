@@ -6,23 +6,23 @@ module Modulus.FE.Utils
   , homeUrl
   , notFoundUrl
   , loginUrl
-  , verifyUrl 
-  , chatUrl 
-  , chatUrlNew 
+  , verifyUrl
+  , chatUrl
+  , chatUrlNew
   , myHyper
   ) where
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.UUID as UUID
+import Modulus.BE.DB.Internal.Model (ConversationPublicID (ConversationPublicID))
+import Network.URI (nullURI, parseRelativeReference)
 import Network.URI.Static
 import Web.Hyperbole
+import Web.Hyperbole.Data.Encoded (encodedToText)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
-import qualified Data.Text as T
-import Network.URI (parseRelativeReference, nullURI)
-import Data.Maybe (fromMaybe)
-import Modulus.BE.DB.Internal.Model (ConversationPublicID (ConversationPublicID))
-import qualified Data.UUID as UUID
-import Web.Hyperbole.Data.Encoded (encodedToText)
 
 homeUrl :: URI
 homeUrl = [relativeReference|/|]
@@ -46,10 +46,12 @@ chatUrl (ConversationPublicID cpID) =
   let str = "/chat/" <> UUID.toText cpID
    in fromMaybe nullURI $ parseRelativeReference (T.unpack str)
 
-
 -- form but without col css
-myForm :: (ViewAction (Action id)) => 
-    Action id -> View (FormFields id) () -> View id ()
+myForm ::
+  (ViewAction (Action id)) =>
+  Action id ->
+  View (FormFields id) () ->
+  View id ()
 myForm a cnt = do
   vid <- context
   tag "form" @ onSubmit a $ do
@@ -57,7 +59,10 @@ myForm a cnt = do
 
 myHyper ::
   forall id ctx.
-  (ViewId id) => id -> View id () -> View ctx ()
+  (ViewId id) =>
+  id ->
+  View id () ->
+  View ctx ()
 myHyper vid vw = do
   tag "div" @ att "id" (encodedToText $ toViewId vid) $
     addContext vid vw

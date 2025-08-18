@@ -4,7 +4,7 @@ module Modulus.Common.Utils
   ( runBE
   , runBEAuth
   , getUserOrGoToLogin
-  , listAvailableOllamaModels 
+  , listAvailableOllamaModels
   ) where
 
 import Control.Exception (SomeException (..), try)
@@ -16,8 +16,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Auth.JwtAuthCombinator
-import Modulus.BE.DB.Internal.Model (UserRead, User (userID))
-import Modulus.BE.Log (logError, logDebug)
+import Modulus.BE.DB.Internal.Model (User (userID), UserRead)
+import Modulus.BE.Log (logDebug, logError)
 import Modulus.BE.Monad.AppM (AppM, runAppM)
 import Modulus.BE.Monad.Error (AppError)
 import Modulus.Common.Types (AuthTokens (..))
@@ -47,14 +47,16 @@ getUserOrGoToLogin authTokens = do
 
 runBE ::
   (IOE :> es, AppConfigEff :> es) =>
-  AppM a -> Eff es (Either AppError a)
+  AppM a ->
+  Eff es (Either AppError a)
 runBE action = do
   cfg <- getAppCfg
   liftIO $ runAppM cfg action
 
 runBEAuth ::
   (IOE :> es, AppConfigEff :> es, Hyperbole :> es) =>
-  (AuthResult -> AppM a) -> Eff es (Either AppError a)
+  (AuthResult -> AppM a) ->
+  Eff es (Either AppError a)
 runBEAuth action = do
   cfg <- getAppCfg
   mbAuthTokens <- lookupSession @AuthTokens
@@ -62,8 +64,11 @@ runBEAuth action = do
     Nothing -> redirect loginUrl
     Just authTokens -> do
       user <- getUserOrGoToLogin authTokens
-      _ <- liftIO $ runAppM cfg $ 
-        logDebug $ "running request for user: " <> T.pack (show $ userID user)
+      _ <-
+        liftIO $
+          runAppM cfg $
+            logDebug $
+              "running request for user: " <> T.pack (show $ userID user)
       liftIO $ runAppM cfg (action (Authenticated user))
 
 listAvailableOllamaModels :: IO [Text]

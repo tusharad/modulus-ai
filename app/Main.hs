@@ -27,7 +27,7 @@ main = do
       openRouterModels <-
         map modelId . take 5 . fromRight []
           <$> getOpenRouterModelList
-      let stData = StateStoreData ollamaModelList openRouterModels 
+      let stData = StateStoreData ollamaModelList openRouterModels
       putStrLn $ "Running application on port " <> show (configPort conf)
       run (configPort conf) $
         staticPolicy (addBase "public") $

@@ -12,7 +12,7 @@
 module Modulus.BE.Auth.JwtAuthCombinator
   ( WithJWTAuth
   , AuthResult (..)
-  , authenticateToken 
+  , authenticateToken
   ) where
 
 import Control.Lens (re, (^?), _Just)

@@ -4,7 +4,7 @@
 
 module Modulus.BE.Handler.Auth
   ( authServer
-  , registerHandler 
+  , registerHandler
   , verifyOTPHandler
   , loginHandler
   , meHandler
@@ -50,11 +50,11 @@ import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error
 import Modulus.BE.Monad.Utils
 import Modulus.BE.Service.Email.Core (sendVerificationEmail)
+import Modulus.Common.Types (AppConfig (configJwtSecret, configMailGunApiKey))
 import qualified Orville.PostgreSQL as Orville
 import Servant
 import System.Random
 import Text.Email.Validate
-import Modulus.Common.Types (AppConfig(configMailGunApiKey, configJwtSecret))
 
 authServer :: ServerT AuthAPI AppM
 authServer =

@@ -14,10 +14,10 @@ module Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
+import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils (genRandomUuidDefault)
 import Orville.PostgreSQL
-import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
 
 -- Email Verification OTP Fields
 emailVerificationOTPIDField :: FieldDefinition NotNull UUID

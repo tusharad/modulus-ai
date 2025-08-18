@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -38,22 +38,27 @@ data MailGunReqBody = MailGunReqBody
 
 sendVerificationEmail :: Text -> Text -> Text -> IO (Either BS.ByteString ())
 sendVerificationEmail apiToken toEmail otp = runReq defaultHttpConfig $ do
-    let url = https "api.mailgun.net" /: "v3" /: "mg.tushar-adhatrao.in" /: "messages"
-    let authHeader = basicAuth "api" $ T.encodeUtf8 apiToken
-    resp <- req POST url
-        (ReqBodyUrlEnc $ mconcat
+  let url = https "api.mailgun.net" /: "v3" /: "mg.tushar-adhatrao.in" /: "messages"
+  let authHeader = basicAuth "api" $ T.encodeUtf8 apiToken
+  resp <-
+    req
+      POST
+      url
+      ( ReqBodyUrlEnc $
+          mconcat
             [ "from" =: ("haskread@mg.tushar-adhatrao.in" :: Text)
             , "to" =: toEmail
             , "subject" =: ("Email verification for HaskRead platform" :: Text)
             , "html" =: verifyEmailHTMLContent otp
-            ])
-        bsResponse  -- Changed to get ByteString response
-        authHeader
-    let statusCode = responseStatusCode resp
-    return $ if statusCode >= 200 && statusCode < 300
-             then Right ()
-             else Left $ responseBody resp
-
+            ]
+      )
+      bsResponse -- Changed to get ByteString response
+      authHeader
+  let statusCode = responseStatusCode resp
+  return $
+    if statusCode >= 200 && statusCode < 300
+      then Right ()
+      else Left $ responseBody resp
 
 -- | HTML content for verification email
 verifyEmailHTMLContent :: Text -> Text

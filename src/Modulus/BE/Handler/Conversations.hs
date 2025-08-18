@@ -16,6 +16,7 @@ import Data.Text (Text)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Ollama (Ollama (..))
+import Langchain.LLM.OpenAICompatible (mkOpenRouter)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
@@ -38,7 +39,6 @@ import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Servant
 import qualified Servant.Types.SourceT as S
-import Langchain.LLM.OpenAICompatible (mkOpenRouter)
 
 conversationsServer :: ServerT ConversationsAPI AppM
 conversationsServer =
@@ -166,8 +166,8 @@ addConversationMessageHandler
     void $ addChatMessage chatMsgWrite
 addConversationMessageHandler _ _ _ = throwError $ AuthenticationError "Invalid token"
 
-addConversationHandler :: 
-    AuthResult -> AddConversationRequest -> AppM ConversationPublicID
+addConversationHandler ::
+  AuthResult -> AddConversationRequest -> AppM ConversationPublicID
 addConversationHandler (Authenticated user) AddConversationRequest {..} = do
   let conversationWrite =
         Conversation

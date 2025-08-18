@@ -1,19 +1,19 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Modulus.Common.Openrouter (
-    getOpenRouterModelList
+module Modulus.Common.Openrouter
+  ( getOpenRouterModelList
   , OpenRouterModel (..)
-) where
+  ) where
 
 import Data.Aeson (FromJSON, parseJSON, withObject, (.:), (.:?))
 import qualified Data.Aeson as Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Text (Text)
+import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import qualified Data.Text as T
 
 -- | Represents the top-level JSON response structure.
 newtype OpenRouterModelsResponse = ModelsResponse
@@ -111,7 +111,7 @@ instance FromJSON TopProvider where
   parseJSON = withObject "TopProvider" $ \v ->
     TopProvider
       <$> v .:? "context_length"
-      <*> v .:? "max_completion_tokens" 
+      <*> v .:? "max_completion_tokens"
       <*> v .:? "is_moderated"
 
 -- | Function to perform the GET request and parse the response.
@@ -123,5 +123,7 @@ getOpenRouterModelList = do
   let body = responseBody response :: ByteString
   case Aeson.eitherDecode body of
     Left err -> pure $ Left ("Error while parsing models: " <> err)
-    Right res -> pure $ Right 
-        (filter (T.isInfixOf "free" . modelId) $ modelsData res)
+    Right res ->
+      pure $
+        Right
+          (filter (T.isInfixOf "free" . modelId) $ modelsData res)

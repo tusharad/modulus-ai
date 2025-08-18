@@ -19,7 +19,8 @@ getConversationsByUserID userID =
 
 getConversationsByPublicID ::
   MonadOrville m =>
-  ConversationPublicID -> m (Maybe ConversationRead)
+  ConversationPublicID ->
+  m (Maybe ConversationRead)
 getConversationsByPublicID convPublicId =
   findFirstEntityBy conversationTable $
     where_ (fieldEquals conversationPublicIDField convPublicId)

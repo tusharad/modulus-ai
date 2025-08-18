@@ -11,12 +11,12 @@ import qualified Data.Text.Encoding as TE
 import Effectful (IOE)
 import Modulus.BE.Api.Types
 import Modulus.BE.Client.V1
+import Modulus.Common.Utils (runBE)
 import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Utils
 import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Modulus.Common.Utils (runBE)
 
 data RegistrationFormView = RegistrationFormView Int
   deriving (Generic, ViewId)
@@ -38,9 +38,8 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView RegistrationFormView es wh
     | RegisterNewUser (RegistrationForm Identity)
     | GoToVerify Text
     deriving (Generic, ViewAction)
-    
-  update (GoToVerify userEmail) = redirect $ verifyUrl userEmail
 
+  update (GoToVerify userEmail) = redirect $ verifyUrl userEmail
   update (RegisterNewUser RegistrationForm {..}) = do
     let reqBody =
           RegisterRequest
@@ -51,8 +50,7 @@ instance (IOE :> es, AppConfigEff :> es) => HyperView RegistrationFormView es wh
     eRes <- runBE $ registerHandler reqBody
     case eRes of
       Left err -> pure $ registrationFormView (Just . T.pack $ show err) genFields
-      Right UserProfile{..} -> pure $ registrationSuccessView userProfileEmail 
-
+      Right UserProfile {..} -> pure $ registrationSuccessView userProfileEmail
   update SubmitForm = do
     f <- formData @(RegistrationForm Identity)
     let validatedForm = validateForm f
@@ -82,8 +80,10 @@ validateForm RegistrationForm {..} =
         validate
           (isLeft $ EmailValidate.validate $ TE.encodeUtf8 email)
           "Email is invalid"
-    , password = validate 
-        (not $ isValidPassword (T.unpack password)) "Password not valid"
+    , password =
+        validate
+          (not $ isValidPassword (T.unpack password))
+          "Password not valid"
     , confirmPassword =
         validate
           (password /= confirmPassword)
@@ -91,9 +91,10 @@ validateForm RegistrationForm {..} =
     }
 
 registrationSuccessView :: Text -> View RegistrationFormView ()
-registrationSuccessView userEmail = 
-  el ~ cls "mb-3" @ onLoad (GoToVerify userEmail) 200 $ 
-      tag "label" ~ cls "form-label" $ text "Registration successful"
+registrationSuccessView userEmail =
+  el ~ cls "mb-3" @ onLoad (GoToVerify userEmail) 200 $
+    tag "label" ~ cls "form-label" $
+      text "Registration successful"
 
 registrationFormView ::
   Maybe Text ->

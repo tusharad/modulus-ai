@@ -1,0 +1,9 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: fourmolu
+        name: fourmolu
+        description: "Formatter for Haskell source code."
+        entry: fourmolu -i .
+        language: system
+        types: [haskell]

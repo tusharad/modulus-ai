@@ -33,9 +33,10 @@ data access logic.
 module Modulus.BE.DB
   ( -- * Schema
     autoMigrate
+
     -- * Connection
-  , mkConnectionPoolFromEnv 
+  , mkConnectionPoolFromEnv
   ) where
 
-import Modulus.BE.DB.Internal.Schema (autoMigrate)
 import Modulus.BE.DB.Internal.Config (mkConnectionPoolFromEnv)
+import Modulus.BE.DB.Internal.Schema (autoMigrate)

@@ -7,7 +7,7 @@ module Modulus.BE.Api.V1
   ) where
 
 import Modulus.BE.Api.Internal.Auth (AuthAPI)
-import Modulus.BE.Api.Types 
+import Modulus.BE.Api.Types
 import Modulus.BE.Auth.JwtAuthCombinator (WithJWTAuth)
 import Modulus.BE.DB.Internal.Model
 import Servant
@@ -23,17 +23,18 @@ type API =
 
 type ConversationsAPI =
   WithJWTAuth
-    :> ReqBody '[JSON] AddConversationRequest :> Post '[JSON] ConversationPublicID
+    :> ReqBody '[JSON] AddConversationRequest
+    :> Post '[JSON] ConversationPublicID
     :<|> WithJWTAuth :> Get '[JSON] [ConversationRead]
-    :<|> WithJWTAuth 
-        :> Capture "conversationID" ConversationPublicID 
-            :> ReqBody '[JSON] AddMessageRequest
-                :> Post '[JSON] ()
-    :<|> WithJWTAuth 
-        :> Capture "conversationID" ConversationPublicID 
-                :> Get '[JSON] [ChatMessageRead]
-    :<|> WithJWTAuth 
-          :> Capture "conversationID" ConversationPublicID 
-            :> "stream" 
-              :> ReqBody '[JSON] LLMRespStreamBody
-                :> StreamPost NewlineFraming JSON (SourceIO LLMRespStream)
+    :<|> WithJWTAuth
+      :> Capture "conversationID" ConversationPublicID
+      :> ReqBody '[JSON] AddMessageRequest
+      :> Post '[JSON] ()
+    :<|> WithJWTAuth
+      :> Capture "conversationID" ConversationPublicID
+      :> Get '[JSON] [ChatMessageRead]
+    :<|> WithJWTAuth
+      :> Capture "conversationID" ConversationPublicID
+      :> "stream"
+      :> ReqBody '[JSON] LLMRespStreamBody
+      :> StreamPost NewlineFraming JSON (SourceIO LLMRespStream)

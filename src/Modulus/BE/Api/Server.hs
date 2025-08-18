@@ -6,10 +6,10 @@ module Modulus.BE.Api.Server
 
 import Modulus.BE.Api.V1
 import Modulus.BE.Handler
+import Modulus.BE.Handler.Conversations (conversationsServer)
 import Modulus.BE.Monad.AppM
 import Modulus.Common.Types
 import Servant
-import Modulus.BE.Handler.Conversations (conversationsServer)
 
 serverV1 :: ServerT API_V1 AppM
 serverV1 =
