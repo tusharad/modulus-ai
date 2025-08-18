@@ -10,22 +10,17 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
 
+  format:
+    runs-on: ubuntu-latest
     steps:
-    - name: Copy repo into actions 
-      uses: actions/checkout@v4
-
-    - name: install dependancies, build and test stack project.
-      uses: freckle/stack-action@v5
-      with:
-          test: false
+      - uses: actions/checkout@v4
+      - uses: haskell-actions/run-fourmolu@v11
+        with:
+          version: "latest"
 
   hlint:
+    needs: format
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -41,10 +36,16 @@ jobs:
         path: src/
         fail-on: warning
 
-  format:
-    runs-on: ubuntu-latest
+  test:
+    needs: hlint
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: haskell-actions/run-fourmolu@v11
-        with:
-          version: "latest"
+    - name: Copy repo into actions 
+      uses: actions/checkout@v4
+
+    - name: install dependancies, build and test stack project.
+      uses: freckle/stack-action@v5
