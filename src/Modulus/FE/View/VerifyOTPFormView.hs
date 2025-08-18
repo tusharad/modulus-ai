@@ -19,10 +19,10 @@ import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data VerifyOTPFormView = VerifyOTPFormView Int
+newtype VerifyOTPFormView = VerifyOTPFormView Int
   deriving (Generic, ViewId)
 
-data VerifyOTPForm f = VerifyOTPForm
+newtype VerifyOTPForm f = VerifyOTPForm
   { otp :: Field f Int
   }
   deriving (Generic, FromFormF, GenFields FieldName, GenFields Validated)

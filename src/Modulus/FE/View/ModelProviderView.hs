@@ -11,7 +11,7 @@ import Modulus.FE.Effects.StateStore
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data ModelProviders = ModelProviders Int
+newtype ModelProviders = ModelProviders Int
   deriving (Generic, ViewId)
 
 instance (StateStoreEff :> es, IOE :> es) => HyperView ModelProviders es where

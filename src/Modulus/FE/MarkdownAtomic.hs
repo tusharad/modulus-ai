@@ -18,9 +18,9 @@ markdownToView :: [MarkdownElement] -> View c ()
 markdownToView markdownElems = forM_ markdownElems $ \case
   (Header level txt) ->
     tag "p" ~ cls (ClassName ("h" <> T.pack (show level))) $ text txt
-  (Paragraph inlines) -> el $ forM_ inlines $ solveInline
+  (Paragraph inlines) -> el $ forM_ inlines solveInline
   (CodeBlock txt) -> tag "code" $ text txt
-  BreakLine -> tag "br" $ none
+  BreakLine -> tag "br" none
   UnorderedList lst -> tag "ul" $ forM_ lst $ \txt -> tag "li" $ text txt
   OrderedList lst -> tag "ol" $ forM_ lst $ \txt -> tag "li" $ text txt
   Blockquote txt -> tag "blockquote" $ text txt

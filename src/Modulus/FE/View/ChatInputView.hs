@@ -16,10 +16,10 @@ import Modulus.FE.View.ChatView
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data ChatInputView = ChatInputView Text
+newtype ChatInputView = ChatInputView Text
   deriving (Generic, ViewId)
 
-data ChatForm f = ChatForm
+newtype ChatForm f = ChatForm
   { chatPrompt :: Field f Text
   }
   deriving (Generic, FromFormF, GenFields FieldName, GenFields Validated)

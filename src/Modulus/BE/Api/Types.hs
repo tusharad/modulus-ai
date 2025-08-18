@@ -40,7 +40,7 @@ data OTPVerifyRequest = OTPVerifyRequest
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
-data RefreshTokenRequest = RefreshTokenRequest
+newtype RefreshTokenRequest = RefreshTokenRequest
   { refreshToken :: Text
   }
   deriving (Generic, FromJSON, ToJSON)
@@ -51,7 +51,7 @@ data UserProfile = UserProfile
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
-data AddConversationRequest = AddConversationRequest
+newtype AddConversationRequest = AddConversationRequest
   { conversationTitle :: Text
   }
   deriving (Eq, Show, Generic, FromJSON, ToJSON)

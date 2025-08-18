@@ -78,8 +78,7 @@ unorderedList = do
     listItem = do
       void $ char '-'
       space1
-      item <- T.pack <$> someTill anySingle eol
-      return item
+      T.pack <$> someTill anySingle eol
 
 orderedList :: Parser MarkdownElement
 orderedList = do
@@ -90,8 +89,7 @@ orderedList = do
       void $ some digitChar
       void $ char '.'
       space1
-      item <- T.pack <$> someTill anySingle eol
-      return item
+      T.pack <$> someTill anySingle eol
 
 paragraph :: Parser MarkdownElement
 paragraph = do
@@ -143,7 +141,8 @@ plainText = do
 breakLine :: Parser MarkdownElement
 breakLine = do
   void $ some newline
-  return $ BreakLine
+  return BreakLine
 
-parseMarkdownText :: Text -> Either (ParseErrorBundle Text Void) [MarkdownElement]
+parseMarkdownText ::
+  Text -> Either (ParseErrorBundle Text Void) [MarkdownElement]
 parseMarkdownText = parse parseMarkdown ""

@@ -8,7 +8,7 @@ import Modulus.FE.View.VerifyOTPFormView
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data Preferences = Preferences
+newtype Preferences = Preferences
   { user_email :: Text
   }
   deriving (Generic, Show, ToQuery, FromQuery)

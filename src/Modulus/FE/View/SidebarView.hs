@@ -18,7 +18,7 @@ import Modulus.FE.Utils
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data SidebarView = SidebarView Int
+newtype SidebarView = SidebarView Int
   deriving (Generic, ViewId)
 
 instance (IOE :> es, AppConfigEff :> es) => HyperView SidebarView es where

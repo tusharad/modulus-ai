@@ -18,7 +18,7 @@ import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data RegistrationFormView = RegistrationFormView Int
+newtype RegistrationFormView = RegistrationFormView Int
   deriving (Generic, ViewId)
 
 data RegistrationForm f = RegistrationForm

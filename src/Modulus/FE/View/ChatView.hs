@@ -29,7 +29,7 @@ import qualified Servant.Types.SourceT as S
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data ChatView = ChatView Text
+newtype ChatView = ChatView Text
   deriving (Generic, ViewId)
 
 instance
@@ -87,7 +87,7 @@ addUserPrompt convID currPrompt = do
     Left err -> pure $ errorView $ T.pack (show err)
     Right _ -> do
       modifyState $ \st_ -> st_ {currentPrompt = mempty}
-      eMsgList <- runBEAuth (\auth -> getConversationMessagesHandler auth convID)
+      eMsgList <- runBEAuth (`getConversationMessagesHandler` convID)
       case eMsgList of
         Left err -> pure $ errorView $ T.pack (show err)
         Right msgList -> do
@@ -163,7 +163,7 @@ loadChatView (Just convId) = do
           "loading..."
 
 ----
-data GenerateReplyView = GenerateReplyView Text
+newtype GenerateReplyView = GenerateReplyView Text
   deriving (Generic, ViewId)
 
 instance
@@ -199,7 +199,7 @@ streamReply convID = do
   streamState <- getStreamState convID
   case streamState of
     Just (Complete content) -> do
-      _ <- runBE $ logDebug $ "Streaming complte "
+      _ <- runBE $ logDebug "Streaming complte "
       handleCompleteStream convID content
     Just (InProgress content) -> pure $ renderStreamingReply (Just (parseView content))
     Nothing -> pure $ el ~ cls "message ai-message" $ "Something went wrong"

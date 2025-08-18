@@ -20,7 +20,7 @@ import qualified Text.Email.Validate as EmailValidate
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data LoginFormView = LoginFormView Int
+newtype LoginFormView = LoginFormView Int
   deriving (Generic, ViewId)
 
 data LoginForm f = LoginForm

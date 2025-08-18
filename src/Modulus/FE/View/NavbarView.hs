@@ -10,7 +10,7 @@ import Modulus.FE.View.ModelProviderView
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data NavbarView = NavbarView Text
+newtype NavbarView = NavbarView Text
   deriving (Generic, ViewId)
 
 instance HyperView NavbarView es where
