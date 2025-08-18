@@ -37,7 +37,7 @@ navbarView p ollamaList orList =
     link homeUrl ~ cls "navbar-brand d-none d-md-block" $ do
       tag "i" ~ cls "bi bi-robot" $ none
       text "Modulus AI"
-    el ~ cls "ms-auto d-flex align-items-center gap-3" $ do
+    el ~ cls "ms-auto d-flex flex-column flex-md-row align-items-end align-items-md-center gap-3" $ do
       hyper (ModelProviders 1) (renderProviderListView p ollamaList orList)
       tag "dropdown" $ do
         tag "i"

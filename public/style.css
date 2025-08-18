@@ -351,3 +351,14 @@ div[id^="ChatView"] {
     overflow: scroll;
     height: 80vh;
 }
+
+@media (max-width: 768px) {
+    #ModelProviders select {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      max-width: 120px;
+    }
+    .avatar {
+      font-size: 1.2rem; /* shrink avatar on mobile */
+    }
+  }

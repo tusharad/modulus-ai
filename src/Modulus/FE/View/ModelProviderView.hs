@@ -75,7 +75,7 @@ updateOpenRouterApiKey apiKey = do
 renderProviderListView :: Provider -> [Text] -> [Text] -> View ModelProviders ()
 renderProviderListView providerInfo ollamaModels orModels = do
   dropdown SetProvider (== providerInfo)
-    ~ cls "dropdown"
+    ~ cls "dropdown form-select form-select-sm d-inline w-auto"
     $ do
       showOllamaProviderOption ollamaModels
       showORProviderOption orModels
@@ -105,17 +105,19 @@ showOllamaProviderOption (firstModel : _) =
 
 renderOllamaModelsView :: Text -> [Text] -> View ModelProviders ()
 renderOllamaModelsView modelName ollamaModels = do
-  dropdown SetOllamaModel (== modelName) ~ cls "dropdown" $ do
+  dropdown SetOllamaModel (== modelName) ~ cls "dropdown form-select form-select-sm d-inline w-auto" $ do
     forM_ ollamaModels $ \model -> do
       option model ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ text model
 
 renderOpenRouterModelsView :: Text -> [Text] -> View ModelProviders ()
 renderOpenRouterModelsView modelName orModels = do
-  dropdown SetOpenRouterModel (== modelName) ~ cls "dropdown" $ do
-    forM_ orModels $ \model -> do
-      option model ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ text model
+  dropdown SetOpenRouterModel (== modelName)
+    ~ cls "dropdown form-select form-select-sm d-inline w-auto"
+    $ do
+      forM_ orModels $ \model -> do
+        option model ~ cls "btn btn-sm btn-outline-secondary dropdown-toggle" $ text model
   tag "input"
-    ~ cls "dropdown"
+    ~ cls "dropdown form-select form-select-sm d-inline w-auto"
       @ att "type" "password"
       . placeholder "API Key"
       . onInput SetOpenRouterApiKey 1000
