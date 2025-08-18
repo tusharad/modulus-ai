@@ -25,6 +25,15 @@ instance HyperView NavbarView es where
 navbarView :: Provider -> [Text] -> [Text] -> View NavbarView ()
 navbarView p ollamaList orList =
   el ~ cls "top-navbar navbar navbar-expand navbar-dark" $ do
+    tag "button"
+      ~ cls "btn btn-outline-light me-3"
+        @ att "type" "button"
+        . att "data-bs-toggle" "collapse"
+        . att "data-bs-target" "#sidebarCollapse"
+        . att "aria-expanded" "false"
+        . att "aria-controls" "sidebarCollapse"
+      $ do
+        tag "i" ~ cls "bi bi-list" $ none
     link homeUrl ~ cls "navbar-brand d-none d-md-block" $ do
       tag "i" ~ cls "bi bi-robot" $ none
       text "Modulus AI"

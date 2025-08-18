@@ -52,3 +52,4 @@ page mbPublicConvId = do
             myHyper (ChatView publicConvID) (loadChatView mbPublicConvId)
             el ~ cls "input-area" $ do
               myHyper (ChatInputView publicConvID) chatInputView
+        script "/chat.js"

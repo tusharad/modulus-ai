@@ -273,6 +273,7 @@
             background: var(--glass-bg);
             border-top: 1px solid var(--glass-border);
             backdrop-filter: blur(12px);
+            height: 100%;
         }
         .input-wrapper {
             position: relative;
@@ -328,40 +329,6 @@
         ::-webkit-scrollbar-thumb { background: #4a235a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent-purple); }
 
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .my-sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100%;
-                z-index: 1050; /* Above navbar */
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-                width: 280px;
-            }
-            .my-sidebar.open {
-                transform: translateX(0);
-            }
-            .my-sidebar.collapsed {
-                transform: translateX(-100%);
-                width: 280px; /* Reset width for when it opens */
-            }
-            .sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0,0,0,0.5);
-                z-index: 1040;
-                display: none;
-            }
-            .sidebar-overlay.active {
-                display: block;
-            }
-            .message { max-width: 90%; }
-        }
 
 div[id^="NavbarView"] {
     display: block !important;

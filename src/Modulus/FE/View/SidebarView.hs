@@ -56,7 +56,7 @@ chatDotsFilled = tag "i" ~ cls "bi bi-chat-dots-fill me-2" $ none
 
 sidebarView :: [ConversationRead] -> View SidebarView ()
 sidebarView convLst = do
-  tag "aside" ~ cls "my-sidebar" $ do
+  tag "aside" ~ cls "my-sidebar collapse collapse-horizontal" @ att "id" "sidebarCollapse" $ do
     el ~ cls "sidebar-header d-flex justify-content-between align-items-center" $ do
       tag "h5" ~ cls "mb-0" $ "History"
     el ~ cls "history-list" $ do
