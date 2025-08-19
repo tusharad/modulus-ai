@@ -11,7 +11,6 @@ import qualified Data.Map.Strict as HM
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import qualified Data.UUID as UUID
 import Effectful (IOE, MonadIO (liftIO))
 import Modulus.BE.Api.Types
@@ -23,7 +22,6 @@ import Modulus.FE.Effects.AppConfig (AppConfigEff)
 import Modulus.FE.Effects.StateStore
 import Modulus.FE.MarkdownAtomic (parseView)
 import Modulus.FE.Utils
-import Modulus.FE.View.ModelProviderView
 import Modulus.FE.View.SidebarView (Action (LoadSidebar), SidebarView (SidebarView))
 import qualified Servant.Types.SourceT as S
 import Web.Atomic.CSS
@@ -119,31 +117,53 @@ resolveOrCreateConvoID convID currPrompt = do
 errorView :: Text -> View c ()
 errorView x = el ~ cls "message ai-message" $ text x
 
-utcToText :: UTCTime -> Text
-utcToText = T.pack . formatTime defaultTimeLocale "%F %T"
+aiAvatar :: View c ()
+aiAvatar =
+  tag "img"
+    ~ cls "rounded-circle me-2"
+      @ att "style" "width: 40px; height: 40px;"
+      . att "src" "https://placehold.co/40x40/374151/e5e7eb?text=AI"
+    $ none
+
+userAvatar :: View c ()
+userAvatar =
+  tag "img"
+    ~ cls "rounded-circle me-2"
+      @ att "style" "width: 40px; height: 40px;"
+      . att "src" "https://placehold.co/40x40/8b5cf6/white?text=A"
+    $ none
 
 renderChatMsg :: ChatMessageRead -> View c ()
 renderChatMsg chatMsg = do
   let css_ =
         if chatMessageRole chatMsg == MessageRoleUser
-          then
-            "message user-message"
-          else "message ai-message"
-  el ~ cls css_ $ text (chatMessageContent chatMsg)
-  el ~ cls "message-meta" $ text (utcToText (chatMessageCreatedAt chatMsg))
+          then "p-3 rounded-3 message-bubble-user"
+          else "p-3 rounded-3 message-bubble-assistant"
+  let msg =
+        el ~ cls css_ @ att "style" "max-width: 70%;" $
+          tag "p" ~ cls "mb-0" $
+            text $
+              chatMessageContent chatMsg
+  if chatMessageRole chatMsg == MessageRoleUser
+    then el ~ cls "d-flex justify-content-end mb-4" $ do
+      msg
+      userAvatar
+    else el ~ cls "d-flex justify-content-start mb-4" $ do
+      aiAvatar
+      msg
 
 renderGeneratingReplyView :: ConversationPublicID -> [ChatMessageRead] -> View ChatView ()
 renderGeneratingReplyView (ConversationPublicID convID) chatMsgList = do
   let c = UUID.toText convID
   target (SidebarView 0) $ el @ onLoad LoadSidebar 300 $ none
-  el ~ cls "chat-window" $ do
+  tag "main" ~ cls "flex-grow-1 p-3 overflow-auto chat-window" $ do
     forM_ chatMsgList $ \chatMsg -> renderChatMsg chatMsg
-    hyper (GenerateReplyView c) $ el ~ cls "message ai-message" $ spinner
+    hyper (GenerateReplyView c) $ el ~ cls "p-3 rounded-3 message-bubble-assistant" $ spinner
     target (GenerateReplyView c) $ el @ onLoad Generate 300 $ none
 
 chatView :: [ChatMessageRead] -> View ChatView ()
 chatView chatMsgList = do
-  el ~ cls "chat-window" $ do
+  tag "main" ~ cls "flex-grow-1 p-3 overflow-auto chat-window" $ do
     forM_ chatMsgList $ \chatMsg -> renderChatMsg chatMsg
 
 spinner :: View c ()

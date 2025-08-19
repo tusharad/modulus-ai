@@ -8,7 +8,6 @@ import Modulus.FE.Effects.StateStore (StateStore (..), StateStoreEff, getState)
 import Modulus.FE.Utils
 import Modulus.FE.View.ChatInputView (ChatInputView (ChatInputView), chatInputView)
 import Modulus.FE.View.ChatView (ChatView (ChatView), GenerateReplyView, loadChatView)
-import Modulus.FE.View.ModelProviderView (ModelProviders)
 import Modulus.FE.View.NavbarView
 import Modulus.FE.View.SidebarView
 import Web.Atomic.CSS
@@ -23,7 +22,6 @@ page ::
     ( Page
         '[ SidebarView
          , NavbarView
-         , ModelProviders
          , ChatView
          , ChatInputView
          , GenerateReplyView
@@ -38,10 +36,9 @@ page mbPublicConvId = do
     Just _ -> do
       pure $ do
         stylesheet "/style.css"
-        el ~ cls "main-layout" $ do
+        el ~ cls "d-flex vh-100" @ att "data-bs-theme" "dark" $ do
           myHyper (SidebarView 1) loadSidebarView
-          el ~ cls "sidebar-overlay" $ none
-          tag "main" ~ cls "main-content" $ do
+          el ~ cls "d-flex flex-column w-100" $ do
             hyper
               (NavbarView publicConvID)
               ( navbarView
@@ -50,6 +47,5 @@ page mbPublicConvId = do
                   (availableORModels st)
               )
             myHyper (ChatView publicConvID) (loadChatView mbPublicConvId)
-            el ~ cls "input-area" $ do
-              myHyper (ChatInputView publicConvID) chatInputView
+            myHyper (ChatInputView publicConvID) chatInputView
         script "/chat.js"

@@ -83,16 +83,39 @@ chatFormView mbErrorMsg r = do
     Just errMsg ->
       el ~ cls "mb-3" $ do
         el ~ cls "invalid-feedback d-block" $ text errMsg
-  myForm SubmitInput $ do
-    el ~ cls "input-wrapper" $ do
-      checkInvalid (chatPrompt r)
-      field (chatPrompt f) $
-        textarea Nothing
-          ~ cls "form-control userInput"
-            @ att "rows" "1"
-      submit ~ cls "btn btn-primary rounded-circle p-2 sendButton" $
-        tag "i" ~ cls "bi bi-arrow-up" $
-          none
+  myForm SubmitInput ~ cls "input-group" $ do
+    checkInvalid (chatPrompt r)
+    field (chatPrompt f) $ do
+      textarea Nothing
+        ~ cls "form-control form-control-dark"
+          @ att "rows" "1"
+    tag "button"
+      ~ cls "btn btn-icon"
+        @ att "type" "button"
+        . att "data-bs-toggle" "dropdown"
+        . att "aria-expanded" "false"
+        . att "title" "Tools"
+      $ tag "i" ~ cls "bi bi-tools fs-5"
+      $ none
+    tag "ul"
+      ~ cls "dropdown-menu dropdown-menu-end"
+        @ att "id" "tools-dropdown"
+      $ do
+        tag "li" $
+          tag "a" ~ cls "dropdown-item" $
+            tag "i" ~ cls "bi bi-search me-2" $
+              text "Web Search"
+        tag "li" $
+          tag "a" ~ cls "dropdown-item" $
+            tag "i" ~ cls "bi bi-wikipedia me-2" $
+              text "Wikipedia"
+        tag "li" $
+          tag "a" ~ cls "dropdown-item" $
+            tag "i" ~ cls "bi bi-paperclip me-2" $
+              text "Upload File"
+    submit ~ cls "btn btn-primary" $
+      tag "i" ~ cls "bi bi-send-fill" $
+        none
   where
     checkInvalid x =
       case x of
@@ -101,4 +124,5 @@ chatFormView mbErrorMsg r = do
 
 chatInputView :: View ChatInputView ()
 chatInputView = do
-  chatFormView Nothing genFields
+  tag "footer" ~ cls "p-3 border-top" $ do
+    chatFormView Nothing genFields

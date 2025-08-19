@@ -48,23 +48,41 @@ loadSidebarView = do
         tag "span" ~ cls "visually-hidden" $
           "loading..."
 
-chatDots :: View c ()
-chatDots = tag "i" ~ cls "bi bi-chat-dots me-2" $ none
-
 chatDotsFilled :: View c ()
 chatDotsFilled = tag "i" ~ cls "bi bi-chat-dots-fill me-2" $ none
 
 sidebarView :: [ConversationRead] -> View SidebarView ()
 sidebarView convLst = do
-  tag "aside" ~ cls "my-sidebar collapse collapse-horizontal" @ att "id" "sidebarCollapse" $ do
-    el ~ cls "sidebar-header d-flex justify-content-between align-items-center" $ do
-      tag "h5" ~ cls "mb-0" $ "History"
-    el ~ cls "history-list" $ do
+  tag "div" ~ cls "d-flex flex-column flex-shrink-0 p-3 sidebar" @ att "id" "my-sidebar" $ do
+    el
+      ~ cls
+        "d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none sidebar-brand"
+        @ att "href" "/"
+      $ do
+        tag "i" ~ cls "bi bi-robot me-2 fs-4" $ none
+        tag "span" ~ cls "fs-4 sidebar-brand-text" $ text "Chat History"
+    tag "hr" none
+    tag "ul" ~ cls "nav nav-pills flex-column mb-auto" $ do
       forM_ convLst $ \conv -> do
-        link (chatUrl $ conversationPublicID conv) ~ cls "history-item" $ do
-          chatDots
-          text $ conversationTitle conv
-    el ~ cls "sidebar-footer p-3 border-top border-secondary-subtle" $ do
-      link chatUrlNew ~ cls "btn btn-outline-light w-100" $ do
-        tag "i" ~ cls "bi bi-plus-lg me-2" $ none
-        text "New Chat"
+        tag "li" ~ cls "nav-item" $ do
+          link (chatUrl $ conversationPublicID conv)
+            ~ cls "nav-link active" -- TODO: get convID as arg, check if active or not
+            $ do
+              el ~ cls "d-flex align-items-center history-item-text" $ do
+                tag "i" ~ cls "bi bi-chat-dots fs-5 me-2" $ none
+                tag "span" ~ cls "sidebar-text" $ do
+                  text $ conversationTitle conv
+                  tag "button"
+                    ~ cls "btn btn-icon btn-sm"
+                      @ att "type" "button"
+                      . att "data-bs-toggle" "modal"
+                      . att "data-bs-target" "#deleteConfirmModal"
+                    $ tag "i" ~ cls "bi bi-trash"
+                    $ none
+    tag "hr" none
+    tag "div" ~ cls "text-center" $ do
+      tag "button"
+        ~ cls "btn btn-icon"
+          @ att "onClick" "toggleSidebar()"
+        $ tag "i" ~ cls "bi bi-arrows-angle-contract fs-5"
+        $ none

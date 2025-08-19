@@ -83,7 +83,6 @@ library
       Modulus.FE.View.ChatInputView
       Modulus.FE.View.ChatView
       Modulus.FE.View.LoginFormView
-      Modulus.FE.View.ModelProviderView
       Modulus.FE.View.NavbarView
       Modulus.FE.View.RegistrationFormView
       Modulus.FE.View.SidebarView
