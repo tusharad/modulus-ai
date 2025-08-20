@@ -133,24 +133,28 @@ userAvatar =
       . att "src" "https://placehold.co/40x40/8b5cf6/white?text=A"
     $ none
 
+renderAiChatMsg :: View c () -> View c ()
+renderAiChatMsg chatMsg = do
+  el ~ cls "d-flex justify-content-start mb-4" $ do
+    aiAvatar
+    el ~ cls "p-3 rounded-3 message-bubble-assistant" @ att "style" "max-width: 70%;" $
+      tag "p" ~ cls "mb-0" $
+        chatMsg
+
+renderUserChatMsg :: View c () -> View c ()
+renderUserChatMsg chatMsg = do
+  el ~ cls "d-flex justify-content-end mb-4 gap-2" $ do
+    el ~ cls "p-3 rounded-3 message-bubble-user" @ att "style" "max-width: 70%;" $
+      tag "p" ~ cls "mb-0" $
+        chatMsg
+    userAvatar
+
 renderChatMsg :: ChatMessageRead -> View c ()
 renderChatMsg chatMsg = do
-  let css_ =
-        if chatMessageRole chatMsg == MessageRoleUser
-          then "p-3 rounded-3 message-bubble-user"
-          else "p-3 rounded-3 message-bubble-assistant"
-  let msg =
-        el ~ cls css_ @ att "style" "max-width: 70%;" $
-          tag "p" ~ cls "mb-0" $
-            text $
-              chatMessageContent chatMsg
   if chatMessageRole chatMsg == MessageRoleUser
-    then el ~ cls "d-flex justify-content-end mb-4" $ do
-      msg
-      userAvatar
-    else el ~ cls "d-flex justify-content-start mb-4" $ do
-      aiAvatar
-      msg
+    then
+      renderUserChatMsg (text $ chatMessageContent chatMsg)
+    else renderAiChatMsg (text $ chatMessageContent chatMsg)
 
 renderGeneratingReplyView :: ConversationPublicID -> [ChatMessageRead] -> View ChatView ()
 renderGeneratingReplyView (ConversationPublicID convID) chatMsgList = do
@@ -158,7 +162,7 @@ renderGeneratingReplyView (ConversationPublicID convID) chatMsgList = do
   target (SidebarView 0) $ el @ onLoad LoadSidebar 300 $ none
   tag "main" ~ cls "flex-grow-1 p-3 overflow-auto chat-window" $ do
     forM_ chatMsgList $ \chatMsg -> renderChatMsg chatMsg
-    hyper (GenerateReplyView c) $ el ~ cls "p-3 rounded-3 message-bubble-assistant" $ spinner
+    hyper (GenerateReplyView c) $ renderAiChatMsg spinner
     target (GenerateReplyView c) $ el @ onLoad Generate 300 $ none
 
 chatView :: [ChatMessageRead] -> View ChatView ()
@@ -176,11 +180,7 @@ spinner =
 loadChatView :: Maybe Text -> View ChatView ()
 loadChatView Nothing = el ~ cls "chat-window" $ none -- TODO: For new chat, add some Hi message
 loadChatView (Just convId) = do
-  el @ onLoad (LoadChatView convId) 200 $
-    el ~ cls "text-center py-5" $ do
-      el ~ cls "spinner-border text-light" @ att "role" "status" $
-        tag "span" ~ cls "visually-hidden" $
-          "loading..."
+  el @ onLoad (LoadChatView convId) 200 $ spinner
 
 ----
 newtype GenerateReplyView = GenerateReplyView Text
@@ -222,7 +222,7 @@ streamReply convID = do
       _ <- runBE $ logDebug "Streaming complte "
       handleCompleteStream convID content
     Just (InProgress content) -> pure $ renderStreamingReply (Just (parseView content))
-    Nothing -> pure $ el ~ cls "message ai-message" $ "Something went wrong"
+    Nothing -> pure $ renderAiChatMsg $ text "Something went wrong"
 
 handleCompleteStream ::
   ( IOE :> es
@@ -272,13 +272,13 @@ handleCompleteStream convID content = do
             Right msgList ->
               if length msgList > 2
                 then
-                  pure $ el ~ cls "message ai-message" $ parseView content
+                  pure $ renderAiChatMsg $ parseView content
                 else redirect $ chatUrl (ConversationPublicID publicConvID)
 
 renderStreamingReply :: Maybe (View GenerateReplyView ()) -> View GenerateReplyView ()
 renderStreamingReply mbContent =
   el @ onLoad Stream 200 $
-    el ~ cls "message ai-message" $
+    renderAiChatMsg $
       fromMaybe spinner mbContent
 
 generateReply ::

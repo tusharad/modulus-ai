@@ -162,15 +162,6 @@ renderOllamaModelsView currentlySelectedModel ollamaModels = do
     tag "ul" ~ cls "dropdown-menu dropdown-menu-end" $ do
       forM_ ollamaModels $ \model -> do
         tag "li" $ button (SetOllamaModel model) ~ cls "dropdown-item" $ text model
-  tag "li" ~ cls "nav-item dropdown" $ do
-    tag "a"
-      ~ cls "nav-link"
-        @ att "href" "#"
-        . att "role" "button"
-        . att "data-bs-toggle" "dropdown"
-        . att "aria-expanded" "false"
-      $ tag "i" ~ cls "bi bi-key fs-5"
-      $ none
 
 renderOpenRouterModelsView :: Text -> Text -> [Text] -> View NavbarView ()
 renderOpenRouterModelsView _ _ [] = none

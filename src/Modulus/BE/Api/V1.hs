@@ -38,3 +38,6 @@ type ConversationsAPI =
       :> "stream"
       :> ReqBody '[JSON] LLMRespStreamBody
       :> StreamPost NewlineFraming JSON (SourceIO LLMRespStream)
+    :<|> WithJWTAuth
+      :> Capture "conversationID" ConversationPublicID
+      :> Delete '[JSON] ()

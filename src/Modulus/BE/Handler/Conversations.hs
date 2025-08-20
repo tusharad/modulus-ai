@@ -5,6 +5,7 @@ module Modulus.BE.Handler.Conversations
   , addConversationHandler
   , addConversationMessageHandler
   , getLLMRespStreamHandler
+  , deleteConversationHandler
   ) where
 
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
@@ -47,6 +48,13 @@ conversationsServer =
     :<|> addConversationMessageHandler
     :<|> getConversationMessagesHandler
     :<|> getLLMRespStreamHandler
+    :<|> deleteConversationHandler
+
+deleteConversationHandler :: AuthResult -> ConversationPublicID -> AppM ()
+deleteConversationHandler (Authenticated user) convPublicId = do
+  convRead <- getConvRead user convPublicId
+  deleteConversation (conversationID convRead)
+deleteConversationHandler _ _ = throwError $ AuthenticationError "Invalid token"
 
 toLangchainRole :: MessageRole -> Langchain.Role
 toLangchainRole r = case r of

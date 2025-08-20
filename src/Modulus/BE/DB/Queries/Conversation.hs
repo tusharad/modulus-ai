@@ -2,6 +2,7 @@ module Modulus.BE.DB.Queries.Conversation
   ( addConversation
   , getConversationsByUserID
   , getConversationsByPublicID
+  , deleteConversation
   ) where
 
 import Modulus.BE.DB.Internal.Marshaller.Conversation
@@ -24,3 +25,6 @@ getConversationsByPublicID ::
 getConversationsByPublicID convPublicId =
   findFirstEntityBy conversationTable $
     where_ (fieldEquals conversationPublicIDField convPublicId)
+
+deleteConversation :: MonadOrville m => ConversationID -> m ()
+deleteConversation = deleteEntity conversationTable

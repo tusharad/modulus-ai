@@ -110,11 +110,13 @@
             border-right: 1px solid var(--border-color);
             transition: all 0.3s ease-in-out;
             height: 100vh;
+            border-right: 1px solid #fff;
         }
 
         .sidebar.collapsed {
             width: 80px;
             min-width: 80px;
+            border-right: 1px solid #fff;
         }
         
         .sidebar.collapsed .sidebar-text,
