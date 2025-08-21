@@ -3,6 +3,7 @@ import LoginPage from './components/auth/LoginPage';
 import RegisterPage from './components/auth/RegisterPage';
 import ChatPage from './components/chat/ChatPage';
 import { getCookie } from './services/cookies';
+import VerifyEmailPage from "./components/auth/VerifyEmailPage";
 
 const Router = () => {
   const isAuthenticated = !!getCookie('accessToken');
@@ -24,6 +25,9 @@ const Router = () => {
         path="/"
         element={<Navigate to={isAuthenticated ? '/chat' : '/login'} />}
       />
+
+    <Route path="/verify-email" element={<VerifyEmailPage />} />
+
     </Routes>
   );
 };

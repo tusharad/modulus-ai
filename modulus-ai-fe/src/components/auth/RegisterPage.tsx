@@ -30,7 +30,7 @@ const RegisterPage: React.FC = () => {
         registerPassword: password,
         registerConfirmPassword: confirmPassword,
       });
-      navigate('/login');
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(`Registration failed. Please try again. ${err}`);
     } finally {
