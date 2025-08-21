@@ -10,6 +10,7 @@ import Modulus.BE.Api.Internal.Auth (AuthAPI)
 import Modulus.BE.Api.Types
 import Modulus.BE.Auth.JwtAuthCombinator (WithJWTAuth)
 import Modulus.BE.DB.Internal.Model
+import Modulus.Common.Types
 import Servant
 
 type API_V1 =
@@ -41,3 +42,4 @@ type ConversationsAPI =
     :<|> WithJWTAuth
       :> Capture "conversationID" ConversationPublicID
       :> Delete '[JSON] ()
+    :<|> "model_providers" :> Get '[JSON] [ModelProviders]

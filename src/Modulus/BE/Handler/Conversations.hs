@@ -11,6 +11,7 @@ module Modulus.BE.Handler.Conversations
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
 import Control.Monad (void, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.Reader (asks)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -36,8 +37,10 @@ import Modulus.BE.DB.Queries.ChatMessage
   , getChatMessagesByConvID
   )
 import Modulus.BE.DB.Queries.Conversation
+import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
+import Modulus.Common.Types
 import Servant
 import qualified Servant.Types.SourceT as S
 
@@ -49,6 +52,10 @@ conversationsServer =
     :<|> getConversationMessagesHandler
     :<|> getLLMRespStreamHandler
     :<|> deleteConversationHandler
+    :<|> getModelProvidersHandler
+
+getModelProvidersHandler :: AppM [ModelProviders]
+getModelProvidersHandler = asks configCurrentProviders
 
 deleteConversationHandler :: AuthResult -> ConversationPublicID -> AppM ()
 deleteConversationHandler (Authenticated user) convPublicId = do
@@ -105,6 +112,7 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
             void $
               Langchain.stream ollamaLLM msgList st Nothing
         _ -> throwError $ NotFoundError "Provider not found"
+      logDebug $ "Provider selected: " <> provider
       pure $ chanSource tokenChan
   where
     chanSource :: Chan (Maybe Text) -> SourceIO LLMRespStream

@@ -16,7 +16,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
-import Modulus.BE.DB.Internal.Model (ConversationPublicID (ConversationPublicID))
+import Modulus.BE.DB.Internal.Model
 import Network.URI (nullURI, parseRelativeReference)
 import Network.URI.Static
 import Web.Hyperbole

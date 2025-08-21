@@ -20,7 +20,7 @@ export const useMessages = (conversation: ConversationRead | null) => {
             try {
                 const msgs = await apiService.getMessages(
                     conversation.conversationPublicID,
-                    navigate
+                    navigate,
                 );
                 setMessages(msgs);
             } catch (err) {
@@ -33,7 +33,10 @@ export const useMessages = (conversation: ConversationRead | null) => {
         loadMessages();
     }, [conversation, navigate]);
 
-    const sendMessage = async (content: string) => {
+    const sendMessage = async (
+        content: string,
+        llmConfig: { provider: string; model: string; apiKey?: string },
+    ) => {
         if (!conversation) return;
         try {
             await apiService.sendMessage(conversation.conversationPublicID, {
@@ -62,8 +65,12 @@ export const useMessages = (conversation: ConversationRead | null) => {
             let finalContent = "";
             await apiService.streamMessage(
                 conversation.conversationPublicID,
-                { modelUsed: "qwen3:0.6b", provider: "ollama" },
-                (chunk : string) => {
+                {
+                    modelUsed: llmConfig.model,
+                    provider: llmConfig.provider,
+                    apiKey: llmConfig.apiKey,
+                },
+                (chunk: string) => {
                     finalContent += chunk;
                     // Update assistant bubble progressively
                     setMessages((prev) =>

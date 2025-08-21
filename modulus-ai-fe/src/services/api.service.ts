@@ -207,6 +207,20 @@ class APIService {
             });
         }
     }
+
+    async getModelProviders(): Promise<
+        {
+            isApiFieldRequired: boolean;
+            modelList: string[];
+            providerName: string;
+        }[]
+    > {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/conversations/model_providers`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch model providers");
+        return response.json();
+    }
 }
 
 export const apiService = new APIService();

@@ -13,6 +13,7 @@ module Modulus.Common.Types
   , AuthTokens (..)
   , StateStoreData (..)
   , Provider (..)
+  , ModelProviders (..)
   ) where
 
 import Data.Aeson hiding (Error)
@@ -25,6 +26,13 @@ import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI (Path (..))
+
+data ModelProviders = ModelProviders
+  { providerName :: Text
+  , modelList :: [Text]
+  , isApiFieldRequired :: Bool
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
 -- | Application configuration
 data AppConfig = AppConfig
@@ -40,6 +48,7 @@ data AppConfig = AppConfig
   , configMinLogLevel :: MinLogLevel
   , configOrvilleState :: O.OrvilleState
   , configMailGunApiKey :: Text
+  , configCurrentProviders :: [ModelProviders]
   }
   deriving (Generic)
 
