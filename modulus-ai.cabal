@@ -143,6 +143,7 @@ library
     , unliftio
     , uuid
     , wai
+    , wai-cors
     , wai-extra
     , wai-middleware-static
     , warp
@@ -207,6 +208,7 @@ executable modulus-ai-exe
     , unliftio
     , uuid
     , wai
+    , wai-cors
     , wai-extra
     , wai-middleware-static
     , warp
@@ -275,6 +277,7 @@ test-suite modulus-ai-test
     , unliftio
     , uuid
     , wai
+    , wai-cors
     , wai-extra
     , wai-middleware-static
     , warp

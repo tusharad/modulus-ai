@@ -11,8 +11,20 @@ import qualified Modulus.FE.Core as FE
 import Modulus.FE.Effects.StateStore (StateStoreMap, initStateStoreMap)
 import Network.Wai
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.Static
 import Orville.PostgreSQL (runOrvilleWithState)
+
+myCorsPolicy :: CorsResourcePolicy
+myCorsPolicy =
+  simpleCorsResourcePolicy
+    { corsOrigins = Nothing
+    , corsMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    , corsRequestHeaders = ["Authorization", "Content-Type"]
+    }
+
+myCorsMiddleware :: Middleware
+myCorsMiddleware = cors (const $ Just myCorsPolicy)
 
 main :: IO ()
 main = do
@@ -31,7 +43,8 @@ main = do
       putStrLn $ "Running application on port " <> show (configPort conf)
       run (configPort conf) $
         staticPolicy (addBase "public") $
-          mainApp stateMap stData conf (appToServer conf)
+          myCorsMiddleware $
+            mainApp stateMap stData conf (appToServer conf)
 
 mainApp ::
   StateStoreMap ->
