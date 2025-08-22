@@ -67,26 +67,6 @@ library
       Modulus.Common.Openrouter
       Modulus.Common.Types
       Modulus.Common.Utils
-      Modulus.FE.Common.Types
-      Modulus.FE.Core
-      Modulus.FE.CSS
-      Modulus.FE.Effects.AppConfig
-      Modulus.FE.Effects.StateStore
-      Modulus.FE.Layout
-      Modulus.FE.MarkdownAtomic
-      Modulus.FE.MarkdownParser
-      Modulus.FE.Page.Chat
-      Modulus.FE.Page.Login
-      Modulus.FE.Page.Register
-      Modulus.FE.Page.Verify
-      Modulus.FE.Utils
-      Modulus.FE.View.ChatInputView
-      Modulus.FE.View.ChatView
-      Modulus.FE.View.LoginFormView
-      Modulus.FE.View.NavbarView
-      Modulus.FE.View.RegistrationFormView
-      Modulus.FE.View.SidebarView
-      Modulus.FE.View.VerifyOTPFormView
   other-modules:
       Paths_modulus_ai
   hs-source-dirs:
