@@ -46,14 +46,15 @@ mkAppConfigFromEnv = do
   eEnvironment <- lookupEnv "MODULUS_ENVIRONMENT"
   eRedisUrl <- lookupEnv "MODULUS_REDIS_URL"
   eMailgunApi <- lookupEnv "MODULUS_MAILGUN_API"
+  eFileUploadPath <- lookupEnv "MODULUS_FILE_UPLOAD_PATH"
   apiTimeout <- readEnvWithDefault "MODULUS_API_TIMEOUT" 30
   loggerSet <- newStdoutLoggerSet defaultBufSize
   eConnectionPool <- mkConnectionPoolFromEnv
   case eConnectionPool of
     Left err -> pure $ Left (T.pack $ show err)
     Right connPool -> do
-      case (ePort, eJwtSecret, eMailgunApi) of
-        (Just portStr, Just jwtSecret, Just mailGunApi) -> do
+      case (ePort, eJwtSecret, eMailgunApi, eFileUploadPath) of
+        (Just portStr, Just jwtSecret, Just mailGunApi, Just fileUploadPath) -> do
           case reads portStr of
             [(port, "")] -> do
               manager <- HTTP.newTlsManager
@@ -90,6 +91,7 @@ mkAppConfigFromEnv = do
                     , configOrvilleState = orvilleState
                     , configMailGunApiKey = T.pack mailGunApi
                     , configCurrentProviders = modelProviders
+                    , configFileUploadPath = fileUploadPath
                     }
             _ -> pure $ Left "Invalid PORT environment variable"
         _ ->

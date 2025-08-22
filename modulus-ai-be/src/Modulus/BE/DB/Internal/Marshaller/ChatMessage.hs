@@ -16,7 +16,7 @@ module Modulus.BE.DB.Internal.Marshaller.ChatMessage
   , chatMessageMarshaller
   ) where
 
-import Control.Lens.Internal.CTypes (Int32)
+import Data.Int (Int32)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)

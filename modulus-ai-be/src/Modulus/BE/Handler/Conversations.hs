@@ -9,12 +9,17 @@ module Modulus.BE.Handler.Conversations
   ) where
 
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
-import Control.Monad (void, when)
+import Control.Exception (SomeException, try)
+import Control.Monad (unless, void, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Reader (asks)
+import qualified Data.ByteString.Lazy as BSL
+import Data.Int (Int64)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import qualified Data.Text as T
+import Data.UUID.V4 (nextRandom)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Ollama (Ollama (..))
@@ -28,12 +33,14 @@ import Modulus.BE.DB.Internal.Model
   , Conversation (..)
   , ConversationPublicID
   , ConversationRead
+  , MessageAttachment (..)
   , MessageRole (..)
   , User (userID)
   , UserRead
   )
 import Modulus.BE.DB.Queries.ChatMessage
   ( addChatMessage
+  , addMsgAttachment
   , getChatMessagesByConvID
   )
 import Modulus.BE.DB.Queries.Conversation
@@ -41,8 +48,11 @@ import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Modulus.Common.Types
+import qualified Orville.PostgreSQL as Orville
 import Servant
+import Servant.Multipart
 import qualified Servant.Types.SourceT as S
+import System.FilePath
 
 conversationsServer :: ServerT ConversationsAPI AppM
 conversationsServer =
@@ -150,6 +160,56 @@ getConversationMessagesHandler _ _ =
   throwError $
     AuthenticationError "Invalid token"
 
+supportedFileTypes :: [Text]
+supportedFileTypes =
+  [ "text/plain"
+  , "application/pdf"
+  ]
+
+storeAttachmentIfExist ::
+  Maybe (FileData Mem) ->
+  AppM (Maybe AttachmentInfo)
+storeAttachmentIfExist Nothing = pure Nothing
+storeAttachmentIfExist (Just FileData {..}) = do
+  logDebug $ "got attachment" <> fdFileName
+  do
+    if fdFileCType `notElem` supportedFileTypes
+      then throwError $ ValidationError "Unsupported file type"
+      else do
+        uuid <- liftIO nextRandom
+        let newAttachmentObjectName =
+              "attachment_" <> show uuid <> takeExtension (T.unpack fdFileName)
+        let fileSize = BSL.length fdPayload
+        unless (fileSize < 1000000) $
+          throwError $
+            ValidationError "File to large :("
+        fPath <- asks configFileUploadPath
+        let resultPath = fPath </> newAttachmentObjectName
+        eRes <-
+          liftIO $
+            try $
+              BSL.writeFile resultPath fdPayload
+        case eRes of
+          Left err -> do
+            let errMsg = T.pack $ show (err :: SomeException)
+            throwError $ ValidationError $ "Could not upload file: " <> errMsg
+          Right _ ->
+            pure $
+              Just $
+                AttachmentInfo
+                  { attachmentName = T.pack newAttachmentObjectName
+                  , attachmentType = fdFileCType
+                  , attachmentSize = fileSize
+                  , attachmentFilePath = T.pack resultPath
+                  }
+
+data AttachmentInfo = AttachmentInfo
+  { attachmentName :: Text
+  , attachmentType :: Text
+  , attachmentSize :: Int64
+  , attachmentFilePath :: Text
+  }
+
 addConversationMessageHandler ::
   AuthResult ->
   ConversationPublicID ->
@@ -160,6 +220,7 @@ addConversationMessageHandler
   convPublicId
   AddMessageRequest {..} = do
     convRead <- getConvRead user convPublicId
+    mbAttachmentInfo <- storeAttachmentIfExist addMessageAttachment
     let role = case addMessageRole of
           "user" -> MessageRoleUser
           "assistant" -> MessageRoleAssistant
@@ -179,8 +240,24 @@ addConversationMessageHandler
             , chatMessageCompletionTokens = Nothing
             , chatMessageCreatedAt = ()
             }
-    void $ addChatMessage chatMsgWrite
-addConversationMessageHandler _ _ _ = throwError $ AuthenticationError "Invalid token"
+    Orville.withTransaction $ do
+      chatMsgRead <- addChatMessage chatMsgWrite
+      case mbAttachmentInfo of
+        Nothing -> pure ()
+        Just AttachmentInfo {..} -> do
+          let msgAttachWrite =
+                MessageAttachment
+                  { messageAttachmentID = ()
+                  , messageAttachmentMessageID = chatMessageID chatMsgRead
+                  , messageAttachmentFileName = attachmentName
+                  , messageAttachmentFileType = attachmentType
+                  , messageAttachmentFileSizeBytes = attachmentSize
+                  , messageAttachmentStoragePath = attachmentFilePath
+                  , messageAttachmentCreatedAt = ()
+                  }
+          void $ addMsgAttachment msgAttachWrite
+addConversationMessageHandler _ _ _ =
+  throwError $ AuthenticationError "Invalid token"
 
 addConversationHandler ::
   AuthResult -> AddConversationRequest -> AppM ConversationPublicID

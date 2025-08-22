@@ -24,8 +24,6 @@ import GHC.Generics
 import qualified Network.HTTP.Client as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
-import Web.Hyperbole
-import Web.Hyperbole.Data.URI (Path (..))
 
 data ModelProviders = ModelProviders
   { providerName :: Text
@@ -49,6 +47,7 @@ data AppConfig = AppConfig
   , configOrvilleState :: O.OrvilleState
   , configMailGunApiKey :: Text
   , configCurrentProviders :: [ModelProviders]
+  , configFileUploadPath :: FilePath
   }
   deriving (Generic)
 
@@ -107,12 +106,6 @@ data AuthTokens = AuthTokens
   }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
-instance Session AuthTokens where
-  sessionKey = "authTokens"
-  cookiePath = Just (Path True [])
-
-instance Default AuthTokens where
-  def = AuthTokens mempty mempty
 data StateStoreData = StateStoreData
   { ollamaList :: [Text]
   , openrouterList :: [Text]

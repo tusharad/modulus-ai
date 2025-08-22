@@ -54,7 +54,7 @@ import Modulus.BE.DB.Internal.Marshaller.AuditLog as Export
 import Modulus.BE.DB.Internal.Marshaller.ChatMessage as Export
 import Modulus.BE.DB.Internal.Marshaller.Conversation as Export
 import Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP as Export
-import Modulus.BE.DB.Internal.Marshaller.Message as Export
+import Modulus.BE.DB.Internal.Marshaller.MessageAttachment as Export
 import Modulus.BE.DB.Internal.Marshaller.RefreshToken as Export
 import Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan as Export
 import Modulus.BE.DB.Internal.Marshaller.User as Export

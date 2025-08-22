@@ -17,22 +17,19 @@ description: Please see the README on GitHub at <https://github.com/tusharad/mod
 dependencies:
   - base >= 4.7 && < 5
   - aeson
-  - atomic-css
   - bytestring
   - containers
   - effectful-core
   - email-validate
   - fast-logger
+  - filepath
   - http-client
   - http-client-tls
   - http-types
-  - hyperbole
   - jose
   - langchain-hs
   - lens
-  - megaparsec
   - mtl
-  - network-uri
   - orville-postgresql
   - ollama-haskell
   - password
@@ -41,6 +38,7 @@ dependencies:
   - servant
   - servant-client
   - servant-client-core
+  - servant-multipart
   - servant-server
   - string-interpolate
   - text

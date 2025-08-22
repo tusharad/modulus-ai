@@ -9,11 +9,6 @@ extra-deps:
     subdirs:
       - orville-postgresql
 
-  - atomic-css-0.1.0@sha256:03ba814e13675adae02254c58ed65e88f333f0102037c5d1bc913b396ed2e02f,3106
-
-  - git: https://github.com/seanhess/hyperbole
-    commit: 99ccee5f698848844435a7e33ed8b06744d137b6
-
   - git: https://github.com/tusharad/langchain-hs
     commit: fc21fd01d14c74dda9a9f3df8c01f8d7711c5087
 

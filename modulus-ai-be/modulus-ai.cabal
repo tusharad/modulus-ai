@@ -41,7 +41,7 @@ library
       Modulus.BE.DB.Internal.Marshaller.ChatMessage
       Modulus.BE.DB.Internal.Marshaller.Conversation
       Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
-      Modulus.BE.DB.Internal.Marshaller.Message
+      Modulus.BE.DB.Internal.Marshaller.MessageAttachment
       Modulus.BE.DB.Internal.Marshaller.RefreshToken
       Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
       Modulus.BE.DB.Internal.Marshaller.User
@@ -90,23 +90,20 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
-    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
     , effectful-core
     , email-validate
     , fast-logger
+    , filepath
     , http-client
     , http-client-tls
     , http-types
-    , hyperbole
     , jose
     , langchain-hs
     , lens
-    , megaparsec
     , mtl
-    , network-uri
     , ollama-haskell
     , orville-postgresql
     , password
@@ -115,6 +112,7 @@ library
     , servant
     , servant-client
     , servant-client-core
+    , servant-multipart
     , servant-server
     , string-interpolate
     , text
@@ -154,24 +152,21 @@ executable modulus-ai-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
     , effectful-core
     , email-validate
     , fast-logger
+    , filepath
     , http-client
     , http-client-tls
     , http-types
-    , hyperbole
     , jose
     , langchain-hs
     , lens
-    , megaparsec
     , modulus-ai
     , mtl
-    , network-uri
     , ollama-haskell
     , orville-postgresql
     , password
@@ -180,6 +175,7 @@ executable modulus-ai-exe
     , servant
     , servant-client
     , servant-client-core
+    , servant-multipart
     , servant-server
     , string-interpolate
     , text
@@ -221,24 +217,21 @@ test-suite modulus-ai-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , atomic-css
     , base >=4.7 && <5
     , bytestring
     , containers
     , effectful-core
     , email-validate
     , fast-logger
+    , filepath
     , http-client
     , http-client-tls
     , http-types
-    , hyperbole
     , jose
     , langchain-hs
     , lens
-    , megaparsec
     , modulus-ai
     , mtl
-    , network-uri
     , ollama-haskell
     , orville-postgresql
     , password
@@ -247,6 +240,7 @@ test-suite modulus-ai-test
     , servant
     , servant-client
     , servant-client-core
+    , servant-multipart
     , servant-server
     , string-interpolate
     , tasty

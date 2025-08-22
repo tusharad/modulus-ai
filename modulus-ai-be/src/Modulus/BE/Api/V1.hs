@@ -12,6 +12,7 @@ import Modulus.BE.Auth.JwtAuthCombinator (WithJWTAuth)
 import Modulus.BE.DB.Internal.Model
 import Modulus.Common.Types
 import Servant
+import Servant.Multipart
 
 type API_V1 =
   "api" :> V1
@@ -29,7 +30,7 @@ type ConversationsAPI =
     :<|> WithJWTAuth :> Get '[JSON] [ConversationRead]
     :<|> WithJWTAuth
       :> Capture "conversationID" ConversationPublicID
-      :> ReqBody '[JSON] AddMessageRequest
+      :> MultipartForm Mem AddMessageRequest
       :> Post '[JSON] ()
     :<|> WithJWTAuth
       :> Capture "conversationID" ConversationPublicID

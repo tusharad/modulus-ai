@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Modulus.BE.DB.Internal.Marshaller.Message
+module Modulus.BE.DB.Internal.Marshaller.MessageAttachment
   ( messageAttachmentIDField
   , messageAttachmentMessageIDField
   , messageAttachmentFileNameField
@@ -12,7 +12,7 @@ module Modulus.BE.DB.Internal.Marshaller.Message
   , messageAttachmentMarshaller
   ) where
 
-import Control.Lens.Internal.CTypes (Int64)
+import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField)
