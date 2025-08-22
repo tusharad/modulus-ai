@@ -4,6 +4,6 @@ repos:
     -   id: fourmolu
         name: fourmolu
         description: "Formatter for Haskell source code."
-        entry: fourmolu -i .
+        entry: fourmolu -i modulus-ai-be
         language: system
         types: [haskell]
