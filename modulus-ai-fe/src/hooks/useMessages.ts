@@ -36,12 +36,14 @@ export const useMessages = (conversation: ConversationRead | null) => {
     const sendMessage = async (
         content: string,
         llmConfig: { provider: string; model: string; apiKey?: string },
+        file?: File
     ) => {
         if (!conversation) return;
         try {
             await apiService.sendMessage(conversation.conversationPublicID, {
                 messageContent: content,
                 addMessageRole: "user",
+                file
             });
             const updatedMsgs = await apiService.getMessages(
                 conversation.conversationPublicID,

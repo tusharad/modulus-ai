@@ -55,7 +55,7 @@ bearerAuthReq token req =
   let authText = decodeUtf8 ("Bearer " <> TE.encodeUtf8 token)
    in ClientCore.addHeader "Authorization" authText req
 
-instance HasClient m api => HasClient m (WithJWTAuth :> api) where
+instance (HasClient m api) => HasClient m (WithJWTAuth :> api) where
   type Client m (WithJWTAuth :> api) = T.Text -> Client m api
 
   clientWithRoute pm Proxy req val =
@@ -106,7 +106,7 @@ jwtAuthCheck appCfg = do
       pure TokenNotFound
     Just rawToken -> authenticateToken appCfg rawToken
 
-authenticateToken :: MonadIO m => AppConfig -> BSL.ByteString -> m AuthResult
+authenticateToken :: (MonadIO m) => AppConfig -> BSL.ByteString -> m AuthResult
 authenticateToken appCfg rawToken = do
   let key = fromOctets $ TE.encodeUtf8 (configJwtSecret appCfg)
   eClaims <- liftIO $ runJOSE $ verifyJWT_ key rawToken

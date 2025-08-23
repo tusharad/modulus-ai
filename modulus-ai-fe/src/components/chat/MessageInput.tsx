@@ -1,22 +1,49 @@
 import React, { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Paperclip, Send } from 'lucide-react';
 
 interface Props {
-  onSend: (content: string) => void;
+  onSend: (content: string, file?: File) => void;
 }
 
 const MessageInput: React.FC<Props> = ({ onSend }) => {
   const [content, setContent] = useState('');
+  const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
-    onSend(content.trim());
-    setContent('');
+    if (!content.trim() && !file) return; // require message or file
+    if(file) 
+        console.log("submmit with file", file)
+    else 
+        console.log("submit without file", file)
+    onSend(content.trim(), file || undefined);
+    setContent("");
+    setFile(null);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t bg-white flex items-center gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="p-4 border-t bg-white flex items-center gap-2"
+    >
+      {/* File Upload */}
+      <label className="cursor-pointer text-gray-500 hover:text-gray-700">
+        <Paperclip size={18} />
+        <input
+          type="file"
+          className="hidden"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+      </label>
+
+      {/* Show filename if selected */}
+      {file && (
+        <span className="text-sm text-gray-600 truncate max-w-[150px]">
+          {file.name}
+        </span>
+      )}
+
+      {/* Text Input */}
       <input
         type="text"
         value={content}
@@ -24,6 +51,8 @@ const MessageInput: React.FC<Props> = ({ onSend }) => {
         className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         placeholder="Type a message..."
       />
+
+      {/* Submit */}
       <button
         type="submit"
         className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"

@@ -97,7 +97,7 @@ mkAppConfigFromEnv = do
         _ ->
           pure $ Left "Missing required environment variables: PORT, JWT_SECRET"
   where
-    readEnvWithDefault :: Read a => String -> a -> IO a
+    readEnvWithDefault :: (Read a) => String -> a -> IO a
     readEnvWithDefault envVar defaultVal = do
       r <- lookupEnv envVar
       case r of

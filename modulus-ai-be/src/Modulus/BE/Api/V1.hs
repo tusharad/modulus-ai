@@ -34,7 +34,7 @@ type ConversationsAPI =
       :> Post '[JSON] ()
     :<|> WithJWTAuth
       :> Capture "conversationID" ConversationPublicID
-      :> Get '[JSON] [ChatMessageRead]
+      :> Get '[JSON] [ChatMessageWithAttachments]
     :<|> WithJWTAuth
       :> Capture "conversationID" ConversationPublicID
       :> "stream"

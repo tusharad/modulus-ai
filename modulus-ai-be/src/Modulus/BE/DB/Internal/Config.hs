@@ -65,7 +65,7 @@ readRequiredEnvVar varName = do
     Right (Just val) -> return $ Right val
 
 -- | Reads an optional environment variable and attempts to parse it.
-readOptionalEnvVar :: Read a => String -> IO (Either ConnectionConfigError (Maybe a))
+readOptionalEnvVar :: (Read a) => String -> IO (Either ConnectionConfigError (Maybe a))
 readOptionalEnvVar varName = do
   result <- lookupEnvSafe varName
   case result of

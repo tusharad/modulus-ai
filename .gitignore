@@ -7,3 +7,4 @@ node_modules/
 .env.prod
 modulus-ai-exe
 html_ui
+uploads

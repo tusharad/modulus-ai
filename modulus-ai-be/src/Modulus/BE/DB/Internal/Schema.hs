@@ -52,7 +52,7 @@ autoMigrate pool = Orville.runOrville pool autoMigrateQ
   This is typically called during application startup to ensure the database
   is up-to-date.
 -}
-autoMigrateQ :: Orville.MonadOrville m => m ()
+autoMigrateQ :: (Orville.MonadOrville m) => m ()
 autoMigrateQ = do
   let pgcryptoExtensionId = Orville.nameToExtensionId "pgcrypto"
       schemaItems :: [SchemaItem]

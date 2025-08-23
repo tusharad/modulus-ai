@@ -121,6 +121,9 @@ module Modulus.BE.DB.Internal.Model
   , RefreshTokenID (..)
   , RefreshTokenRead
   , RefreshTokenWrite
+
+    -- * joined models
+  , ChatMessageWithAttachments (..)
   ) where
 
 import Data.Aeson
@@ -323,3 +326,9 @@ data RefreshToken a b = RefreshToken
 
 type RefreshTokenRead = RefreshToken RefreshTokenID UTCTime
 type RefreshTokenWrite = RefreshToken () ()
+
+data ChatMessageWithAttachments = ChatMessageWithAttachments
+  { cm :: ChatMessageRead
+  , mas :: [MessageAttachmentRead]
+  }
+  deriving (Show, Eq, Generic, ToJSON)

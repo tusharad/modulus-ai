@@ -51,9 +51,9 @@ const ChatPage: React.FC = () => {
           {selectedConversation ? (
             <>
               <MessageList messages={messages} />
-              <MessageInput onSend={(content) => {
+              <MessageInput onSend={(content, file) => {
                 if (llmConfig) {
-                  sendMessage(content, llmConfig);
+                  sendMessage(content, llmConfig, file);
                 }
               }} />
             </>

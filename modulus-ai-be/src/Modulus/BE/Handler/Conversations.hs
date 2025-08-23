@@ -28,20 +28,10 @@ import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
 import Modulus.BE.DB.Internal.Model
-  ( ChatMessage (..)
-  , ChatMessageRead
-  , Conversation (..)
-  , ConversationPublicID
-  , ConversationRead
-  , MessageAttachment (..)
-  , MessageRole (..)
-  , User (userID)
-  , UserRead
-  )
 import Modulus.BE.DB.Queries.ChatMessage
   ( addChatMessage
   , addMsgAttachment
-  , getChatMessagesByConvID
+  , getChatMessagesWithAttachmentsByConvID
   )
 import Modulus.BE.DB.Queries.Conversation
 import Modulus.BE.Log (logDebug)
@@ -98,7 +88,7 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
                     chatMessageContent
                     Langchain.defaultMessageData
               )
-              chatMsgLst
+              (cm <$> chatMsgLst)
       tokenChan <- liftIO newChan
       let st =
             StreamHandler
@@ -152,10 +142,10 @@ getConvRead user convPublicId = do
 getConversationMessagesHandler ::
   AuthResult ->
   ConversationPublicID ->
-  AppM [ChatMessageRead]
+  AppM [ChatMessageWithAttachments]
 getConversationMessagesHandler (Authenticated user) convPublicId = do
   convRead <- getConvRead user convPublicId
-  getChatMessagesByConvID (conversationID convRead)
+  getChatMessagesWithAttachmentsByConvID (conversationID convRead)
 getConversationMessagesHandler _ _ =
   throwError $
     AuthenticationError "Invalid token"

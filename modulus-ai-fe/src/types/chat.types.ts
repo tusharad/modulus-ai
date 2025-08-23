@@ -1,30 +1,44 @@
-
 export interface ChatMessageRead {
     chatMessagePublicID: string;
     chatMessageContent: string;
-    chatMessageRole: 'MessageRoleUser' | 'MessageRoleAssistant';
+    chatMessageRole: "MessageRoleUser" | "MessageRoleAssistant";
     chatMessageCreatedAt: string;
-  }
-  
-  export interface ConversationRead {
+}
+
+export interface MessageAttachmentRead {
+    messageAttachmentID: string;
+    messageAttachmentMessageID: string;
+    messageAttachmentFileName: string;
+    messageAttachmentFileType: string;
+    messageAttachmentFileSizeBytes: number;
+    messageAttachmentStoragePath: string;
+    messageAttachmentCreatedAt: string;
+}
+
+export interface ChatMessageWithAttachments  {
+    cm  : ChatMessageRead
+  , mas : [MessageAttachmentRead]
+}
+
+export interface ConversationRead {
     conversationPublicID: string;
     conversationTitle: string;
     conversationCreatedAt: string;
-  }
-  
-  export interface AddConversationRequest {
+}
+
+export interface AddConversationRequest {
     conversationTitle: string;
-  }
-  
-  export interface AddMessageRequest {
+}
+
+export interface AddMessageRequest {
     messageContent: string;
-    addMessageRole: 'user' | 'assistant';
+    addMessageRole: "user" | "assistant";
     addMessageProvider?: string;
     addMessageModel?: string;
-  }
-  
-  export interface LLMRespStreamBody {
+}
+
+export interface LLMRespStreamBody {
     modelUsed: string;
     provider: string;
     apiKey?: string;
-  }
+}

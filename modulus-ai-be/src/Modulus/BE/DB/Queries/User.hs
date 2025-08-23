@@ -11,15 +11,15 @@ import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table (userTable)
 import Orville.PostgreSQL
 
-getUserByEmailQ :: MonadOrville m => Text -> m (Maybe UserRead)
+getUserByEmailQ :: (MonadOrville m) => Text -> m (Maybe UserRead)
 getUserByEmailQ inputEmail =
   findFirstEntityBy userTable $ where_ (fieldEquals userEmailField inputEmail)
 
-addUser :: MonadOrville m => UserWrite -> m UserRead
+addUser :: (MonadOrville m) => UserWrite -> m UserRead
 addUser = insertAndReturnEntity userTable
 
-updateUser :: MonadOrville m => UserID -> UserWrite -> m ()
+updateUser :: (MonadOrville m) => UserID -> UserWrite -> m ()
 updateUser = updateEntity userTable
 
-getUser :: MonadOrville m => UserID -> m (Maybe UserRead)
+getUser :: (MonadOrville m) => UserID -> m (Maybe UserRead)
 getUser = findEntity userTable

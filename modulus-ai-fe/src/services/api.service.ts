@@ -7,6 +7,7 @@ import type {
     LoginRequest,
     RegisterRequest,
     UserProfile,
+    ChatMessageWithAttachments ,
 } from "../types";
 import { getCookie } from "./cookies";
 import { deleteCookie, setCookie } from "./cookies.ts";
@@ -44,13 +45,19 @@ class APIService {
         navigate?: (path: string) => void,
     ): Promise<Response> {
         const token = getCookie("accessToken");
+        const headers: Record<string, string> = {
+            ...(options.headers as Record<string, string>),
+            ...(token && { Authorization: `Bearer ${token}` }),
+        };
+
+        // ❌ Don't force Content-Type if FormData is used
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+
         let response = await fetch(url, {
             ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(token && { Authorization: `Bearer ${token}` }),
-                ...options.headers,
-            },
+            headers,
         });
 
         if (response.status === 401) {
@@ -65,13 +72,17 @@ class APIService {
 
             // Retry once with new token
             const newToken = getCookie("accessToken");
+            const retryHeaders: Record<string, string> = {
+                ...(options.headers as Record<string, string>),
+                ...(newToken && { Authorization: `Bearer ${newToken}` }),
+            };
+            if (!(options.body instanceof FormData)) {
+                retryHeaders["Content-Type"] = "application/json";
+            }
+
             response = await fetch(url, {
                 ...options,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(newToken && { Authorization: `Bearer ${newToken}` }),
-                    ...options.headers,
-                },
+                headers: retryHeaders,
             });
         }
 
@@ -130,31 +141,35 @@ class APIService {
             navigate,
         );
         if (!response.ok) throw new Error("Failed to fetch messages");
-        return response.json();
+        const data: ChatMessageWithAttachments[] = await response.json();
+        return data.map(item => item.cm);
     }
 
     async sendMessage(
         conversationId: string,
-        data: AddMessageRequest,
+        data: {
+            messageContent: string;
+            addMessageRole: "user" | "assistant";
+            file?: File;
+        },
     ): Promise<void> {
+        const formData = new FormData();
+        formData.append("messageContent", data.messageContent);
+        formData.append("addMessageRole", data.addMessageRole);
+
+        if (data.file) {
+            formData.append("addMessageAttachment", data.file);
+        }
+
         const response = await this.fetchWithAuth(
             `${this.baseUrl}/conversations/${conversationId}`,
             {
                 method: "POST",
-                body: JSON.stringify(data),
+                body: formData,
             },
         );
-        if (!response.ok) throw new Error("Failed to send message");
-    }
 
-    async deleteConversation(conversationId: string): Promise<void> {
-        const response = await this.fetchWithAuth(
-            `${this.baseUrl}/conversations/${conversationId}`,
-            {
-                method: "DELETE",
-            },
-        );
-        if (!response.ok) throw new Error("Failed to delete conversation");
+        if (!response.ok) throw new Error("Failed to send message");
     }
 
     async verifyOTP(
