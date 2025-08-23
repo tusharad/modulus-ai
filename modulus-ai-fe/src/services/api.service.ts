@@ -3,11 +3,11 @@ import type {
     AddMessageRequest,
     AuthTokens,
     ChatMessageRead,
+    ChatMessageWithAttachments,
     ConversationRead,
     LoginRequest,
     RegisterRequest,
     UserProfile,
-    ChatMessageWithAttachments ,
 } from "../types";
 import { getCookie } from "./cookies";
 import { deleteCookie, setCookie } from "./cookies.ts";
@@ -142,7 +142,7 @@ class APIService {
         );
         if (!response.ok) throw new Error("Failed to fetch messages");
         const data: ChatMessageWithAttachments[] = await response.json();
-        return data.map(item => item.cm);
+        return data.map((item) => item.cm);
     }
 
     async sendMessage(
@@ -171,6 +171,17 @@ class APIService {
 
         if (!response.ok) throw new Error("Failed to send message");
     }
+
+    async deleteConversation(conversationId: string): Promise<void> {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/conversations/${conversationId}`,
+            {
+                method: "DELETE",
+            },
+        );
+        if (!response.ok) throw new Error("Failed to delete conversation");
+    }
+
 
     async verifyOTP(
         data: { verifyEmail: string; verifyOTP: number },
