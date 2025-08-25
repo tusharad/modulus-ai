@@ -50,3 +50,5 @@ jobs:
 
     - name: install dependancies, build and test stack project.
       uses: freckle/stack-action@v5
+      with:
+        working-directory: ./modulus-ai-be/
