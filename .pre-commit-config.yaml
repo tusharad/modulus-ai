@@ -7,3 +7,10 @@ repos:
         entry: fourmolu -i modulus-ai-be
         language: system
         types: [haskell]
+
+    -   id: hlint
+        name: hlint
+        description: "Linter for Haskell source code."
+        entry: hlint modulus-ai-be
+        language: system
+        types: [haskell]
