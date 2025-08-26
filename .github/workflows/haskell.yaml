@@ -72,3 +72,36 @@ jobs:
           name: modulus-ai-image
           path: modulus-ai-be/modulus-ai-image.tar
           retention-days: 1
+
+  frontend:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./modulus-ai-fe/
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Docker image
+        run: |
+          docker build -f dockerfile.release -t modulus-ai-frontend:release .
+
+      - name: Save Docker image to tarball
+        run: |
+          docker save modulus-ai-frontend:release -o frontend-image.tar
+          ls -lh frontend-image.tar
+
+      - name: Upload image artifact (1 day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-docker-image
+          path: modulus-ai-fe/frontend-image.tar
+          retention-days: 1
