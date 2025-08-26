@@ -14,6 +14,5 @@ WORKDIR /home/appuser/app
 
 RUN mkdir /home/appuser/app/uploads
 COPY --chown=appuser:appuser modulus-ai-exe .
-COPY --chown=appuser:appuser public ./public
 
 CMD ["./modulus-ai-exe"]

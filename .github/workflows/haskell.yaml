@@ -36,7 +36,7 @@ jobs:
         path: modulus-ai-be/src/
         fail-on: warning
 
-  test:
+  build_test_package:
     needs: hlint
     runs-on: ubuntu-22.04
     defaults:
@@ -52,3 +52,23 @@ jobs:
       uses: freckle/stack-action@v5
       with:
         working-directory: ./modulus-ai-be/
+        stack-build-arguments: --copy-bins
+
+    - name: Copy binary for docker
+      run: cp /home/runner/.local/bin/modulus-ai-exe ./modulus-ai-exe
+    
+    - name: Build docker image
+      run: |
+          docker build -f dockerfile.release -t modulus-ai:release .
+
+    - name: Save docker image to tarball
+      run: |
+          docker save modulus-ai:release -o modulus-ai-image.tar
+          ls -lh modulus-ai-image.tar
+
+    - name: Upload image artifact (1 day retention)
+      uses: actions/upload-artifact@v4
+      with:
+          name: modulus-ai-image
+          path: modulus-ai-be/modulus-ai-image.tar
+          retention-days: 1
