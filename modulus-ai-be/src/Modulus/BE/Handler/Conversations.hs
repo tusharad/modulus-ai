@@ -11,32 +11,19 @@ module Modulus.BE.Handler.Conversations
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
 import Control.Exception (SomeException, try)
 import Control.Monad (unless, void, when)
-import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
-import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.IO.Class
 import Control.Monad.Reader (asks)
 import qualified Data.ByteString.Lazy as BSL
 import Data.Int (Int64)
 import qualified Data.List.NonEmpty as NE
-import qualified Data.Map.Strict as HM
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.UUID.V4 (nextRandom)
-import Langchain.DocumentLoader.Core (BaseLoader (load), Document (..))
-import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
-import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
-import Langchain.Embeddings.Ollama (OllamaEmbeddings (OllamaEmbeddings))
 import Langchain.LLM.Core (StreamHandler (..))
-import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Ollama (Ollama (..))
 import Langchain.LLM.OpenAICompatible (mkOpenRouter)
-import Langchain.PromptTemplate (PromptTemplate (PromptTemplate), renderPrompt)
-import Langchain.Retriever.Core
-  ( Retriever (_get_relevant_documents)
-  , VectorStoreRetriever (VectorStoreRetriever)
-  )
-import Langchain.VectorStore.InMemory (fromDocuments)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
@@ -47,7 +34,8 @@ import Modulus.BE.DB.Queries.ChatMessage
   , getChatMessagesWithAttachmentsByConvID
   )
 import Modulus.BE.DB.Queries.Conversation
-import Modulus.BE.Log (logDebug, logError)
+import Modulus.BE.LLM (attachDocumentRAG, runOllamaWithTools, runOpenRouterWithTools)
+import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Modulus.Common.Types
@@ -106,66 +94,7 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
         [] -> do
           logDebug $ "no chatMsgLst found" <> T.pack (show chatMsgLst)
           pure msgList_
-        msgAttachmentsList -> do
-          eVecStore <- runExceptT $ do
-            docs <-
-              mconcat
-                <$> mapM
-                  ( \msgAttach -> do
-                      let fName = T.unpack $ messageAttachmentFileName msgAttach
-                      if ".pdf" == takeExtension fName
-                        then do
-                          let sourcePdf =
-                                PdfLoader $
-                                  T.unpack $
-                                    messageAttachmentStoragePath msgAttach
-                          ExceptT $ liftIO $ load sourcePdf
-                        else do
-                          let sourcePdf =
-                                FileLoader $
-                                  T.unpack $
-                                    messageAttachmentStoragePath msgAttach
-
-                          ExceptT $ liftIO $ load sourcePdf
-                  )
-                  msgAttachmentsList
-            let ollamaEmbeddings =
-                  OllamaEmbeddings
-                    "nomic-embed-text:latest"
-                    Nothing
-                    Nothing
-                    Nothing
-            ExceptT $ liftIO $ fromDocuments ollamaEmbeddings docs
-          case eVecStore of
-            Left err -> do
-              logError $ "Error loading documents: " <> T.pack err
-              pure msgList_
-            Right vectorStore -> do
-              let retriever = VectorStoreRetriever vectorStore
-              let docToText =
-                    mconcat
-                      . map
-                        (\doc -> pageContent doc <> T.pack (show $ metadata doc))
-              let promptTemplate = PromptTemplate systemTemplate
-              let lastUserMsg = Langchain.content $ NE.last msgList_
-              eSysPrompt <- runExceptT $ do
-                relevantDocs <-
-                  ExceptT $
-                    liftIO $
-                      _get_relevant_documents retriever lastUserMsg
-                let context = docToText relevantDocs
-                ExceptT . pure $
-                  renderPrompt promptTemplate (HM.fromList [("context", context)])
-              case eSysPrompt of
-                Left err -> do
-                  logError $ "Error while getting relevant docs" <> T.pack err
-                  pure msgList_
-                Right sysPrompt -> do
-                  let sysMsg = L.Message L.System sysPrompt L.defaultMessageData
-                  let userMsg = L.Message L.User lastUserMsg L.defaultMessageData
-                  logDebug $ "sysPrompt" <> L.content sysMsg
-                  pure $ NE.fromList $ NE.init msgList_ ++ [sysMsg, userMsg]
-
+        msgAttachmentsList -> attachDocumentRAG msgAttachmentsList msgList_
       tokenChan <- liftIO newChan
       let st =
             StreamHandler
@@ -174,20 +103,27 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
               }
       case provider of
         "openrouter" -> do
-          let openRouterLLM =
-                mkOpenRouter
-                  modelUsed
-                  []
-                  Nothing
-                  (fromMaybe "" apiKey)
-          void . liftIO . forkIO $
-            void $
-              Langchain.stream openRouterLLM msgList st Nothing
+          let openRouterLLM = mkOpenRouter modelUsed [] Nothing (fromMaybe "" apiKey)
+          case toolCall of
+            Just selectedTool ->
+              void $
+                liftIO $
+                  runOpenRouterWithTools openRouterLLM msgList st selectedTool
+            Nothing -> do
+              void . liftIO . forkIO $
+                void $
+                  Langchain.stream openRouterLLM msgList st Nothing
         "ollama" -> do
           let ollamaLLM = Ollama modelUsed []
-          void . liftIO . forkIO $
-            void $
-              Langchain.stream ollamaLLM msgList st Nothing
+          case toolCall of
+            Just selectedTool ->
+              void $
+                liftIO $
+                  runOllamaWithTools ollamaLLM msgList st selectedTool
+            Nothing -> do
+              void . liftIO . forkIO $
+                void $
+                  Langchain.stream ollamaLLM msgList st Nothing
         _ -> throwError $ NotFoundError "Provider not found"
       logDebug $ "Provider selected: " <> provider
       pure $ chanSource tokenChan
@@ -347,11 +283,3 @@ getConversationsHandler :: AuthResult -> AppM [ConversationRead]
 getConversationsHandler (Authenticated user) = getConversationsByUserID (userID user)
 getConversationsHandler TokenExpired = throwError $ AuthenticationError "Token expired"
 getConversationsHandler _ = throwError $ AuthenticationError "Invalid token"
-
-systemTemplate :: Text
-systemTemplate =
-  T.unlines
-    [ "Use the following pieces of context to answer the user's question."
-    , "If you don't know the answer, just say that you don't know, don't try to make up an answer."
-    , "{context}"
-    ]

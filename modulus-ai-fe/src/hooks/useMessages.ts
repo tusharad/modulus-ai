@@ -35,7 +35,7 @@ export const useMessages = (conversation: ConversationRead | null) => {
 
     const sendMessage = async (
         content: string,
-        llmConfig: { provider: string; model: string; apiKey?: string },
+        llmConfig: { provider: string; model: string; apiKey?: string, toolCall?: "Wikipedia" | "WebSearch" | null},
         file?: File
     ) => {
         if (!conversation) return;
@@ -43,7 +43,7 @@ export const useMessages = (conversation: ConversationRead | null) => {
             await apiService.sendMessage(conversation.conversationPublicID, {
                 messageContent: content,
                 addMessageRole: "user",
-                file
+                file,
             });
             const updatedMsgs = await apiService.getMessages(
                 conversation.conversationPublicID,
@@ -71,6 +71,7 @@ export const useMessages = (conversation: ConversationRead | null) => {
                     modelUsed: llmConfig.model,
                     provider: llmConfig.provider,
                     apiKey: llmConfig.apiKey,
+                    toolCall: llmConfig.toolCall
                 },
                 (chunk: string) => {
                     finalContent += chunk;
