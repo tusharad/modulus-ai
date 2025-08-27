@@ -10,6 +10,7 @@ env:
   PROJECT_ID: haskread
   REGION: us-central1
   GAR_LOCATION: us-central1-docker.pkg.dev/haskread/modulus-ai-repo
+  BACKEND_URL: https://modulus-ai-backend-461848834131.southamerica-west1.run.app/api/v1
 
 permissions:
   contents: read
@@ -106,6 +107,27 @@ jobs:
         COMMIT_HASH=$(git rev-parse --short HEAD)
         IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
         docker push $IMAGE_NAME
+    
+    - name: deploy to cloud run
+      run: |
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
+        gcloud run deploy modulus-ai-backend \
+          --image $IMAGE_NAME \
+          --min-instances=0 \
+          --region=southamerica-west1 \
+          --project=haskread \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars=POSTGRES_DB=${{secrets.POSTGRES_DB}} --set-env-vars=POSTGRES_USER=${{secrets.POSTGRES_USER}} \
+          --set-env-vars=POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}} --set-env-vars=POSTGRES_HOST=${{secrets.POSTGRES_HOST}} \
+          --set-env-vars=MODULUS_DB_TIMEOUT=30 --set-env-vars=MODULUS_APP_PORT=8080 \
+          --set-env-vars=MODULUS_JWT_SECRET=${{secrets.MODULUS_JWT_SECRET}} \
+          --set-env-vars=MODULUS_LOG_LEVEL=debug --set-env-vars=MODULUS_ENVIRONMENT=development \
+          --set-env-vars='MODULUS_REDIS_URL=redis://localhost:6379' --set-env-vars=MODULUS_API_TIMEOUT=60 \
+          --set-env-vars=MODULUS_MAILGUN_API=${{secrets.MODULUS_MAILGUN_API}} \
+          --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
+          --memory 512Mi && gcloud run services update-traffic modulus-ai-backend --to-latest
 
   frontend:
     runs-on: ubuntu-22.04
@@ -123,7 +145,7 @@ jobs:
         run: npm ci
 
       - name: Build frontend
-        run: npm run build
+        run: VITE_API_BASE_URL=${{ env.BACKEND_URL }} npm run build
 
       - id: "auth"
         uses: "google-github-actions/auth@v2"
