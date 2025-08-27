@@ -2,7 +2,7 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "release" ]
   pull_request:
     branches: [ "main" ]
 
@@ -26,7 +26,6 @@ jobs:
           version: "latest"
 
   hlint:
-    needs: format
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -43,7 +42,6 @@ jobs:
         fail-on: warning
 
   test:
-    needs: hlint
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -59,7 +57,8 @@ jobs:
       with:
         working-directory: ./modulus-ai-be/
 
-  push_backend_image:
+  deploy-backend:
+    if: github.ref == 'refs/heads/release'
     needs: test
     runs-on: ubuntu-22.04
     environment: development
@@ -72,10 +71,11 @@ jobs:
     - name: Copy repo into actions 
       uses: actions/checkout@v4
 
-    - name: install dependancies, build and test stack project.
+    - name: install dependancies, build and export binaries.
       uses: freckle/stack-action@v5
       with:
         working-directory: ./modulus-ai-be/
+        test: false
         stack-build-arguments: --copy-bins
 
     - name: Copy binary for docker
@@ -129,7 +129,9 @@ jobs:
           --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
           --memory 512Mi
 
-  frontend:
+  deploy-frontend:
+    if: github.ref == 'refs/heads/release'
+    needs: deploy-backend
     runs-on: ubuntu-22.04
     environment: development
     defaults:
@@ -165,13 +167,13 @@ jobs:
       - name: Build docker image
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:COMMIT_HASH
+          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
           docker build -f dockerfile.release -t $IMAGE_NAME .
 
       - name: Push image
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:COMMIT_HASH
+          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
           docker push $IMAGE_NAME
       
       - name: deploy to cloud run
