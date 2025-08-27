@@ -102,7 +102,7 @@ jobs:
     - name: Push image
       run: |
         IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend
-        docker push $IMAGE_NAME:$COMMIT_SHA
+        docker push $IMAGE_NAME:${{ github.sha }}
 
   frontend:
     runs-on: ubuntu-22.04
