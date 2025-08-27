@@ -58,9 +58,10 @@ jobs:
       with:
         working-directory: ./modulus-ai-be/
 
-  build_test_package:
+  push_backend_image:
     needs: test
     runs-on: ubuntu-22.04
+    environment: development
     defaults:
       run:
         working-directory: ./modulus-ai-be/
@@ -84,7 +85,7 @@ jobs:
           docker build -f dockerfile.release -t modulus-ai-backend:release .
 
     - id: "auth"
-      uses: "google-github-actions/auth@v1"
+      uses: "google-github-actions/auth@v2"
       with:
           credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
 
