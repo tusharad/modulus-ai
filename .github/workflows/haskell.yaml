@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  PROJECT_ID: haskread
+  REGION: us-central1
+  GAR_LOCATION: us-central1-docker.pkg.dev/haskread/modulus-ai-repo
+
 permissions:
   contents: read
 
@@ -36,8 +41,25 @@ jobs:
         path: modulus-ai-be/src/
         fail-on: warning
 
-  build_test_package:
+  test:
     needs: hlint
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./modulus-ai-be/
+        shell: bash
+
+    steps:
+    - name: Copy repo into actions 
+      uses: actions/checkout@v4
+
+    - name: install dependancies, build and test stack project.
+      uses: freckle/stack-action@v5
+      with:
+        working-directory: ./modulus-ai-be/
+
+  build_test_package:
+    needs: test
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -59,19 +81,27 @@ jobs:
     
     - name: Build docker image
       run: |
-          docker build -f dockerfile.release -t modulus-ai:release .
+          docker build -f dockerfile.release -t modulus-ai-backend:release .
 
-    - name: Save docker image to tarball
-      run: |
-          docker save modulus-ai:release -o modulus-ai-image.tar
-          ls -lh modulus-ai-image.tar
-
-    - name: Upload image artifact (1 day retention)
-      uses: actions/upload-artifact@v4
+    - id: "auth"
+      uses: "google-github-actions/auth@v1"
       with:
-          name: modulus-ai-image
-          path: modulus-ai-be/modulus-ai-image.tar
-          retention-days: 1
+          credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+    - name: "Set up Cloud SDK"
+      uses: "google-github-actions/setup-gcloud@v1"
+
+    - name: "Use gcloud CLI"
+      run: "gcloud info"
+
+    - name: "Docker auth"
+      run: |-
+        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+    - name: Push image
+      run: |
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend
+        docker push $IMAGE_NAME:$COMMIT_SHA
 
   frontend:
     runs-on: ubuntu-22.04
