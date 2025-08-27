@@ -79,10 +79,6 @@ jobs:
 
     - name: Copy binary for docker
       run: cp /home/runner/.local/bin/modulus-ai-exe ./modulus-ai-exe
-    
-    - name: Build docker image
-      run: |
-          docker build -f dockerfile.release -t modulus-ai-backend:latest .
 
     - id: "auth"
       uses: "google-github-actions/auth@v2"
@@ -101,16 +97,19 @@ jobs:
 
     - name: Build docker image
       run: |
-        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:latest
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
         docker build -f dockerfile.release -t $IMAGE_NAME .
 
     - name: Push image
       run: |
-        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:latest
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
         docker push $IMAGE_NAME
 
   frontend:
     runs-on: ubuntu-22.04
+    environment: development
     defaults:
       run:
         working-directory: ./modulus-ai-fe/
@@ -126,18 +125,29 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Build Docker image
-        run: |
-          docker build -f dockerfile.release -t modulus-ai-frontend:release .
-
-      - name: Save Docker image to tarball
-        run: |
-          docker save modulus-ai-frontend:release -o frontend-image.tar
-          ls -lh frontend-image.tar
-
-      - name: Upload image artifact (1 day retention)
-        uses: actions/upload-artifact@v4
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
         with:
-          name: frontend-docker-image
-          path: modulus-ai-fe/frontend-image.tar
-          retention-days: 1
+          credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: "Docker auth"
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build docker image
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:COMMIT_HASH
+          docker build -f dockerfile.release -t $IMAGE_NAME .
+
+      - name: Push image
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:COMMIT_HASH
+          docker push $IMAGE_NAME
