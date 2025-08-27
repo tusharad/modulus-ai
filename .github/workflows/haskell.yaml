@@ -82,7 +82,7 @@ jobs:
     
     - name: Build docker image
       run: |
-          docker build -f dockerfile.release -t modulus-ai-backend:release .
+          docker build -f dockerfile.release -t modulus-ai-backend:latest .
 
     - id: "auth"
       uses: "google-github-actions/auth@v2"
@@ -99,10 +99,15 @@ jobs:
       run: |-
         gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
+    - name: Build docker image
+      run: |
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:latest
+        docker build -f dockerfile.release -t $IMAGE_NAME .
+
     - name: Push image
       run: |
-        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend
-        docker push $IMAGE_NAME:${{ github.sha }}
+        IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:latest
+        docker push $IMAGE_NAME
 
   frontend:
     runs-on: ubuntu-22.04
