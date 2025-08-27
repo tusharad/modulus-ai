@@ -127,7 +127,7 @@ jobs:
           --set-env-vars='MODULUS_REDIS_URL=redis://localhost:6379' --set-env-vars=MODULUS_API_TIMEOUT=60 \
           --set-env-vars=MODULUS_MAILGUN_API=${{secrets.MODULUS_MAILGUN_API}} \
           --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
-          --memory 512Mi && gcloud run services update-traffic modulus-ai-backend --to-latest
+          --memory 512Mi
 
   frontend:
     runs-on: ubuntu-22.04
@@ -173,3 +173,13 @@ jobs:
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:COMMIT_HASH
           docker push $IMAGE_NAME
+      
+      - name: deploy to cloud run
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
+          gcloud run deploy modulus-ai-frontend \
+            --image=$IMAGE_NAME \
+            --min-instances=0 \
+            --region=europe-west1 \
+            --project=haskread
