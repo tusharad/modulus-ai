@@ -14,7 +14,7 @@ import { deleteCookie, setCookie } from "./cookies.ts";
 
 // API service
 class APIService {
-    private baseUrl = "http://localhost:8081/api/v1";
+    private baseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081/api/v1";
 
     private async refreshTokens(): Promise<boolean> {
         const refreshToken = getCookie("refreshToken");

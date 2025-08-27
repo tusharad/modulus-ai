@@ -11,19 +11,19 @@ clearTestEnvVars :: IO ()
 clearTestEnvVars = do
   mapM_
     unsetEnv
-    [ "MODULUS_DB_NAME"
-    , "MODULUS_DB_USER_NAME"
-    , "MODULUS_DB_PASSWORD"
-    , "MODULUS_DB_HOST"
+    [ "POSTGRES_DB"
+    , "POSTGRES_USER"
+    , "POSTGRES_PASSWORD"
+    , "POSTGRES_HOST"
     ]
 
 -- Helper to set required environment variables
 setRequiredEnvVars :: String -> String -> String -> String -> IO ()
 setRequiredEnvVars dbName dbUser dbPass dbHost = do
-  setEnv "MODULUS_DB_NAME" dbName
-  setEnv "MODULUS_DB_USER_NAME" dbUser
-  setEnv "MODULUS_DB_PASSWORD" dbPass
-  setEnv "MODULUS_DB_HOST" dbHost
+  setEnv "POSTGRES_DB" dbName
+  setEnv "POSTGRES_USER" dbUser
+  setEnv "POSTGRES_PASSWORD" dbPass
+  setEnv "POSTGRES_HOST" dbHost
 
 testCreateConnectionPool :: TestTree
 testCreateConnectionPool = testCase "Successful Configuration Parsing" $ do

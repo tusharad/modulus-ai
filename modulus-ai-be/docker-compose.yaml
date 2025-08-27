@@ -8,10 +8,6 @@ services:
     env_file:
       - .env.local
     environment:
-      # Compose will fail fast if the password isn't provided in .env.local
-      POSTGRES_DB: ${MODULUS_DB_NAME:-modulus_local_db}
-      POSTGRES_USER: ${MODULUS_DB_USER_NAME:-modulus_local_user}
-      POSTGRES_PASSWORD: ${MODULUS_DB_PASSWORD?err:You must set MODULUS_LOCAL_DB_PASSWORD in .env.local}
       PGDATA: /var/lib/postgresql/data/pgdata
       TZ: Asia/Kolkata
     ports:

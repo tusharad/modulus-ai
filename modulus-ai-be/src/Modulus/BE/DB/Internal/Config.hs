@@ -33,19 +33,19 @@ instance Exception ConnectionConfigError
 
 -- | The names of the environment variables used for configuration.
 dbNameEnvVar :: String
-dbNameEnvVar = "MODULUS_DB_NAME"
+dbNameEnvVar = "POSTGRES_DB"
 
 dbUserEnvVar :: String
-dbUserEnvVar = "MODULUS_DB_USER_NAME"
+dbUserEnvVar = "POSTGRES_USER"
 
 dbPasswordEnvVar :: String
-dbPasswordEnvVar = "MODULUS_DB_PASSWORD"
+dbPasswordEnvVar = "POSTGRES_PASSWORD"
 
 dbHostEnvVar :: String
-dbHostEnvVar = "MODULUS_DB_HOST"
+dbHostEnvVar = "POSTGRES_HOST"
 
 timeoutEnvVar :: String
-timeoutEnvVar = "MODULUS_DB_TIMEOUT" -- Interpreted as seconds for connection timeout
+timeoutEnvVar = "POSTGRES_TIMEOUT" -- Interpreted as seconds for connection timeout
 
 {- | Attempts to read a single environment variable.
 Returns 'Right (Just value)' if found, 'Right Nothing' if not found, or 'Left' on IO error.
@@ -89,10 +89,10 @@ buildConnectionString = unwords . map (\(k, v) -> k ++ "=" ++ v)
   This function reads the following environment variables:
 
   * __Required:__
-      * @MODULUS_DB_NAME@: The name of the PostgreSQL database.
-      * @MODULUS_DB_USER_NAME@: The username to connect to the database.
-      * @MODULUS_DB_PASSWORD@: The password for the database user.
-      * @MODULUS_DB_HOST@: The hostname or IP address of the database server.
+      * @POSTGRES_DB@: The name of the PostgreSQL database.
+      * @POSTGRES_USER@: The username to connect to the database.
+      * @POSTGRES_PASSWORD@: The password for the database user.
+      * @POSTGRES_HOST@: The hostname or IP address of the database server.
 
   * __Optional:__
       * @MODULUS_DB_TIMEOUT@: Connection timeout in seconds (integer).
