@@ -147,7 +147,9 @@ jobs:
         run: npm ci
 
       - name: Build frontend
-        run: VITE_API_BASE_URL=${{ env.BACKEND_URL }} npm run build
+        run: |
+          export VITE_API_BASE_URL=${{ env.BACKEND_URL }} 
+          npm run build
 
       - id: "auth"
         uses: "google-github-actions/auth@v2"

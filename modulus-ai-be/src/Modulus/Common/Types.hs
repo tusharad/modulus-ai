@@ -14,6 +14,7 @@ module Modulus.Common.Types
   , StateStoreData (..)
   , Provider (..)
   , ModelProviders (..)
+  , Environment (..)
   ) where
 
 import Data.Aeson hiding (Error)
@@ -24,6 +25,9 @@ import GHC.Generics
 import qualified Network.HTTP.Client as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
+
+data Environment = Local | Development | Production
+  deriving (Eq, Show)
 
 data ModelProviders = ModelProviders
   { providerName :: Text
@@ -38,7 +42,7 @@ data AppConfig = AppConfig
   -- we'll directly calling handler functions from Hyperbole
   , configPort :: Int
   , configLogLevel :: Text
-  , configEnvironment :: Text -- "development", "staging", "production"
+  , configEnvironment :: Environment -- "development", "staging", "production"
   , configRedisUrl :: Maybe Text
   , configJwtSecret :: Text
   , configExternalApiTimeout :: Int -- seconds
@@ -48,6 +52,7 @@ data AppConfig = AppConfig
   , configMailGunApiKey :: Text
   , configCurrentProviders :: [ModelProviders]
   , configFileUploadPath :: FilePath
+  , configGCPBucketName :: Text
   }
   deriving (Generic)
 

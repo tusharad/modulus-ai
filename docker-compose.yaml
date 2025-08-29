@@ -37,7 +37,7 @@ services:
     ports:
       - "8081:8081"
     volumes:
-      - ./modulus-ai-be/uploads:/home/appuser/app/uploads
+      - ./uploads:/home/appuser/app/uploads
     networks:
       - app-network
 

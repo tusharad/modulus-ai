@@ -23,6 +23,7 @@ dependencies:
   - email-validate
   - fast-logger
   - filepath
+  - google-cloud-storage
   - http-client
   - http-client-tls
   - http-types
@@ -41,6 +42,7 @@ dependencies:
   - servant-multipart
   - servant-server
   - string-interpolate
+  - temporary
   - text
   - time
   - transformers

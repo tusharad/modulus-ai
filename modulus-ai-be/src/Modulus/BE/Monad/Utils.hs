@@ -15,6 +15,7 @@ import Control.Monad.Reader (MonadIO (liftIO), asks)
 import Crypto.JOSE.Types
 import Crypto.JWT
 import Data.Either (fromRight)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -40,60 +41,69 @@ hmacJwk secret =
 -- | Create AppConfig from environment variables
 mkAppConfigFromEnv :: IO (Either Text AppConfig)
 mkAppConfigFromEnv = do
-  ePort <- lookupEnv "MODULUS_APP_PORT"
-  eJwtSecret <- lookupEnv "MODULUS_JWT_SECRET"
-  eLogLevel <- lookupEnv "MODULUS_LOG_LEVEL"
-  eEnvironment <- lookupEnv "MODULUS_ENVIRONMENT"
-  eRedisUrl <- lookupEnv "MODULUS_REDIS_URL"
-  eMailgunApi <- lookupEnv "MODULUS_MAILGUN_API"
-  eFileUploadPath <- lookupEnv "MODULUS_FILE_UPLOAD_PATH"
+  mbPort <- lookupEnv "MODULUS_APP_PORT"
+  mbJwtSecret <- lookupEnv "MODULUS_JWT_SECRET"
+  mbLogLevel <- lookupEnv "MODULUS_LOG_LEVEL"
+  mbEnvironment <- lookupEnv "MODULUS_ENVIRONMENT"
+  mbRedisUrl <- lookupEnv "MODULUS_REDIS_URL"
+  mbMailgunApi <- lookupEnv "MODULUS_MAILGUN_API"
+  mbGCPBucketName <- lookupEnv "MODULUS_GCP_UPLOAD_BUCKET_NAME"
+  mbUploadFilePath <- lookupEnv "MODULUS_UPLOAD_FILE_PATH"
   apiTimeout <- readEnvWithDefault "MODULUS_API_TIMEOUT" 30
   loggerSet <- newStdoutLoggerSet defaultBufSize
+  let env = fromMaybe Local (textToEnv (fromMaybe "" mbEnvironment))
+  print ("ENVIRONMENT SET for " :: String, env)
   eConnectionPool <- mkConnectionPoolFromEnv
   case eConnectionPool of
     Left err -> pure $ Left (T.pack $ show err)
     Right connPool -> do
-      case (ePort, eJwtSecret, eMailgunApi, eFileUploadPath) of
-        (Just portStr, Just jwtSecret, Just mailGunApi, Just fileUploadPath) -> do
-          case reads portStr of
-            [(port, "")] -> do
-              manager <- HTTP.newTlsManager
-              ollamaModelList <- listAvailableOllamaModels
-              openRouterModels <-
-                map modelId . take 5 . fromRight []
-                  <$> getOpenRouterModelList
-              let modelProviders =
-                    [ ModelProviders
-                        { providerName = "ollama"
-                        , modelList = ollamaModelList
-                        , isApiFieldRequired = False
-                        }
-                    , ModelProviders
-                        { providerName = "openrouter"
-                        , modelList = openRouterModels
-                        , isApiFieldRequired = True
-                        }
-                    ]
-              let orvilleState =
-                    O.newOrvilleState O.defaultErrorDetailLevel connPool
-              pure $
-                Right
-                  AppConfig
-                    { configHttpManager = manager
-                    , configPort = port
-                    , configLogLevel = maybe "INFO" T.pack eLogLevel
-                    , configEnvironment = maybe "development" T.pack eEnvironment
-                    , configRedisUrl = T.pack <$> eRedisUrl
-                    , configJwtSecret = T.pack jwtSecret
-                    , configExternalApiTimeout = apiTimeout
-                    , configLoggerSet = loggerSet
-                    , configMinLogLevel = Debug
-                    , configOrvilleState = orvilleState
-                    , configMailGunApiKey = T.pack mailGunApi
-                    , configCurrentProviders = modelProviders
-                    , configFileUploadPath = fileUploadPath
-                    }
-            _ -> pure $ Left "Invalid PORT environment variable"
+      case (mbPort, mbJwtSecret, mbMailgunApi, mbUploadFilePath, mbGCPBucketName) of
+        ( Just portStr
+          , Just jwtSecret
+          , Just mailGunApi
+          , Just fileUploadPath
+          , Just bucketName
+          ) -> do
+            case reads portStr of
+              [(port, "")] -> do
+                manager <- HTTP.newTlsManager
+                ollamaModelList <- listAvailableOllamaModels
+                openRouterModels <-
+                  map modelId . take 5 . fromRight []
+                    <$> getOpenRouterModelList
+                let modelProviders =
+                      [ ModelProviders
+                          { providerName = "ollama"
+                          , modelList = ollamaModelList
+                          , isApiFieldRequired = False
+                          }
+                      , ModelProviders
+                          { providerName = "openrouter"
+                          , modelList = openRouterModels
+                          , isApiFieldRequired = True
+                          }
+                      ]
+                let orvilleState =
+                      O.newOrvilleState O.defaultErrorDetailLevel connPool
+                pure $
+                  Right
+                    AppConfig
+                      { configHttpManager = manager
+                      , configPort = port
+                      , configLogLevel = maybe "INFO" T.pack mbLogLevel
+                      , configEnvironment = env
+                      , configRedisUrl = T.pack <$> mbRedisUrl
+                      , configJwtSecret = T.pack jwtSecret
+                      , configExternalApiTimeout = apiTimeout
+                      , configLoggerSet = loggerSet
+                      , configMinLogLevel = Debug
+                      , configOrvilleState = orvilleState
+                      , configMailGunApiKey = T.pack mailGunApi
+                      , configCurrentProviders = modelProviders
+                      , configFileUploadPath = fileUploadPath
+                      , configGCPBucketName = T.pack bucketName
+                      }
+              _ -> pure $ Left "Invalid PORT environment variable"
         _ ->
           pure $ Left "Missing required environment variables: PORT, JWT_SECRET"
   where
@@ -105,6 +115,12 @@ mkAppConfigFromEnv = do
         Just str -> case reads str of
           [(val, "")] -> pure val
           _ -> pure defaultVal
+
+textToEnv :: String -> Maybe Environment
+textToEnv "Local" = Just Local
+textToEnv "Development" = Just Development
+textToEnv "Production" = Just Production
+textToEnv _ = Nothing
 
 -- | Utility functions
 askConfig :: AppM AppConfig

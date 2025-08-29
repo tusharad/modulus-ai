@@ -45,7 +45,7 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
         apiKey: selectedProvider.isApiFieldRequired ? apiKey : undefined,
       });
     }
-  }, [selectedProvider, selectedModel, apiKey, onChange]);
+  }, [selectedProvider, selectedModel, apiKey]);
 
   return (
     <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">

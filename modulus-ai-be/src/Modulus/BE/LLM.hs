@@ -5,12 +5,17 @@ module Modulus.BE.LLM
   , runOllamaWithTools
   ) where
 
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
 import Control.Monad.IO.Class
 import Data.Aeson
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
+import Data.Ollama.Chat
+  ( FunctionDef (..)
+  , FunctionParameters (..)
+  , InputTool (..)
+  )
 import Data.Text (Text)
 import qualified Data.Text as T
 import Langchain.DocumentLoader.Core (BaseLoader (load), Document (..))
@@ -20,6 +25,7 @@ import Langchain.Embeddings.Ollama (OllamaEmbeddings (OllamaEmbeddings))
 import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
 import qualified Langchain.LLM.Internal.OpenAI as OpenAIInternal
+import Langchain.LLM.Ollama as LLMOllama
 import Langchain.LLM.OpenAICompatible as OpenAILike hiding (metadata)
 import Langchain.PromptTemplate (PromptTemplate (PromptTemplate), renderPrompt)
 import Langchain.Retriever.Core
@@ -33,14 +39,9 @@ import Langchain.VectorStore.InMemory (fromDocuments)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.Log (logDebug, logError)
 import Modulus.BE.Monad.AppM (AppM)
+import Modulus.BE.Monad.Storage
 import System.FilePath
-
-import Data.Ollama.Chat
-  ( FunctionDef (..)
-  , FunctionParameters (..)
-  , InputTool (..)
-  )
-import Langchain.LLM.Ollama as LLMOllama
+import UnliftIO.Directory (removeFile)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -50,31 +51,36 @@ createToolMessage (functionName, result) =
     ("Tool (" <> T.pack functionName <> ") result: " <> result)
     defaultMessageData
 
+isBucket :: StorageConfig -> Bool
+isBucket (StorageBucket _) = True
+isBucket _ = False
+
 attachDocumentRAG ::
   [MessageAttachmentRead] ->
   NE.NonEmpty L.Message ->
   AppM (NE.NonEmpty L.Message)
 attachDocumentRAG msgAttachmentsList msgList_ = do
+  storageConfig <- mkStorageFromEnv
   eVecStore <- runExceptT $ do
     docs <-
       mconcat
         <$> mapM
-          ( \msgAttach -> do
-              let fName = T.unpack $ messageAttachmentFileName msgAttach
-              if ".pdf" == takeExtension fName
+          ( \MessageAttachment {..} -> do
+              let attName = T.unpack messageAttachmentFileName
+              fPath <-
+                ExceptT $
+                  loadFile storageConfig attName
+              if ".pdf" == takeExtension fPath
                 then do
-                  let sourcePdf =
-                        PdfLoader $
-                          T.unpack $
-                            messageAttachmentStoragePath msgAttach
-                  ExceptT $ liftIO $ load sourcePdf
+                  let sourcePdf = PdfLoader fPath
+                  eRes <- ExceptT $ liftIO $ load sourcePdf
+                  when (isBucket storageConfig) (removeFile fPath)
+                  pure eRes
                 else do
-                  let sourcePdf =
-                        FileLoader $
-                          T.unpack $
-                            messageAttachmentStoragePath msgAttach
-
-                  ExceptT $ liftIO $ load sourcePdf
+                  let sourcePdf = FileLoader fPath
+                  eRes <- ExceptT $ liftIO $ load sourcePdf
+                  when (isBucket storageConfig) (removeFile fPath)
+                  pure eRes
           )
           msgAttachmentsList
     let ollamaEmbeddings =

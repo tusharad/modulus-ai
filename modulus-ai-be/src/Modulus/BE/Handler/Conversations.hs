@@ -9,7 +9,6 @@ module Modulus.BE.Handler.Conversations
   ) where
 
 import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
-import Control.Exception (SomeException, try)
 import Control.Monad (unless, void, when)
 import Control.Monad.IO.Class
 import Control.Monad.Reader (asks)
@@ -38,6 +37,7 @@ import Modulus.BE.LLM (attachDocumentRAG, runOllamaWithTools, runOpenRouterWithT
 import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
+import Modulus.BE.Monad.Storage
 import Modulus.Common.Types
 import qualified Orville.PostgreSQL as Orville
 import Servant
@@ -186,16 +186,11 @@ storeAttachmentIfExist (Just FileData {..}) = do
         unless (fileSize < 1000000) $
           throwError $
             ValidationError "File to large :("
-        fPath <- asks configFileUploadPath
-        let resultPath = fPath </> newAttachmentObjectName
-        eRes <-
-          liftIO $
-            try $
-              BSL.writeFile resultPath fdPayload
+        storageConf <- mkStorageFromEnv
+        eRes <- saveFile storageConf newAttachmentObjectName fdPayload
         case eRes of
           Left err -> do
-            let errMsg = T.pack $ show (err :: SomeException)
-            throwError $ ValidationError $ "Could not upload file: " <> errMsg
+            throwError $ ValidationError $ "Could not upload file: " <> T.pack err
           Right _ ->
             pure $
               Just $
@@ -203,14 +198,12 @@ storeAttachmentIfExist (Just FileData {..}) = do
                   { attachmentName = T.pack newAttachmentObjectName
                   , attachmentType = fdFileCType
                   , attachmentSize = fileSize
-                  , attachmentFilePath = T.pack resultPath
                   }
 
 data AttachmentInfo = AttachmentInfo
   { attachmentName :: Text
   , attachmentType :: Text
   , attachmentSize :: Int64
-  , attachmentFilePath :: Text
   }
 
 addConversationMessageHandler ::
@@ -255,7 +248,7 @@ addConversationMessageHandler
                   , messageAttachmentFileName = attachmentName
                   , messageAttachmentFileType = attachmentType
                   , messageAttachmentFileSizeBytes = attachmentSize
-                  , messageAttachmentStoragePath = attachmentFilePath
+                  , messageAttachmentStoragePath = attachmentName
                   , messageAttachmentCreatedAt = ()
                   }
           void $ addMsgAttachment msgAttachWrite
@@ -276,7 +269,8 @@ addConversationHandler (Authenticated user) AddConversationRequest {..} = do
           }
   conversationRead <- addConversation conversationWrite
   pure $ conversationPublicID conversationRead
-addConversationHandler TokenExpired _ = throwError $ AuthenticationError "Token expired"
+addConversationHandler TokenExpired _ =
+  throwError $ AuthenticationError "Token expired"
 addConversationHandler _ _ = throwError $ AuthenticationError "Invalid token"
 
 getConversationsHandler :: AuthResult -> AppM [ConversationRead]
