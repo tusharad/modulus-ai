@@ -187,6 +187,7 @@ storeAttachmentIfExist (Just FileData {..}) = do
           throwError $
             ValidationError "File to large :("
         storageConf <- mkStorageFromEnv
+        fileUploadPath <- asks configFileUploadPath
         eRes <- saveFile storageConf newAttachmentObjectName fdPayload
         case eRes of
           Left err -> do
@@ -198,12 +199,14 @@ storeAttachmentIfExist (Just FileData {..}) = do
                   { attachmentName = T.pack newAttachmentObjectName
                   , attachmentType = fdFileCType
                   , attachmentSize = fileSize
+                  , attachmentUploadPath = fileUploadPath </> newAttachmentObjectName
                   }
 
 data AttachmentInfo = AttachmentInfo
   { attachmentName :: Text
   , attachmentType :: Text
   , attachmentSize :: Int64
+  , attachmentUploadPath :: FilePath
   }
 
 addConversationMessageHandler ::
@@ -248,7 +251,7 @@ addConversationMessageHandler
                   , messageAttachmentFileName = attachmentName
                   , messageAttachmentFileType = attachmentType
                   , messageAttachmentFileSizeBytes = attachmentSize
-                  , messageAttachmentStoragePath = attachmentName
+                  , messageAttachmentStoragePath = T.pack attachmentUploadPath
                   , messageAttachmentCreatedAt = ()
                   }
           void $ addMsgAttachment msgAttachWrite

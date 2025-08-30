@@ -5,7 +5,7 @@ module Modulus.BE.LLM
   , runOllamaWithTools
   ) where
 
-import Control.Monad (void, when)
+import Control.Monad (void)
 import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
 import Control.Monad.IO.Class
 import Data.Aeson
@@ -41,7 +41,6 @@ import Modulus.BE.Log (logDebug, logError)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Storage
 import System.FilePath
-import UnliftIO.Directory (removeFile)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -50,10 +49,6 @@ createToolMessage (functionName, result) =
     System
     ("Tool (" <> T.pack functionName <> ") result: " <> result)
     defaultMessageData
-
-isBucket :: StorageConfig -> Bool
-isBucket (StorageBucket _) = True
-isBucket _ = False
 
 attachDocumentRAG ::
   [MessageAttachmentRead] ->
@@ -67,20 +62,14 @@ attachDocumentRAG msgAttachmentsList msgList_ = do
         <$> mapM
           ( \MessageAttachment {..} -> do
               let attName = T.unpack messageAttachmentFileName
-              fPath <-
-                ExceptT $
-                  loadFile storageConfig attName
+              fPath <- ExceptT $ loadFile storageConfig attName
               if ".pdf" == takeExtension fPath
                 then do
                   let sourcePdf = PdfLoader fPath
-                  eRes <- ExceptT $ liftIO $ load sourcePdf
-                  when (isBucket storageConfig) (removeFile fPath)
-                  pure eRes
+                  ExceptT $ liftIO $ load sourcePdf
                 else do
                   let sourcePdf = FileLoader fPath
-                  eRes <- ExceptT $ liftIO $ load sourcePdf
-                  when (isBucket storageConfig) (removeFile fPath)
-                  pure eRes
+                  ExceptT $ liftIO $ load sourcePdf
           )
           msgAttachmentsList
     let ollamaEmbeddings =

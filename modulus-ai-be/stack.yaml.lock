@@ -40,32 +40,6 @@ packages:
     commit: 05c7869652870a2a88bec259f501ee77cec79134
     git: https://github.com/tusharad/ollama-haskell
 - completed:
-    commit: 1193e654fc06f264a6b1c2a8619609b1668656c7
-    git: https://github.com/tusharad/google-cloud-haskell
-    name: google-cloud-common
-    pantry-tree:
-      sha256: 9ff77b41917e9e00d145c6149c8ab06be60b276733434f97f82342c70c7533d8
-      size: 489
-    subdir: lib/google-cloud-common
-    version: 0.1.0.0
-  original:
-    commit: 1193e654fc06f264a6b1c2a8619609b1668656c7
-    git: https://github.com/tusharad/google-cloud-haskell
-    subdir: lib/google-cloud-common
-- completed:
-    commit: 1193e654fc06f264a6b1c2a8619609b1668656c7
-    git: https://github.com/tusharad/google-cloud-haskell
-    name: google-cloud-storage
-    pantry-tree:
-      sha256: a025d65e9348b79ea49d18d1b65ec28a01bfa1e8f69d0ea032a977c08c0c16eb
-      size: 493
-    subdir: lib/google-cloud-storage
-    version: 0.1.0.0
-  original:
-    commit: 1193e654fc06f264a6b1c2a8619609b1668656c7
-    git: https://github.com/tusharad/google-cloud-haskell
-    subdir: lib/google-cloud-storage
-- completed:
     hackage: pdf-toolbox-document-0.1.4@sha256:6016daf47765f4a06b23a90e59741f34f7c2c8561091a9db3caa922339037108,2405
     pantry-tree:
       sha256: 6530b803d559773deb1bcd62ec0828b715a4572798faecbf669e91f829298b7c
@@ -100,41 +74,6 @@ packages:
       size: 23323
   original:
     hackage: cryptonite-0.30@sha256:12c85dea7be63e5ad90bcb487eb3846bf3c413347f94336fa1dede7b28f9936a,18301
-- completed:
-    hackage: jwt-0.11.0@sha256:0602735ee4093c6c5bc918461855bcd55499099363bad34eb7a227aeef3cde29,4265
-    pantry-tree:
-      sha256: 0b3155d79cc7d44285762b2012debe8ec70ac377163a8e5f29581bacaf50179e
-      size: 1029
-  original:
-    hackage: jwt-0.11.0@sha256:0602735ee4093c6c5bc918461855bcd55499099363bad34eb7a227aeef3cde29,4265
-- completed:
-    hackage: x509-1.7.7@sha256:90eef2d745a654146fc1c325e035eaddac531e4d2145d4bc1dcf4b8fad439d34,2276
-    pantry-tree:
-      sha256: d81ffd09633c0417bcedbfc29f870cc843ec0750edd2f73c8fd60a5e5df278d2
-      size: 1124
-  original:
-    hackage: x509-1.7.7@sha256:90eef2d745a654146fc1c325e035eaddac531e4d2145d4bc1dcf4b8fad439d34,2276
-- completed:
-    hackage: x509-store-1.6.9@sha256:1f1abeab5bacf1407b920d0f34f4c35a5ad450ff0d8121cd3dc76460f81e711d,1716
-    pantry-tree:
-      sha256: 9fc5a6a997af3569c79d5062534cc9836721b39df86bef56308f209164ab500d
-      size: 398
-  original:
-    hackage: x509-store-1.6.9@sha256:1f1abeab5bacf1407b920d0f34f4c35a5ad450ff0d8121cd3dc76460f81e711d,1716
-- completed:
-    hackage: x509-validation-1.6.12@sha256:4f4af20ec77f02c042ecd4726c195bb0e0b694b336de81e7bd4515b2917bd9bc,2169
-    pantry-tree:
-      sha256: f95c21aa9671b10f9384b89c018874246f68220b63266172b47a747b62695e23
-      size: 631
-  original:
-    hackage: x509-validation-1.6.12@sha256:4f4af20ec77f02c042ecd4726c195bb0e0b694b336de81e7bd4515b2917bd9bc,2169
-- completed:
-    hackage: cryptostore-0.3.1.0@sha256:ce4762361b509d1719b5d500604a5a1f2d75c2c53f4fe75f7c4ef2faec4f8352,4219
-    pantry-tree:
-      sha256: afc133eaba1d8645e8df28fd28beddc8dffa7e182ac91f43da8922b8507c93d1
-      size: 8529
-  original:
-    hackage: cryptostore-0.3.1.0@sha256:ce4762361b509d1719b5d500604a5a1f2d75c2c53f4fe75f7c4ef2faec4f8352,4219
 snapshots:
 - completed:
     sha256: f5c5c81f00156f57e6ba5aca3ad1ddf37e79171b73fdca2d839d9875b8d4dd97

@@ -15,12 +15,6 @@ extra-deps:
   - git: https://github.com/tusharad/ollama-haskell
     commit: 05c7869652870a2a88bec259f501ee77cec79134
 
-  - git: https://github.com/tusharad/google-cloud-haskell
-    commit: 1193e654fc06f264a6b1c2a8619609b1668656c7
-    subdirs:
-      - lib/google-cloud-common
-      - lib/google-cloud-storage
-
   - pdf-toolbox-document-0.1.4@sha256:6016daf47765f4a06b23a90e59741f34f7c2c8561091a9db3caa922339037108,2405
 
   - pdf-toolbox-content-0.1.2@sha256:e84fd8be2150bccd60db4a231ad7b6f82e22eadb29cd3cbbc30cea690fc59dcc,2562
@@ -30,14 +24,3 @@ extra-deps:
   - cryptohash-0.11.9@sha256:59d9494ba0cc9eef087ecba2e12e4d3e2d3b0327dd1542af552e3dca0e7de70d,4230
 
   - cryptonite-0.30@sha256:12c85dea7be63e5ad90bcb487eb3846bf3c413347f94336fa1dede7b28f9936a,18301
-
-  - jwt-0.11.0@sha256:0602735ee4093c6c5bc918461855bcd55499099363bad34eb7a227aeef3cde29,4265
-
-  - x509-1.7.7@sha256:90eef2d745a654146fc1c325e035eaddac531e4d2145d4bc1dcf4b8fad439d34,2276
-  
-  - x509-store-1.6.9@sha256:1f1abeab5bacf1407b920d0f34f4c35a5ad450ff0d8121cd3dc76460f81e711d,1716
-  
-  - x509-validation-1.6.12@sha256:4f4af20ec77f02c042ecd4726c195bb0e0b694b336de81e7bd4515b2917bd9bc,2169
-
-  - cryptostore-0.3.1.0@sha256:ce4762361b509d1719b5d500604a5a1f2d75c2c53f4fe75f7c4ef2faec4f8352,4219
-

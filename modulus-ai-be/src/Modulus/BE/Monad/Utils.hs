@@ -47,7 +47,6 @@ mkAppConfigFromEnv = do
   mbEnvironment <- lookupEnv "MODULUS_ENVIRONMENT"
   mbRedisUrl <- lookupEnv "MODULUS_REDIS_URL"
   mbMailgunApi <- lookupEnv "MODULUS_MAILGUN_API"
-  mbGCPBucketName <- lookupEnv "MODULUS_GCP_UPLOAD_BUCKET_NAME"
   mbUploadFilePath <- lookupEnv "MODULUS_UPLOAD_FILE_PATH"
   apiTimeout <- readEnvWithDefault "MODULUS_API_TIMEOUT" 30
   loggerSet <- newStdoutLoggerSet defaultBufSize
@@ -57,12 +56,11 @@ mkAppConfigFromEnv = do
   case eConnectionPool of
     Left err -> pure $ Left (T.pack $ show err)
     Right connPool -> do
-      case (mbPort, mbJwtSecret, mbMailgunApi, mbUploadFilePath, mbGCPBucketName) of
+      case (mbPort, mbJwtSecret, mbMailgunApi, mbUploadFilePath) of
         ( Just portStr
           , Just jwtSecret
           , Just mailGunApi
           , Just fileUploadPath
-          , Just bucketName
           ) -> do
             case reads portStr of
               [(port, "")] -> do
@@ -101,7 +99,6 @@ mkAppConfigFromEnv = do
                       , configMailGunApiKey = T.pack mailGunApi
                       , configCurrentProviders = modelProviders
                       , configFileUploadPath = fileUploadPath
-                      , configGCPBucketName = T.pack bucketName
                       }
               _ -> pure $ Left "Invalid PORT environment variable"
         _ ->

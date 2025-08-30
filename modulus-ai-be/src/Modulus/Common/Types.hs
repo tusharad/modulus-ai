@@ -52,7 +52,6 @@ data AppConfig = AppConfig
   , configMailGunApiKey :: Text
   , configCurrentProviders :: [ModelProviders]
   , configFileUploadPath :: FilePath
-  , configGCPBucketName :: Text
   }
   deriving (Generic)
 

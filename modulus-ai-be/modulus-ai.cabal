@@ -94,11 +94,9 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
-    , effectful-core
     , email-validate
     , fast-logger
     , filepath
-    , google-cloud-storage
     , http-client
     , http-client-tls
     , http-types
@@ -117,7 +115,6 @@ library
     , servant-multipart
     , servant-server
     , string-interpolate
-    , temporary
     , text
     , time
     , transformers
@@ -158,11 +155,9 @@ executable modulus-ai-exe
     , base >=4.7 && <5
     , bytestring
     , containers
-    , effectful-core
     , email-validate
     , fast-logger
     , filepath
-    , google-cloud-storage
     , http-client
     , http-client-tls
     , http-types
@@ -182,7 +177,6 @@ executable modulus-ai-exe
     , servant-multipart
     , servant-server
     , string-interpolate
-    , temporary
     , text
     , time
     , transformers
@@ -225,11 +219,9 @@ test-suite modulus-ai-test
     , base >=4.7 && <5
     , bytestring
     , containers
-    , effectful-core
     , email-validate
     , fast-logger
     , filepath
-    , google-cloud-storage
     , http-client
     , http-client-tls
     , http-types
@@ -251,7 +243,6 @@ test-suite modulus-ai-test
     , string-interpolate
     , tasty
     , tasty-hunit
-    , temporary
     , text
     , time
     , transformers
