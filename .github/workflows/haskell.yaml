@@ -134,7 +134,7 @@ jobs:
           --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
           --memory 512Mi \
           --add-volume=name=gcs-1,type=cloud-storage,bucket=modulus_ai_bucket \
-          --add-volume-mount=volume=uploads-volume,mount-path=/home/appuser/app/uploads
+          --add-volume-mount=volume=gcs-1,mount-path=/home/appuser/app/uploads
 
   deploy-frontend:
     if: github.ref == 'refs/heads/release'
