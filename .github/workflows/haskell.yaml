@@ -150,14 +150,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: |
-          export VITE_API_BASE_URL=${{ env.BACKEND_URL }} 
-          npm run build
-
       - id: "auth"
         uses: "google-github-actions/auth@v2"
         with:
@@ -177,7 +169,7 @@ jobs:
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
-          docker build -f dockerfile.release -t $IMAGE_NAME .
+          docker build -f dockerfile.release -t $IMAGE_NAME . --build-arg VITE_API_BASE_URL=${{env.BACKEND_URL}}
 
       - name: Push image
         run: |
