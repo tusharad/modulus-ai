@@ -47,7 +47,7 @@ mkAppConfigFromEnv = do
   mbEnvironment <- lookupEnv "MODULUS_ENVIRONMENT"
   mbRedisUrl <- lookupEnv "MODULUS_REDIS_URL"
   mbMailgunApi <- lookupEnv "MODULUS_MAILGUN_API"
-  mbUploadFilePath <- lookupEnv "MODULUS_UPLOAD_FILE_PATH"
+  mbUploadFilePath <- lookupEnv "MODULUS_FILE_UPLOAD_PATH"
   apiTimeout <- readEnvWithDefault "MODULUS_API_TIMEOUT" 30
   loggerSet <- newStdoutLoggerSet defaultBufSize
   let env = fromMaybe Local (textToEnv (fromMaybe "" mbEnvironment))
@@ -100,9 +100,17 @@ mkAppConfigFromEnv = do
                       , configCurrentProviders = modelProviders
                       , configFileUploadPath = fileUploadPath
                       }
-              _ -> pure $ Left "Invalid PORT environment variable"
-        _ ->
-          pure $ Left "Missing required environment variables: PORT, JWT_SECRET"
+              _ -> pure $ Left "Invalid PORT environment variable "
+        (mb1, mb2, mb3, mb4) ->
+          pure $
+            Left $
+              "Missing required environment variables: "
+                <> mconcat
+                  [ maybe "PORT" (const "") mb1
+                  , maybe "JWT Secret" (const "") mb2
+                  , maybe "Mail gun api" (const "") mb3
+                  , maybe "File upload path" (const "") mb4
+                  ]
   where
     readEnvWithDefault :: (Read a) => String -> a -> IO a
     readEnvWithDefault envVar defaultVal = do
