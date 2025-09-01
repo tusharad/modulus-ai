@@ -88,13 +88,13 @@ mkAppConfigFromEnv = do
                     AppConfig
                       { configHttpManager = manager
                       , configPort = port
-                      , configLogLevel = maybe "INFO" T.pack mbLogLevel
                       , configEnvironment = env
                       , configRedisUrl = T.pack <$> mbRedisUrl
                       , configJwtSecret = T.pack jwtSecret
                       , configExternalApiTimeout = apiTimeout
                       , configLoggerSet = loggerSet
-                      , configMinLogLevel = Debug
+                      , configMinLogLevel =
+                          fromMaybe Debug (parseLogLevel =<< mbLogLevel)
                       , configOrvilleState = orvilleState
                       , configMailGunApiKey = T.pack mailGunApi
                       , configCurrentProviders = modelProviders

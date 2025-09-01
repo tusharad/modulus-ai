@@ -41,7 +41,6 @@ data AppConfig = AppConfig
   { configHttpManager :: HTTP.Manager -- TODO: We probably won't need this as
   -- we'll directly calling handler functions from Hyperbole
   , configPort :: Int
-  , configLogLevel :: Text
   , configEnvironment :: Environment -- "development", "staging", "production"
   , configRedisUrl :: Maybe Text
   , configJwtSecret :: Text

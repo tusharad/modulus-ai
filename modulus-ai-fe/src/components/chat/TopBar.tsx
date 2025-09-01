@@ -27,8 +27,14 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
         const data = await apiService.getModelProviders();
         setProviders(data);
         if (data.length > 0) {
-          setSelectedProvider(data[0]);
-          setSelectedModel(data[0].modelList[0] || "");
+          const firstWithModels = data.find(p => p.modelList.length > 0);
+          if (firstWithModels) {
+            setSelectedProvider(firstWithModels);
+            setSelectedModel(firstWithModels.modelList[0] || "");
+          } else {
+            setSelectedProvider(data[0]);
+            setSelectedModel("");
+          }
         }
       } catch (err) {
         console.error("Failed to load model providers", err);

@@ -56,7 +56,10 @@ conversationsServer =
     :<|> getModelProvidersHandler
 
 getModelProvidersHandler :: AppM [ModelProviders]
-getModelProvidersHandler = asks configCurrentProviders
+getModelProvidersHandler = do
+  x <- asks configCurrentProviders
+  logDebug $ "sending providers " <> T.pack (show x)
+  pure x
 
 deleteConversationHandler :: AuthResult -> ConversationPublicID -> AppM ()
 deleteConversationHandler (Authenticated user) convPublicId = do
