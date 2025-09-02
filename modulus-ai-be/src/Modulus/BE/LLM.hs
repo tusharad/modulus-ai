@@ -33,22 +33,20 @@ import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Storage
 import System.FilePath
 
-import Langchain.DocumentLoader.Core (BaseLoader (load), Document (..))
+import Langchain.DocumentLoader.Core (BaseLoader (load))
 import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
 import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
-import Langchain.Embeddings.Ollama (OllamaEmbeddings (OllamaEmbeddings))
 import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Gemini as LLMGemini
 import qualified Langchain.LLM.Internal.OpenAI as OpenAIInternal
 import Langchain.LLM.Ollama as LLMOllama
 import Langchain.LLM.OpenAICompatible as OpenAILike hiding (metadata)
-import Langchain.PromptTemplate (PromptTemplate (PromptTemplate), renderPrompt)
-import Langchain.Retriever.Core
+import Langchain.PromptTemplate
 import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
-import Langchain.VectorStore.InMemory (fromDocuments)
+import Modulus.BE.LLM.Embeddings (getRelevantContext)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -61,52 +59,34 @@ createToolMessage (functionName, result) =
 attachDocumentRAG ::
   [MessageAttachmentRead] ->
   NE.NonEmpty L.Message ->
+  LLMRespStreamBody ->
   AppM (NE.NonEmpty L.Message)
-attachDocumentRAG msgAttachmentsList msgList_ = do
+attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
   storageConfig <- mkStorageFromEnv
-  eVecStore <- runExceptT $ do
-    docs <-
-      mconcat
-        <$> mapM
-          ( \MessageAttachment {..} -> do
-              let attName = T.unpack messageAttachmentFileName
-              fPath <- ExceptT $ loadFile storageConfig attName
-              if ".pdf" == takeExtension fPath
-                then do
-                  let sourcePdf = PdfLoader fPath
-                  ExceptT $ liftIO $ load sourcePdf
-                else do
-                  let sourcePdf = FileLoader fPath
-                  ExceptT $ liftIO $ load sourcePdf
-          )
-          msgAttachmentsList
-    let ollamaEmbeddings =
-          OllamaEmbeddings
-            "nomic-embed-text:latest"
-            Nothing
-            Nothing
-            Nothing
-    ExceptT $ liftIO $ fromDocuments ollamaEmbeddings docs
-  case eVecStore of
+  eDocs <- runExceptT $ do
+    mconcat
+      <$> mapM
+        ( \MessageAttachment {..} -> do
+            let attName = T.unpack messageAttachmentFileName
+            fPath <- ExceptT $ loadFile storageConfig attName
+            if ".pdf" == takeExtension fPath
+              then do
+                let sourcePdf = PdfLoader fPath
+                ExceptT $ liftIO $ load sourcePdf
+              else do
+                let sourcePdf = FileLoader fPath
+                ExceptT $ liftIO $ load sourcePdf
+        )
+        msgAttachmentsList
+  case eDocs of
     Left err -> do
-      logError $ "Error loading documents: " <> T.pack err
+      logDebug $ "Error while generating docs" <> T.pack err
       pure msgList_
-    Right vectorStore -> do
-      let retriever = VectorStoreRetriever vectorStore
-      let docToText =
-            mconcat
-              . map
-                (\doc -> pageContent doc <> T.pack (show $ metadata doc))
-      let promptTemplate = PromptTemplate systemTemplate
+    Right docs -> do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
-        relevantDocs <-
-          ExceptT $
-            liftIO $
-              _get_relevant_documents retriever lastUserMsg
-        let context = docToText relevantDocs
-        ExceptT . pure $
-          renderPrompt promptTemplate (HM.fromList [("context", context)])
+        context <- ExceptT $ liftIO $ getRelevantContext docs respStreamBody lastUserMsg
+        ExceptT . pure $ renderPrompt (PromptTemplate systemTemplate) (HM.fromList [("context", context)])
       case eSysPrompt of
         Left err -> do
           logError $ "Error while getting relevant docs" <> T.pack err
@@ -121,7 +101,8 @@ systemTemplate :: Text
 systemTemplate =
   T.unlines
     [ "Use the following pieces of context to answer the user's question."
-    , "If you don't know the answer, just say that you don't know, don't try to make up an answer."
+    , "If you don't know the answer, just say that you don't know, \
+      \don't try to make up an answer."
     , "{context}"
     ]
 

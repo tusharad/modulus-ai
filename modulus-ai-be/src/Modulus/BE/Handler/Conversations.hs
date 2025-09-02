@@ -94,7 +94,7 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
         [] -> do
           logDebug $ "no chatMsgLst found" <> T.pack (show chatMsgLst)
           pure msgList_
-        msgAttachmentsList -> attachDocumentRAG msgAttachmentsList msgList_
+        msgAttachmentsList -> attachDocumentRAG msgAttachmentsList msgList_ streamBody
       tokenChan <- liftIO newChan
       let st =
             StreamHandler
