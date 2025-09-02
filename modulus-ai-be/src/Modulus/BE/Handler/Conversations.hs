@@ -35,12 +35,14 @@ import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Modulus.BE.Monad.Storage
+import Modulus.BE.Service.Conversation (updateConversationTitle)
 import Modulus.Common.Types
 import qualified Orville.PostgreSQL as Orville
 import Servant
 import Servant.Multipart
 import qualified Servant.Types.SourceT as S
 import System.FilePath
+import qualified UnliftIO.Concurrent as UnliftIO (forkIO)
 
 conversationsServer :: ServerT ConversationsAPI AppM
 conversationsServer =
@@ -81,6 +83,9 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
   case NE.nonEmpty chatMsgLst_ of
     Nothing -> throwError $ NotFoundError "Empty conversation"
     Just chatMsgLst -> do
+      when
+        (length chatMsgLst < 2)
+        (void $ UnliftIO.forkIO $ updateConversationTitle convPublicId streamBody)
       let msgList_ =
             NE.map
               ( \ChatMessage {..} ->

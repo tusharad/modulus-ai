@@ -24,8 +24,11 @@ import Data.Ollama.Chat
   , FunctionParameters (..)
   , InputTool (..)
   )
+import qualified Data.Ollama.Chat as Ollama
+import qualified Data.Ollama.Common.SchemaBuilder as Ollama
 import Data.Text (Text)
 import qualified Data.Text as T
+import GHC.Generics
 import Modulus.BE.Api.Types (LLMRespStreamBody (..))
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.Log (logDebug, logError)
@@ -33,13 +36,17 @@ import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Storage
 import System.FilePath
 
+import qualified Data.ByteString as BS
+import qualified Data.Text.Encoding as TE
 import Langchain.DocumentLoader.Core (BaseLoader (load))
 import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
 import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
 import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Gemini as LLMGemini
+import qualified Langchain.LLM.Internal.OpenAI as Internal
 import qualified Langchain.LLM.Internal.OpenAI as OpenAIInternal
+import qualified Langchain.LLM.Internal.SchemaBuilder as LangchainSchema
 import Langchain.LLM.Ollama as LLMOllama
 import Langchain.LLM.OpenAICompatible as OpenAILike hiding (metadata)
 import Langchain.PromptTemplate
@@ -86,7 +93,10 @@ attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
         context <- ExceptT $ liftIO $ getRelevantContext docs respStreamBody lastUserMsg
-        ExceptT . pure $ renderPrompt (PromptTemplate systemTemplate) (HM.fromList [("context", context)])
+        ExceptT . pure $
+          renderPrompt
+            (PromptTemplate systemTemplate)
+            (HM.fromList [("context", context)])
       case eSysPrompt of
         Left err -> do
           logError $ "Error while getting relevant docs" <> T.pack err
@@ -357,6 +367,8 @@ class LLMProvider a where
     Text ->
     IO (Either String ())
 
+  generateNewConversationTitle :: a -> Text -> IO (Either String NewConversationTitle)
+
 data AnyLLMProvider where
   AnyLLMProvider :: (LLMProvider a) => a -> AnyLLMProvider
 
@@ -374,24 +386,55 @@ streamWithProvider (AnyLLMProvider provider) msgs sh (Just tool) =
 instance LLMProvider Ollama where
   streamResponse = Langchain.stream
   streamWithTools = runOllamaWithTools
+  generateNewConversationTitle l userQuestion = do
+    let schema =
+          Ollama.buildSchema $
+            Ollama.emptyObject
+              Ollama.|+ ("title", Ollama.JString)
+              Ollama.|! "title"
+    let msgContent = generateTitlePrompt <> userQuestion
+    let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
+    let ollamaParams =
+          defaultOllamaParams
+            { format = Just $ Ollama.SchemaFormat schema
+            }
+    fmap (toNewTitle . content) <$> chat l msg (Just ollamaParams)
 
 instance LLMProvider OpenAICompatible where
   streamResponse = Langchain.stream
   streamWithTools = runOpenRouterWithTools
+  generateNewConversationTitle l userQuestion = do
+    let schema =
+          LangchainSchema.buildSchema $
+            LangchainSchema.emptyObject
+              LangchainSchema.|+ ("title", LangchainSchema.JString)
+              LangchainSchema.|! "title"
+    let msgContent = generateTitlePrompt <> userQuestion
+    let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
+    let params =
+          defaultOpenAIParams
+            { responseFormat =
+                Just $
+                  Internal.JsonSchemaFormat "SomeSchema" schema False
+            }
+    fmap (toNewTitle . content) <$> chat l msg (Just params)
 
 instance LLMProvider Gemini where
   streamResponse = Langchain.stream
-  streamWithTools = runOpenRouterWithTools . toOpenAICompatible
-    where
-      toOpenAICompatible Gemini {..} =
-        OpenAILike.OpenAICompatible
-          { OpenAILike.apiKey = Just apiKey
-          , modelName = geminiModelName
-          , callbacks = []
-          , baseUrl = baseUrl
-          , defaultBaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai"
-          , providerName = "gemini"
-          }
+  streamWithTools = runOpenRouterWithTools . geminiToOpenAICompatible
+  generateNewConversationTitle =
+    generateNewConversationTitle . geminiToOpenAICompatible
+
+geminiToOpenAICompatible :: Gemini -> OpenAICompatible
+geminiToOpenAICompatible Gemini {..} =
+  OpenAILike.OpenAICompatible
+    { OpenAILike.apiKey = Just apiKey
+    , modelName = geminiModelName
+    , callbacks = []
+    , baseUrl = baseUrl
+    , defaultBaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai"
+    , providerName = "gemini"
+    }
 
 mkLLMProvider :: LLMRespStreamBody -> AppM (Either Text AnyLLMProvider)
 mkLLMProvider LLMRespStreamBody {..} = pure $ case provider of
@@ -411,3 +454,19 @@ mkLLMProvider LLMRespStreamBody {..} = pure $ case provider of
             }
      in Right $ AnyLLMProvider llm
   _ -> Left $ "Provider not found: " <> provider
+
+newtype NewConversationTitle = NewConversationTitle {title :: Text}
+  deriving (Show, Eq, Generic, FromJSON)
+
+toNewTitle :: Text -> NewConversationTitle
+toNewTitle txt =
+  fromMaybe (NewConversationTitle "New Chat") $
+    decode (BS.fromStrict $ TE.encodeUtf8 txt)
+
+generateTitlePrompt :: Text
+generateTitlePrompt =
+  T.unlines
+    [ "You are given a user question, write a 5 word summary of user's question for"
+    , "the conversation title. Follow the json structure only"
+    , "User question: "
+    ]

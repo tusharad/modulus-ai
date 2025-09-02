@@ -66,6 +66,7 @@ library
       Modulus.BE.Monad.Error
       Modulus.BE.Monad.Storage
       Modulus.BE.Monad.Utils
+      Modulus.BE.Service.Conversation
       Modulus.BE.Service.Email.Core
       Modulus.Common.Openrouter
       Modulus.Common.Types
@@ -195,6 +196,7 @@ test-suite modulus-ai-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Conversation
       DB
       Paths_modulus_ai
   hs-source-dirs:
