@@ -24,7 +24,8 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
   useEffect(() => {
     const loadProviders = async () => {
       try {
-        const data = await apiService.getModelProviders();
+        const data_ = await apiService.getModelProviders();
+        const data = data_.filter((p) => p.modelList.length > 0);
         setProviders(data);
         if (data.length > 0) {
           const firstWithModels = data.find(p => p.modelList.length > 0);
