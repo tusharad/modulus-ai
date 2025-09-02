@@ -1,8 +1,15 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RecordWildCards #-}
+
 -- LLM related functions shall be here
 module Modulus.BE.LLM
   ( attachDocumentRAG
   , runOpenRouterWithTools
   , runOllamaWithTools
+  , streamWithProvider
+  , mkLLMProvider
+  , LLMProvider (..)
+  , AnyLLMProvider (..)
   ) where
 
 import Control.Monad (void)
@@ -11,6 +18,7 @@ import Control.Monad.IO.Class
 import Data.Aeson
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
+import Data.Maybe (fromMaybe)
 import Data.Ollama.Chat
   ( FunctionDef (..)
   , FunctionParameters (..)
@@ -18,29 +26,29 @@ import Data.Ollama.Chat
   )
 import Data.Text (Text)
 import qualified Data.Text as T
+import Modulus.BE.Api.Types (LLMRespStreamBody (..))
+import Modulus.BE.DB.Internal.Model
+import Modulus.BE.Log (logDebug, logError)
+import Modulus.BE.Monad.AppM (AppM)
+import Modulus.BE.Monad.Storage
+import System.FilePath
+
 import Langchain.DocumentLoader.Core (BaseLoader (load), Document (..))
 import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
 import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
 import Langchain.Embeddings.Ollama (OllamaEmbeddings (OllamaEmbeddings))
 import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
+import Langchain.LLM.Gemini as LLMGemini
 import qualified Langchain.LLM.Internal.OpenAI as OpenAIInternal
 import Langchain.LLM.Ollama as LLMOllama
 import Langchain.LLM.OpenAICompatible as OpenAILike hiding (metadata)
 import Langchain.PromptTemplate (PromptTemplate (PromptTemplate), renderPrompt)
 import Langchain.Retriever.Core
-  ( Retriever (_get_relevant_documents)
-  , VectorStoreRetriever (VectorStoreRetriever)
-  )
 import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
 import Langchain.VectorStore.InMemory (fromDocuments)
-import Modulus.BE.DB.Internal.Model
-import Modulus.BE.Log (logDebug, logError)
-import Modulus.BE.Monad.AppM (AppM)
-import Modulus.BE.Monad.Storage
-import System.FilePath
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -352,3 +360,73 @@ executeToolCallFromResponse tool (ToolCall _ _ toolFunction) = do
           pure (T.unpack functionName, result)
         _ -> pure (T.unpack functionName, "Error: query parameter not found")
     _ -> pure ("", "Error: unknown toolName")
+
+class LLMProvider a where
+  streamResponse ::
+    a ->
+    NE.NonEmpty Langchain.Message ->
+    StreamHandler Text ->
+    Maybe (Langchain.LLMParams a) ->
+    IO (Either String ())
+
+  streamWithTools ::
+    a ->
+    NE.NonEmpty Langchain.Message ->
+    StreamHandler Text ->
+    Text ->
+    IO (Either String ())
+
+data AnyLLMProvider where
+  AnyLLMProvider :: (LLMProvider a) => a -> AnyLLMProvider
+
+streamWithProvider ::
+  AnyLLMProvider ->
+  NE.NonEmpty Langchain.Message ->
+  StreamHandler Text ->
+  Maybe Text ->
+  IO (Either String ())
+streamWithProvider (AnyLLMProvider provider) msgs sh Nothing =
+  streamResponse provider msgs sh Nothing
+streamWithProvider (AnyLLMProvider provider) msgs sh (Just tool) =
+  streamWithTools provider msgs sh tool
+
+instance LLMProvider Ollama where
+  streamResponse = Langchain.stream
+  streamWithTools = runOllamaWithTools
+
+instance LLMProvider OpenAICompatible where
+  streamResponse = Langchain.stream
+  streamWithTools = runOpenRouterWithTools
+
+instance LLMProvider Gemini where
+  streamResponse = Langchain.stream
+  streamWithTools = runOpenRouterWithTools . toOpenAICompatible
+    where
+      toOpenAICompatible Gemini {..} =
+        OpenAILike.OpenAICompatible
+          { OpenAILike.apiKey = Just apiKey
+          , modelName = geminiModelName
+          , callbacks = []
+          , baseUrl = baseUrl
+          , defaultBaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai"
+          , providerName = "gemini"
+          }
+
+mkLLMProvider :: LLMRespStreamBody -> AppM (Either Text AnyLLMProvider)
+mkLLMProvider LLMRespStreamBody {..} = pure $ case provider of
+  "ollama" ->
+    let llm = Ollama modelUsed []
+     in Right $ AnyLLMProvider llm
+  "openrouter" ->
+    let llm = mkOpenRouter modelUsed [] Nothing (fromMaybe "" apiKey)
+     in Right $ AnyLLMProvider llm
+  "gemini" ->
+    let llm =
+          Gemini
+            { apiKey = fromMaybe "" apiKey
+            , geminiModelName = modelUsed
+            , callbacks = []
+            , baseUrl = Nothing
+            }
+     in Right $ AnyLLMProvider llm
+  _ -> Left $ "Provider not found: " <> provider

@@ -14,18 +14,16 @@ import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.Reader (MonadIO (liftIO), asks)
 import Crypto.JOSE.Types
 import Crypto.JWT
-import Data.Either (fromRight)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Modulus.BE.DB.Internal.Config (mkConnectionPoolFromEnv)
+import Modulus.BE.LLM.Providers (fetchAllProviders)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error (AppError)
-import Modulus.Common.Openrouter
 import Modulus.Common.Types
 import qualified Network.HTTP.Client.TLS as HTTP
-import qualified Ollama
 import qualified Orville.PostgreSQL as O
 import System.Environment (lookupEnv)
 import System.Log.FastLogger (defaultBufSize, newStdoutLoggerSet)
@@ -65,22 +63,7 @@ mkAppConfigFromEnv = do
             case reads portStr of
               [(port, "")] -> do
                 manager <- HTTP.newTlsManager
-                ollamaModelList <- listAvailableOllamaModels
-                openRouterModels <-
-                  map modelId . take 5 . fromRight []
-                    <$> getOpenRouterModelList
-                let modelProviders =
-                      [ ModelProviders
-                          { providerName = "ollama"
-                          , modelList = ollamaModelList
-                          , isApiFieldRequired = False
-                          }
-                      , ModelProviders
-                          { providerName = "openrouter"
-                          , modelList = openRouterModels
-                          , isApiFieldRequired = True
-                          }
-                      ]
+                modelProviders <- fetchAllProviders
                 let orvilleState =
                       O.newOrvilleState O.defaultErrorDetailLevel connPool
                 pure $
@@ -146,19 +129,3 @@ withResource :: IO a -> (a -> IO b) -> (a -> AppM c) -> AppM c
 withResource acquire release action = do
   unlift <- askUnliftIO
   liftIO $ bracket acquire release (unliftIO unlift . action)
-
-listAvailableOllamaModels :: IO [Text]
-listAvailableOllamaModels = do
-  eVersion <- Ollama.getVersion
-  case eVersion of
-    Left _ -> do
-      putStrLn "Ollama not seems to be installed."
-      pure []
-    Right (Ollama.Version v) -> do
-      putStrLn $ "Ollama version: " <> T.unpack v
-      eModelInfo <- Ollama.list Nothing
-      case eModelInfo of
-        Left err -> print err >> pure []
-        Right (Ollama.Models modelInfoList) -> do
-          let modelNames = map Ollama.name modelInfoList
-          pure modelNames

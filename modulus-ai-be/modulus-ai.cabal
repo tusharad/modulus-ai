@@ -18,7 +18,7 @@ license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
+    ../README.md
     CHANGELOG.md
 
 source-repository head
@@ -59,6 +59,7 @@ library
       Modulus.BE.Handler.Auth
       Modulus.BE.Handler.Conversations
       Modulus.BE.LLM
+      Modulus.BE.LLM.Providers
       Modulus.BE.Log
       Modulus.BE.Monad.AppM
       Modulus.BE.Monad.Error
