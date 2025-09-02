@@ -15,14 +15,11 @@ import Control.Monad.Reader (asks)
 import qualified Data.ByteString.Lazy as BSL
 import Data.Int (Int64)
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.UUID.V4 (nextRandom)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
-import Langchain.LLM.Ollama (Ollama (..))
-import Langchain.LLM.OpenAICompatible (mkOpenRouter)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
@@ -33,7 +30,7 @@ import Modulus.BE.DB.Queries.ChatMessage
   , getChatMessagesWithAttachmentsByConvID
   )
 import Modulus.BE.DB.Queries.Conversation
-import Modulus.BE.LLM (attachDocumentRAG, runOllamaWithTools, runOpenRouterWithTools)
+import Modulus.BE.LLM
 import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
@@ -79,7 +76,7 @@ getLLMRespStreamHandler ::
   ConversationPublicID ->
   LLMRespStreamBody ->
   AppM (SourceIO LLMRespStream)
-getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
+getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} = do
   chatMsgLst_ <- getConversationMessagesHandler authUser convPublicId
   case NE.nonEmpty chatMsgLst_ of
     Nothing -> throwError $ NotFoundError "Empty conversation"
@@ -104,31 +101,20 @@ getLLMRespStreamHandler authUser convPublicId LLMRespStreamBody {..} = do
               { onToken = writeChan tokenChan . Just
               , onComplete = writeChan tokenChan Nothing
               }
-      case provider of
-        "openrouter" -> do
-          let openRouterLLM = mkOpenRouter modelUsed [] Nothing (fromMaybe "" apiKey)
-          case toolCall of
-            Just selectedTool ->
-              void $
-                liftIO $
-                  runOpenRouterWithTools openRouterLLM msgList st selectedTool
-            Nothing -> do
-              void . liftIO . forkIO $
+      eLLM <- mkLLMProvider streamBody
+      case eLLM of
+        Left err -> throwError $ ValidationError err
+        Right llmProvider -> do
+          logDebug $ "Provider selected: " <> provider
+          void $
+            liftIO $
+              forkIO $
                 void $
-                  Langchain.stream openRouterLLM msgList st Nothing
-        "ollama" -> do
-          let ollamaLLM = Ollama modelUsed []
-          case toolCall of
-            Just selectedTool ->
-              void $
-                liftIO $
-                  runOllamaWithTools ollamaLLM msgList st selectedTool
-            Nothing -> do
-              void . liftIO . forkIO $
-                void $
-                  Langchain.stream ollamaLLM msgList st Nothing
-        _ -> throwError $ NotFoundError "Provider not found"
-      logDebug $ "Provider selected: " <> provider
+                  streamWithProvider
+                    llmProvider
+                    msgList
+                    st
+                    toolCall
       pure $ chanSource tokenChan
   where
     chanSource :: Chan (Maybe Text) -> SourceIO LLMRespStream

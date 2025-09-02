@@ -7,7 +7,7 @@ maintainer: "tusharadhatrao@gmail.com"
 copyright: "2025 tushar"
 
 extra-source-files:
-  - README.md
+  - ../README.md
   - CHANGELOG.md
 
 synopsis: An AI chatbot that lets you interact with LLMs from different providers.
