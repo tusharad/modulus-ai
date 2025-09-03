@@ -22,6 +22,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import GHC.Generics
+import qualified Network.AMQP as AMQP
 import qualified Network.HTTP.Client as HTTP
 import qualified Orville.PostgreSQL as O
 import System.Log.FastLogger
@@ -51,6 +52,12 @@ data AppConfig = AppConfig
   , configMailGunApiKey :: Text
   , configCurrentProviders :: [ModelProviders]
   , configFileUploadPath :: FilePath
+  , -- RabbitMQ configuration
+    configRabbitMQConnection :: Maybe AMQP.Connection
+  , configRabbitMQHost :: Text
+  , configRabbitMQVirtualHost :: Text
+  , configRabbitMQLogin :: Text
+  , configRabbitMQPassword :: Text
   }
   deriving (Generic)
 

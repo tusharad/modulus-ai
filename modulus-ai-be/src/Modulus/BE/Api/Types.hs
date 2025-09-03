@@ -13,6 +13,7 @@ module Modulus.BE.Api.Types
   , AddMessageRequest (..)
   , LLMRespStream (..)
   , LLMRespStreamBody (..)
+  , UpdateConversationTitleMessage (..)
   ) where
 
 import Data.Aeson
@@ -98,5 +99,14 @@ data LLMRespStreamBody = LLMRespStreamBody
   , provider :: Text
   , apiKey :: Maybe Text
   , toolCall :: Maybe Text
+  }
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
+
+-- | Message type for RabbitMQ communication to update conversation titles
+data UpdateConversationTitleMessage = UpdateConversationTitleMessage
+  { uctmConversationId :: ConversationPublicID
+  , uctmModelUsed :: Text
+  , uctmProvider :: Text
+  , uctmApiKey :: Text
   }
   deriving (Eq, Show, Generic, FromJSON, ToJSON)
