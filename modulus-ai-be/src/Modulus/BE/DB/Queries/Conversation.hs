@@ -3,6 +3,7 @@ module Modulus.BE.DB.Queries.Conversation
   , getConversationsByUserID
   , getConversationsByPublicID
   , deleteConversation
+  , updateConversation
   ) where
 
 import Modulus.BE.DB.Internal.Marshaller.Conversation
@@ -28,3 +29,6 @@ getConversationsByPublicID convPublicId =
 
 deleteConversation :: (MonadOrville m) => ConversationID -> m ()
 deleteConversation = deleteEntity conversationTable
+
+updateConversation :: MonadOrville m => ConversationID -> ConversationWrite -> m ()
+updateConversation = updateEntity conversationTable

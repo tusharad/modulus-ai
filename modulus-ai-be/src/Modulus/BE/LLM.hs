@@ -10,6 +10,7 @@ module Modulus.BE.LLM
   , mkLLMProvider
   , LLMProvider (..)
   , AnyLLMProvider (..)
+  , NewConversationTitle (..)
   ) where
 
 import Control.Monad (void)

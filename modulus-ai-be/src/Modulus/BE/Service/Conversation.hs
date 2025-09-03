@@ -1,15 +1,18 @@
 module Modulus.BE.Service.Conversation (updateConversationTitle) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Modulus.BE.Api.Types
+import qualified Data.Text as T
+import Modulus.BE.Api.Types (LLMRespStreamBody)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.ChatMessage (getChatMessagesByConvID)
-import Modulus.BE.DB.Queries.Conversation (getConversationsByPublicID)
+import Modulus.BE.DB.Queries.Conversation (getConversationsByPublicID, updateConversation)
 import Modulus.BE.LLM
   ( AnyLLMProvider (AnyLLMProvider)
   , LLMProvider (generateNewConversationTitle)
+  , NewConversationTitle (..)
   , mkLLMProvider
   )
+import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error (AppError (ExternalServiceError, NotFoundError))
 import Servant (throwError)
@@ -28,9 +31,21 @@ updateConversationTitle convPublicID llmRespBody = do
           case eLLM of
             Left e -> throwError $ ExternalServiceError e
             Right (AnyLLMProvider llmProvider) -> do
-              _ <-
+              eRes <-
                 liftIO $
                   generateNewConversationTitle
                     llmProvider
                     (chatMessageContent firstMsg)
-              pure ()
+              case eRes of
+                Left err -> logDebug $ "Failed to generate new title: " <> T.pack err
+                Right (NewConversationTitle newTitle) -> do
+                  let updatedConv =
+                        convRead
+                          { conversationTitle = newTitle
+                          , conversationID = ()
+                          , conversationPublicID = ()
+                          , conversationCreatedAt = ()
+                          , conversationUpdatedAt = ()
+                          }
+                  updateConversation (conversationID convRead) updatedConv
+                  logDebug $ "Title updated for conversation ID " <> T.pack (show convPublicID)
