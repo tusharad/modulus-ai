@@ -55,9 +55,14 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
   }, [selectedProvider, selectedModel, apiKey]);
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
+    <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
       {/* Left side: Provider + Model */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium text-gray-600">AI Model</span>
+        </div>
+        
         <select
           value={selectedProvider?.providerName || ""}
           onChange={(e) => {
@@ -65,7 +70,7 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
             setSelectedProvider(provider);
             if (provider) setSelectedModel(provider.modelList[0] || "");
           }}
-          className="border rounded-lg px-3 py-2"
+          className="input px-3 py-2 text-sm border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
         >
           {providers.map((p) => (
             <option key={p.providerName} value={p.providerName}>
@@ -77,7 +82,7 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
         <select
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-          className="border rounded-lg px-3 py-2"
+          className="input px-3 py-2 text-sm border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 disabled:opacity-50"
           disabled={!selectedProvider}
         >
           {selectedProvider?.modelList.map((m) => (
@@ -93,7 +98,7 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
             placeholder="Enter API Key"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            className="border rounded-lg px-3 py-2 flex-1"
+            className="input px-3 py-2 text-sm border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 min-w-[200px]"
           />
         )}
       </div>
@@ -102,26 +107,33 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
       <div className="relative">
         <button
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-full hover:bg-gray-200"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl hover:from-gray-200 hover:to-gray-100 transition-all duration-200 shadow-sm hover:shadow-md"
         >
-          <User className="w-5 h-5 text-gray-700" />
-          <ChevronDown size={16} className="text-gray-600" />
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-sm font-medium text-gray-700">Profile</span>
+          <ChevronDown size={16} className="text-gray-500" />
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg">
-            <button
-              className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-100 text-left"
-              onClick={() => alert("Settings clicked")}
-            >
-              <Settings size={16} /> Settings
-            </button>
-            <button
-              className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-100 text-left text-red-600"
-              onClick={onLogout}
-            >
-              <LogOut size={16} /> Logout
-            </button>
+          <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md border border-gray-200/50 rounded-xl shadow-xl animate-fade-in">
+            <div className="p-2">
+              <button
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                onClick={() => alert("Settings clicked")}
+              >
+                <Settings size={16} className="text-gray-500" />
+                Settings
+              </button>
+              <button
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                onClick={onLogout}
+              >
+                <LogOut size={16} className="text-red-500" />
+                Logout
+              </button>
+            </div>
           </div>
         )}
       </div>

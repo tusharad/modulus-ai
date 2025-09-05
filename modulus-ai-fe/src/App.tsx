@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getCookie } from './services/cookies';
 import { BrowserRouter } from 'react-router';
 import Router from './router';
+import './App.css';
 
 // Main App Component
 const App: React.FC = () => {
@@ -15,10 +16,12 @@ const App: React.FC = () => {
     }
   }, []);
 
-return (
-    <BrowserRouter>
-      <Router />
-    </BrowserRouter>
+  return (
+    <div className="app-container">
+      <BrowserRouter>
+        <Router />
+      </BrowserRouter>
+    </div>
   );
 };
 
