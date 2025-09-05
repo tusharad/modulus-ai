@@ -15,7 +15,6 @@ import Control.Monad.Reader (asks)
 import qualified Data.ByteString.Lazy as BSL
 import Data.Int (Int64)
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.UUID.V4 (nextRandom)
@@ -36,7 +35,6 @@ import Modulus.BE.Log (logDebug)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Error
 import Modulus.BE.Monad.Storage
-import Modulus.BE.Monad.Utils (askConfig, publishToRabbitMQ)
 import Modulus.BE.Service.Conversation (updateConversationTitle)
 import Modulus.Common.Types
 import qualified Orville.PostgreSQL as Orville
@@ -88,20 +86,7 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
       when
         (length chatMsgLst < 2)
         ( void $ UnliftIO.forkIO $ do
-            config <- askConfig
-            case configRabbitMQConnection config of
-              Nothing -> do
-                logDebug "No RabbitMQ connection available for conversation title update"
-                updateConversationTitle convPublicId streamBody
-              Just conn -> do
-                let updateMsg =
-                      UpdateConversationTitleMessage
-                        { uctmConversationId = convPublicId
-                        , uctmModelUsed = modelUsed
-                        , uctmProvider = provider
-                        , uctmApiKey = fromMaybe "" apiKey
-                        }
-                publishToRabbitMQ (Just conn) "update_conversation_title" updateMsg
+            updateConversationTitle convPublicId streamBody
         )
       let msgList_ =
             NE.map
