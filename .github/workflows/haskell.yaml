@@ -184,5 +184,5 @@ jobs:
           gcloud run deploy modulus-ai-frontend \
             --image=$IMAGE_NAME \
             --min-instances=0 \
-            --region=europe-west1 \
+            --region=southamerica-west1 \
             --project=haskread
