@@ -41,12 +41,13 @@ const ConversationList: React.FC<Props> = ({
       <>
         <div className="flex items-center justify-between p-4 border-b border-gray-200/50">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
             <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
           </div>
           <button 
             onClick={onNewConversation} 
-            className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
+            className="w-8 h-8 bg-gradient-to-r from-blue-300 to-indigo-600 
+                  text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 
+                  transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
           >
             <Plus size={16} />
           </button>

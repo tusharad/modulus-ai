@@ -59,8 +59,7 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
       {/* Left side: Provider + Model */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium text-gray-600">AI Model</span>
+          <span className="text-md font-medium text-gray-600 whitespace-nowrap">Modulus AI</span>
         </div>
         
         <select

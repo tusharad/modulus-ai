@@ -83,7 +83,7 @@ const MessageInput: React.FC<Props> = ({ onSend, toolCall, setToolCall }) => {
         <button
           type="button"
           onClick={() => toggleToolCall("WebSearch")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 ${
+          className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 ${
             toolCall === "WebSearch"
               ? "bg-blue-500 text-white border-blue-500 shadow-sm"
               : "bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 border-gray-200 hover:border-blue-300"
@@ -94,9 +94,9 @@ const MessageInput: React.FC<Props> = ({ onSend, toolCall, setToolCall }) => {
         <button
           type="button"
           onClick={() => toggleToolCall("Wikipedia")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 ${
+          className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 ${
             toolCall === "Wikipedia"
-              ? "bg-green-500 text-white border-green-500 shadow-sm"
+              ? "bg-green-500 text-white border-green-500 shadow-md"
               : "bg-white text-gray-700 hover:bg-green-50 hover:text-green-700 border-gray-200 hover:border-green-300"
           }`}
         >

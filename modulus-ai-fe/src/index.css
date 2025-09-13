@@ -109,7 +109,6 @@ h6 { font-size: 1.125rem; }
 
 p {
   margin: 0 0 1rem 0;
-  color: var(--secondary-700);
 }
 
 /* Links */
@@ -130,9 +129,7 @@ button {
   font-size: inherit;
   line-height: inherit;
   margin: 0;
-  padding: 0;
   border: none;
-  background: none;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
