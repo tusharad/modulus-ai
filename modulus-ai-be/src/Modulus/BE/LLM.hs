@@ -54,7 +54,8 @@ import Langchain.PromptTemplate
 import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
-import Modulus.BE.LLM.Embeddings (getRelevantContext)
+import Modulus.BE.DB.Queries.DocumentEmbedding (getDocumentEmbeddingsByAttachmentId)
+import Modulus.BE.LLM.Embeddings (getRelevantContext, storeDocsForEmbeddings)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -72,28 +73,40 @@ attachDocumentRAG ::
 attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
   storageConfig <- mkStorageFromEnv
   eDocs <- runExceptT $ do
-    mconcat
-      <$> mapM
+    perAttachmentDocs <-
+      mapM
         ( \MessageAttachment {..} -> do
-            let attName = T.unpack messageAttachmentFileName
-            fPath <- ExceptT $ loadFile storageConfig attName
-            if ".pdf" == takeExtension fPath
-              then do
-                let sourcePdf = PdfLoader fPath
-                ExceptT $ liftIO $ load sourcePdf
-              else do
-                let sourcePdf = FileLoader fPath
-                ExceptT $ liftIO $ load sourcePdf
+            existing <-
+              ExceptT $
+                Right
+                  <$> getDocumentEmbeddingsByAttachmentId messageAttachmentID
+            case existing of
+              [] -> do
+                let attName = T.unpack messageAttachmentFileName
+                fPath <- ExceptT $ loadFile storageConfig attName
+                docs <-
+                  if ".pdf" == takeExtension fPath
+                    then do
+                      let sourcePdf = PdfLoader fPath
+                      ExceptT $ liftIO $ load sourcePdf
+                    else do
+                      let source = FileLoader fPath
+                      ExceptT $ liftIO $ load source
+                ExceptT $ Right <$> logDebug "storing new docs"
+                ExceptT $ storeDocsForEmbeddings respStreamBody messageAttachmentID docs
+              _ -> pure existing
         )
         msgAttachmentsList
+    pure $ mconcat perAttachmentDocs
   case eDocs of
     Left err -> do
       logDebug $ "Error while generating docs" <> T.pack err
       pure msgList_
-    Right docs -> do
+    Right docEmbedList -> do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
-        context <- ExceptT $ liftIO $ getRelevantContext docs respStreamBody lastUserMsg
+        ExceptT $ Right <$> logDebug "getting relevant context"
+        context <- ExceptT $ getRelevantContext docEmbedList respStreamBody lastUserMsg
         ExceptT . pure $
           renderPrompt
             (PromptTemplate systemTemplate)

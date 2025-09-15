@@ -124,9 +124,14 @@ module Modulus.BE.DB.Internal.Model
 
     -- * joined models
   , ChatMessageWithAttachments (..)
+  , DocumentEmbedding (..)
+  , DocumentEmbeddingID (..)
+  , DocumentEmbeddingRead
+  , DocumentEmbeddingWrite
   ) where
 
 import Data.Aeson
+import qualified Data.List.NonEmpty as NE
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
@@ -332,3 +337,18 @@ data ChatMessageWithAttachments = ChatMessageWithAttachments
   , mas :: [MessageAttachmentRead]
   }
   deriving (Show, Eq, Generic, ToJSON)
+
+newtype DocumentEmbeddingID = DocumentEmbeddingID Int32
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
+
+-- document_embeddings
+data DocumentEmbedding a = DocumentEmbedding
+  { documentEmbeddingID :: a
+  , documentEmbeddingMessageAttachmentID :: MessageAttachmentID
+  , documentEmbeddingDocumentContent :: Text
+  , documentEmbeddingEmbedding :: NE.NonEmpty Double
+  }
+  deriving (Show, Eq, Generic, ToJSON)
+
+type DocumentEmbeddingRead = DocumentEmbedding DocumentEmbeddingID
+type DocumentEmbeddingWrite = DocumentEmbedding ()

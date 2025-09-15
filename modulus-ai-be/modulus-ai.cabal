@@ -40,6 +40,7 @@ library
       Modulus.BE.DB.Internal.Marshaller.AuditLog
       Modulus.BE.DB.Internal.Marshaller.ChatMessage
       Modulus.BE.DB.Internal.Marshaller.Conversation
+      Modulus.BE.DB.Internal.Marshaller.DocumentEmbedding
       Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
       Modulus.BE.DB.Internal.Marshaller.MessageAttachment
       Modulus.BE.DB.Internal.Marshaller.RefreshToken
@@ -52,6 +53,7 @@ library
       Modulus.BE.DB.Internal.Utils
       Modulus.BE.DB.Queries.ChatMessage
       Modulus.BE.DB.Queries.Conversation
+      Modulus.BE.DB.Queries.DocumentEmbedding
       Modulus.BE.DB.Queries.EmailVerification
       Modulus.BE.DB.Queries.RefreshTokens
       Modulus.BE.DB.Queries.User

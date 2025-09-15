@@ -20,6 +20,7 @@ getChatMessagesByConvID :: (MonadOrville m) => ConversationID -> m [ChatMessageR
 getChatMessagesByConvID convID =
   findEntitiesBy chatMessageTable $
     where_ (fieldEquals chatMessageConversationIDField convID)
+      <> orderBy (orderByField chatMessageIDField ascendingOrder)
 
 addMsgAttachment ::
   (MonadOrville m) => MessageAttachmentWrite -> m MessageAttachmentRead

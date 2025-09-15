@@ -4,8 +4,8 @@ packages:
 - .
 
 extra-deps:
-  - git: https://github.com/flipstone/orville
-    commit: 267cca9ec3b42c682fcd0dbc9402e9600c681e55
+  - git: https://github.com/tusharad/orville
+    commit: 431d3565154d6b7e47ae6865ba6e9e32e32cb2f7
     subdirs:
       - orville-postgresql
 

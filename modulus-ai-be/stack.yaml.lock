@@ -5,17 +5,17 @@
 
 packages:
 - completed:
-    commit: 267cca9ec3b42c682fcd0dbc9402e9600c681e55
-    git: https://github.com/flipstone/orville
+    commit: 431d3565154d6b7e47ae6865ba6e9e32e32cb2f7
+    git: https://github.com/tusharad/orville
     name: orville-postgresql
     pantry-tree:
-      sha256: 9cd17faf611d111c51f471b5db0a82ad0019f97b3be823f8769be5897f97d010
-      size: 17761
+      sha256: eb5ff4188a721e44bafa26f8d1f9064aab6202d12284afd11e35386432472eea
+      size: 17864
     subdir: orville-postgresql
     version: 1.1.0.0
   original:
-    commit: 267cca9ec3b42c682fcd0dbc9402e9600c681e55
-    git: https://github.com/flipstone/orville
+    commit: 431d3565154d6b7e47ae6865ba6e9e32e32cb2f7
+    git: https://github.com/tusharad/orville
     subdir: orville-postgresql
 - completed:
     commit: 120d54578df976a8fe6548ff24e7b02b375ec4e4

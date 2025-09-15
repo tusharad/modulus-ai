@@ -8,7 +8,7 @@ module Modulus.BE.Handler.Conversations
   , deleteConversationHandler
   ) where
 
-import Control.Concurrent (Chan, forkIO, newChan, readChan, writeChan)
+import Control.Concurrent (Chan, newChan, readChan, writeChan)
 import Control.Monad (unless, void, when)
 import Control.Monad.IO.Class
 import Control.Monad.Reader (asks)
@@ -79,6 +79,7 @@ getLLMRespStreamHandler ::
   LLMRespStreamBody ->
   AppM (SourceIO LLMRespStream)
 getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} = do
+  logDebug $ "Streaming response for " <> T.pack (show convPublicId)
   chatMsgLst_ <- getConversationMessagesHandler authUser convPublicId
   case NE.nonEmpty chatMsgLst_ of
     Nothing -> throwError $ NotFoundError "Empty conversation"
@@ -113,15 +114,12 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
         Left err -> throwError $ ValidationError err
         Right llmProvider -> do
           logDebug $ "Provider selected: " <> provider
-          void $
-            liftIO $
-              forkIO $
-                void $
-                  streamWithProvider
-                    llmProvider
-                    msgList
-                    st
-                    toolCall
+          void . UnliftIO.forkIO . liftIO . void $
+            streamWithProvider
+              llmProvider
+              msgList
+              st
+              toolCall
       pure $ chanSource tokenChan
   where
     chanSource :: Chan (Maybe Text) -> SourceIO LLMRespStream

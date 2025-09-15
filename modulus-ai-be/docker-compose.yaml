@@ -2,7 +2,7 @@ name: modulus-local-stack
 
 services:
   modulus-local-db:
-    image: postgres:17.5-alpine3.22
+    image: pgvector/pgvector:pg17-trixie
     container_name: modulus-local-db
     restart: unless-stopped
     env_file:

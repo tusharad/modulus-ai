@@ -23,6 +23,7 @@ import Modulus.BE.DB.Internal.Table
   ( auditLogTable
   , chatMessageTable
   , conversationTable
+  , documentEmbeddingTable
   , emailVerificationOTPTable
   , messageAttachmentTable
   , refreshTokenTable
@@ -55,13 +56,16 @@ autoMigrate pool = Orville.runOrville pool autoMigrateQ
 autoMigrateQ :: (Orville.MonadOrville m) => m ()
 autoMigrateQ = do
   let pgcryptoExtensionId = Orville.nameToExtensionId "pgcrypto"
+      vectorExtensionId = Orville.nameToExtensionId "vector"
       schemaItems :: [SchemaItem]
       schemaItems =
         [ SchemaExtension pgcryptoExtensionId
+        , SchemaExtension vectorExtensionId
         , SchemaTable userTable
         , SchemaTable conversationTable
         , SchemaTable chatMessageTable
         , SchemaTable messageAttachmentTable
+        , SchemaTable documentEmbeddingTable
         , SchemaTable subscriptionPlanTable
         , SchemaTable userSubscriptionTable
         , SchemaTable auditLogTable

@@ -76,6 +76,7 @@ module Modulus.BE.DB.Internal.Table
     -- * Email Verification OTP Table
   , emailVerificationOTPTable
   , refreshTokenTable
+  , documentEmbeddingTable
   ) where
 
 import Data.List.NonEmpty (NonEmpty (..))
@@ -278,6 +279,34 @@ refreshTokenTable =
         ( foreignReference
             (fieldName refreshTokenUserIDField)
             (fieldName userIDField)
+            :| []
+        )
+        ( defaultForeignKeyOptions
+            { foreignKeyOptionsOnUpdate = Cascade
+            , foreignKeyOptionsOnDelete = Cascade
+            }
+        )
+
+documentEmbeddingTable ::
+  TableDefinition
+    (HasKey DocumentEmbeddingID)
+    DocumentEmbeddingWrite
+    DocumentEmbeddingRead
+documentEmbeddingTable =
+  addTableConstraints
+    [fkDocumentEmbeddingToMessageAttachment]
+    ( mkTableDefinition
+        "document_embedding"
+        (primaryKey documentEmbeddingIDField)
+        documentEmbeddingMarshaller
+    )
+  where
+    fkDocumentEmbeddingToMessageAttachment =
+      foreignKeyConstraintWithOptions
+        (tableIdentifier messageAttachmentTable)
+        ( foreignReference
+            (fieldName documentEmbeddingMessageAttachmentIDField)
+            (fieldName messageAttachmentIDField)
             :| []
         )
         ( defaultForeignKeyOptions
