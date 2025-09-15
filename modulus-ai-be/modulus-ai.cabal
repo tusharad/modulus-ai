@@ -62,6 +62,7 @@ library
       Modulus.BE.Handler.Conversations
       Modulus.BE.LLM
       Modulus.BE.LLM.Embeddings
+      Modulus.BE.LLM.PGVectorRetriever
       Modulus.BE.LLM.Providers
       Modulus.BE.Log
       Modulus.BE.Monad.AppM

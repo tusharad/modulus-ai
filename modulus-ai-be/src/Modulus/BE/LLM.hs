@@ -17,6 +17,7 @@ import Control.Monad (void)
 import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
 import Control.Monad.IO.Class
 import Data.Aeson
+import qualified Data.ByteString as BS
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
 import Data.Maybe (fromMaybe)
@@ -29,16 +30,8 @@ import qualified Data.Ollama.Chat as Ollama
 import qualified Data.Ollama.Common.SchemaBuilder as Ollama
 import Data.Text (Text)
 import qualified Data.Text as T
-import GHC.Generics
-import Modulus.BE.Api.Types (LLMRespStreamBody (..))
-import Modulus.BE.DB.Internal.Model
-import Modulus.BE.Log (logDebug, logError)
-import Modulus.BE.Monad.AppM (AppM)
-import Modulus.BE.Monad.Storage
-import System.FilePath
-
-import qualified Data.ByteString as BS
 import qualified Data.Text.Encoding as TE
+import GHC.Generics
 import Langchain.DocumentLoader.Core (BaseLoader (load))
 import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
 import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
@@ -54,8 +47,14 @@ import Langchain.PromptTemplate
 import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
+import Modulus.BE.Api.Types (LLMRespStreamBody (..))
+import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.DocumentEmbedding (getDocumentEmbeddingsByAttachmentId)
 import Modulus.BE.LLM.Embeddings (getRelevantContext, storeDocsForEmbeddings)
+import Modulus.BE.Log (logDebug, logError)
+import Modulus.BE.Monad.AppM (AppM)
+import Modulus.BE.Monad.Storage
+import System.FilePath
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -94,7 +93,7 @@ attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
                       ExceptT $ liftIO $ load source
                 ExceptT $ Right <$> logDebug "storing new docs"
                 ExceptT $ storeDocsForEmbeddings respStreamBody messageAttachmentID docs
-              _ -> pure existing
+              _ -> pure ()
         )
         msgAttachmentsList
     pure $ mconcat perAttachmentDocs
@@ -102,11 +101,11 @@ attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
     Left err -> do
       logDebug $ "Error while generating docs" <> T.pack err
       pure msgList_
-    Right docEmbedList -> do
+    Right _ -> do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
         ExceptT $ Right <$> logDebug "getting relevant context"
-        context <- ExceptT $ getRelevantContext docEmbedList respStreamBody lastUserMsg
+        context <- ExceptT $ getRelevantContext respStreamBody lastUserMsg
         ExceptT . pure $
           renderPrompt
             (PromptTemplate systemTemplate)
