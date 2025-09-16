@@ -37,6 +37,7 @@ import Modulus.BE.Monad.Error
 import Modulus.BE.Monad.Storage
 import Modulus.BE.Service.Conversation (updateConversationTitle)
 import Modulus.Common.Types
+import Modulus.Common.Utils (takeRecentMessages)
 import qualified Orville.PostgreSQL as Orville
 import Servant
 import Servant.Multipart
@@ -80,15 +81,16 @@ getLLMRespStreamHandler ::
   AppM (SourceIO LLMRespStream)
 getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} = do
   logDebug $ "Streaming response for " <> T.pack (show convPublicId)
-  chatMsgLst_ <- getConversationMessagesHandler authUser convPublicId
-  case NE.nonEmpty chatMsgLst_ of
+  cLst <- getConversationMessagesHandler authUser convPublicId
+  case NE.nonEmpty cLst of
     Nothing -> throwError $ NotFoundError "Empty conversation"
-    Just chatMsgLst -> do
+    Just chatMsgLst_ -> do
       when
-        (length chatMsgLst < 2)
+        (length chatMsgLst_ < 2)
         ( void $ UnliftIO.forkIO $ do
             updateConversationTitle convPublicId streamBody
         )
+      let (chatMsgLst, remainingMsgs) = takeRecentMessages 300 chatMsgLst_
       let msgList_ =
             NE.map
               ( \ChatMessage {..} ->
@@ -98,11 +100,23 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
                     Langchain.defaultMessageData
               )
               (cm <$> chatMsgLst)
-      msgList <- case (mconcat . NE.toList) $ mas <$> chatMsgLst of
+      msgListWithoutSummarizedHistory <- case (mconcat . NE.toList) $ mas <$> chatMsgLst of
         [] -> do
           logDebug $ "no chatMsgLst found" <> T.pack (show chatMsgLst)
           pure msgList_
         msgAttachmentsList -> attachDocumentRAG msgAttachmentsList msgList_ streamBody
+      msgList <- case remainingMsgs of
+        [] -> pure msgListWithoutSummarizedHistory
+        _ -> do
+          logDebug "summarizing history"
+          eSummarizedMsg <- summarizeConversationHistory streamBody remainingMsgs
+          case eSummarizedMsg of
+            Left err -> do
+              logDebug $ "Failed to summarize older messages: " <> T.pack err
+              pure msgListWithoutSummarizedHistory
+            Right summarizedMsg -> do
+              logDebug $ "summarized history " <> T.pack (show summarizedMsg)
+              pure $ msgListWithoutSummarizedHistory <> (summarizedMsg NE.:| [])
       tokenChan <- liftIO newChan
       let st =
             StreamHandler

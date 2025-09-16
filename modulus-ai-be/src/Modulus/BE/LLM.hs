@@ -8,6 +8,7 @@ module Modulus.BE.LLM
   , runOllamaWithTools
   , streamWithProvider
   , mkLLMProvider
+  , summarizeConversationHistory
   , LLMProvider (..)
   , AnyLLMProvider (..)
   , NewConversationTitle (..)
@@ -381,6 +382,7 @@ class LLMProvider a where
     IO (Either String ())
 
   generateNewConversationTitle :: a -> Text -> IO (Either String NewConversationTitle)
+  summarizeOlderConversation :: a -> Text -> IO (Either String Text)
 
 data AnyLLMProvider where
   AnyLLMProvider :: (LLMProvider a) => a -> AnyLLMProvider
@@ -412,6 +414,10 @@ instance LLMProvider Ollama where
             { format = Just $ Ollama.SchemaFormat schema
             }
     fmap (toNewTitle . content) <$> chat l msg (Just ollamaParams)
+  summarizeOlderConversation l oldConv = do
+    let msgContent = summarizeConversationHistoryPrompt <> oldConv
+    let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
+    fmap content <$> chat l msg Nothing
 
 instance LLMProvider OpenAICompatible where
   streamResponse = Langchain.stream
@@ -431,12 +437,20 @@ instance LLMProvider OpenAICompatible where
                   Internal.JsonSchemaFormat "SomeSchema" schema False
             }
     fmap (toNewTitle . content) <$> chat l msg (Just params)
+  summarizeOlderConversation l oldConv = do
+    let msgContent = summarizeConversationHistoryPrompt <> oldConv
+    let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
+    fmap content <$> chat l msg Nothing
 
 instance LLMProvider Gemini where
   streamResponse = Langchain.stream
   streamWithTools = runOpenRouterWithTools . geminiToOpenAICompatible
   generateNewConversationTitle =
     generateNewConversationTitle . geminiToOpenAICompatible
+  summarizeOlderConversation l oldConv = do
+    let msgContent = summarizeConversationHistoryPrompt <> oldConv
+    let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
+    fmap content <$> chat l msg Nothing
 
 geminiToOpenAICompatible :: Gemini -> OpenAICompatible
 geminiToOpenAICompatible Gemini {..} =
@@ -483,3 +497,34 @@ generateTitlePrompt =
     , "the conversation title. Follow the json structure only"
     , "User question: "
     ]
+
+summarizeConversationHistoryPrompt :: Text
+summarizeConversationHistoryPrompt =
+  T.unlines
+    [ "You are given a list of older conversation, due to context length"
+    , "We cannot pass these older messages to the LLM, your goal is to"
+    , "Create a paragraph that summarizes the old messages in 5-6 lines."
+    , "Only return the summary and nothing else!!!!"
+    , "older converastion: "
+    ]
+
+summarizeConversationHistory ::
+  LLMRespStreamBody ->
+  [ChatMessageWithAttachments] ->
+  AppM (Either String Message)
+summarizeConversationHistory llmRespBody chatMsgAttLst = do
+  let oldConvo = foldr combineContent "Older conversation context: \n" chatMsgAttLst
+  eLLM <- mkLLMProvider llmRespBody
+  case eLLM of
+    Left e -> pure $ Left (T.unpack e)
+    Right (AnyLLMProvider llmProvider) -> do
+      fmap (\t -> Message Langchain.System t defaultMessageData)
+        <$> liftIO (summarizeOlderConversation llmProvider oldConvo)
+  where
+    combineContent chatMsgAtt acc = do
+      let c = cm chatMsgAtt
+      let cont = chatMessageContent c
+      if chatMessageRole c == MessageRoleUser
+        then
+          acc `T.append` "User: " <> cont <> "\n"
+        else acc `T.append` "Assistant: " <> cont <> "\n"
