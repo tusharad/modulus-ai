@@ -78,3 +78,16 @@ clean: ## Remove Stack build artifacts
 	@echo "Cleaning Stack build artifacts..."
 	@$(STACK_CMD) clean
 	@echo "Build artifacts cleaned."
+
+startTestDB:
+	docker run \
+		--name modulus_test_pg_db \
+		-e POSTGRES_PASSWORD=1234 \
+		-e POSTGRES_USER=tushar \
+		-e POSTGRES_DB=modulus_test_db \
+		-p 5432:5432 \
+		--rm -d \
+		pgvector/pgvector:pg17-trixie
+
+stopTestDB:
+	docker stop modulus_test_pg_db

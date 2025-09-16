@@ -8,6 +8,7 @@ module Modulus.BE.Handler.Auth
   , verifyOTPHandler
   , loginHandler
   , meHandler
+  , generateJWT
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
