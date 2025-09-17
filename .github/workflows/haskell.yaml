@@ -52,10 +52,9 @@ jobs:
     - name: Copy repo into actions 
       uses: actions/checkout@v4
 
-    - name: install dependancies, build and test stack project.
-      uses: freckle/stack-action@v5
-      with:
-        working-directory: ./modulus-ai-be/
+    - name: run test script
+      run: |
+        ./scripts/run-tests.sh
 
   deploy-backend:
     if: github.ref == 'refs/heads/release'

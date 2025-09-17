@@ -240,7 +240,7 @@ data MessageAttachment a b = MessageAttachment
   , messageAttachmentStoragePath :: Text
   , messageAttachmentCreatedAt :: b
   }
-  deriving (Show, Eq, Generic, ToJSON)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type MessageAttachmentRead = MessageAttachment MessageAttachmentID UTCTime
 type MessageAttachmentWrite = MessageAttachment () ()
@@ -336,7 +336,7 @@ data ChatMessageWithAttachments = ChatMessageWithAttachments
   { cm :: ChatMessageRead
   , mas :: [MessageAttachmentRead]
   }
-  deriving (Show, Eq, Generic, ToJSON)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 newtype DocumentEmbeddingID = DocumentEmbeddingID Int32
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)

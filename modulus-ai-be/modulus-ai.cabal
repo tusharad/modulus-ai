@@ -199,8 +199,11 @@ test-suite modulus-ai-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Conversation
-      DB
+      TestApp.Common
+      TestApp.Conversation
+      TestApp.Core
+      TestApp.DB
+      TestApp.SampleData
       Paths_modulus_ai
   hs-source-dirs:
       test
@@ -250,6 +253,7 @@ test-suite modulus-ai-test
     , string-interpolate
     , tasty
     , tasty-hunit
+    , tasty-wai
     , text
     , time
     , transformers

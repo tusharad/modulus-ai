@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module DB (tests) where
+module TestApp.DB (tests) where
 
 import Modulus.BE.DB
 import System.Environment

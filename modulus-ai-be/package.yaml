@@ -105,3 +105,4 @@ tests:
       - modulus-ai
       - tasty
       - tasty-hunit
+      - tasty-wai
