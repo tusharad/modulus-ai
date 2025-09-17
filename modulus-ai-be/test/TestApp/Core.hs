@@ -37,7 +37,7 @@ getTests = do
       let app = appToServer appConf
       let t =
             [ DB.tests
-            , conversationTest app testData
+            , conversationTest app testData appConf
             ]
       pure $ Right t
     Left err -> pure $ Left (T.unpack err)

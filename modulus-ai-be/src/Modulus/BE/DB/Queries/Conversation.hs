@@ -4,11 +4,14 @@ module Modulus.BE.DB.Queries.Conversation
   , getConversationsByPublicID
   , deleteConversation
   , updateConversation
+  , findSummaryByConvID
+  , addSummary
   ) where
 
+import Modulus.BE.DB.Internal.Marshaller (oldConvSummaryConversationIDField)
 import Modulus.BE.DB.Internal.Marshaller.Conversation
 import Modulus.BE.DB.Internal.Model
-import Modulus.BE.DB.Internal.Table (conversationTable)
+import Modulus.BE.DB.Internal.Table (conversationTable, oldConvSummaryTable)
 import Orville.PostgreSQL
 
 addConversation :: (MonadOrville m) => ConversationWrite -> m ConversationRead
@@ -32,3 +35,11 @@ deleteConversation = deleteEntity conversationTable
 
 updateConversation :: MonadOrville m => ConversationID -> ConversationWrite -> m ()
 updateConversation = updateEntity conversationTable
+
+findSummaryByConvID :: (MonadOrville m) => ConversationID -> m (Maybe OldConvSummaryRead)
+findSummaryByConvID convId =
+  findFirstEntityBy oldConvSummaryTable $
+    where_ (fieldEquals oldConvSummaryConversationIDField convId)
+
+addSummary :: (MonadOrville m) => OldConvSummaryWrite -> m OldConvSummaryRead
+addSummary = insertAndReturnEntity oldConvSummaryTable

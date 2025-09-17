@@ -124,10 +124,18 @@ module Modulus.BE.DB.Internal.Model
 
     -- * joined models
   , ChatMessageWithAttachments (..)
+
+    -- * Document Types
   , DocumentEmbedding (..)
   , DocumentEmbeddingID (..)
   , DocumentEmbeddingRead
   , DocumentEmbeddingWrite
+
+    -- * Old Conversation Summary Types
+  , OldConvSummary (..)
+  , OldConvSummaryID (..)
+  , OldConvSummaryRead
+  , OldConvSummaryWrite
   ) where
 
 import Data.Aeson
@@ -352,3 +360,17 @@ data DocumentEmbedding a = DocumentEmbedding
 
 type DocumentEmbeddingRead = DocumentEmbedding DocumentEmbeddingID
 type DocumentEmbeddingWrite = DocumentEmbedding ()
+
+newtype OldConvSummaryID = OldConvSummaryID Int64
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
+
+data OldConvSummary a b = OldConvSummary
+  { oldConvSummaryID :: a
+  , oldConvSummaryConversationID :: ConversationID
+  , oldConvSummarySummary :: Text
+  , oldConvSummaryCreatedAt :: b
+  }
+  deriving (Show, Eq, Generic, ToJSON)
+
+type OldConvSummaryRead = OldConvSummary OldConvSummaryID UTCTime
+type OldConvSummaryWrite = OldConvSummary () ()

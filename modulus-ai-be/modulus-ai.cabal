@@ -43,6 +43,7 @@ library
       Modulus.BE.DB.Internal.Marshaller.DocumentEmbedding
       Modulus.BE.DB.Internal.Marshaller.EmailVerificationOTP
       Modulus.BE.DB.Internal.Marshaller.MessageAttachment
+      Modulus.BE.DB.Internal.Marshaller.OldConvSummary
       Modulus.BE.DB.Internal.Marshaller.RefreshToken
       Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
       Modulus.BE.DB.Internal.Marshaller.User

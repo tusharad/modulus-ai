@@ -66,6 +66,7 @@ module Modulus.BE.DB.Internal.Index
     -- * Audit Log Indexes
   , idxAuditLogUserId
   , idxAuditLogAction
+  , idxOldConvSummaryConversationId
   ) where
 
 import Data.List.NonEmpty (NonEmpty (..))
@@ -121,3 +122,7 @@ idxAuditLogUserId =
 idxAuditLogAction :: IndexDefinition
 idxAuditLogAction =
   IndexDefinition.nonUniqueIndex (fieldName auditLogActionField :| [])
+
+idxOldConvSummaryConversationId :: IndexDefinition
+idxOldConvSummaryConversationId =
+  IndexDefinition.nonUniqueIndex (fieldName oldConvSummaryConversationIDField :| [])

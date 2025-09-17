@@ -12,6 +12,7 @@ module Modulus.BE.LLM
   , LLMProvider (..)
   , AnyLLMProvider (..)
   , NewConversationTitle (..)
+  , getOrCreateConversationSummary
   ) where
 
 import Control.Monad (void)
@@ -21,7 +22,7 @@ import Data.Aeson
 import qualified Data.ByteString as BS
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Ollama.Chat
   ( FunctionDef (..)
   , FunctionParameters (..)
@@ -50,6 +51,7 @@ import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
 import Modulus.BE.Api.Types (LLMRespStreamBody (..))
 import Modulus.BE.DB.Internal.Model
+import Modulus.BE.DB.Queries.Conversation (addSummary, findSummaryByConvID)
 import Modulus.BE.DB.Queries.DocumentEmbedding (getDocumentEmbeddingsByAttachmentId)
 import Modulus.BE.LLM.Embeddings (getRelevantContext, storeDocsForEmbeddings)
 import Modulus.BE.Log (logDebug, logError)
@@ -512,14 +514,17 @@ summarizeConversationHistory ::
   LLMRespStreamBody ->
   [ChatMessageWithAttachments] ->
   AppM (Either String Message)
+summarizeConversationHistory _ [] = pure $ Left "No messages to summarize"
 summarizeConversationHistory llmRespBody chatMsgAttLst = do
-  let oldConvo = foldr combineContent "Older conversation context: \n" chatMsgAttLst
-  eLLM <- mkLLMProvider llmRespBody
-  case eLLM of
-    Left e -> pure $ Left (T.unpack e)
-    Right (AnyLLMProvider llmProvider) -> do
-      fmap (\t -> Message Langchain.System t defaultMessageData)
-        <$> liftIO (summarizeOlderConversation llmProvider oldConvo)
+  let mbConvID = chatMessageConversationID . cm <$> listToMaybe chatMsgAttLst
+  case mbConvID of
+    Nothing -> pure $ Left "No conversation ID found in messages"
+    Just convID -> do
+      let oldConvo = foldr combineContent "Older conversation context: \n" chatMsgAttLst
+      eLLM <- mkLLMProvider llmRespBody
+      case eLLM of
+        Left e -> pure $ Left (T.unpack e)
+        Right anyLLMProvider -> getOrCreateConversationSummary anyLLMProvider convID oldConvo
   where
     combineContent chatMsgAtt acc = do
       let c = cm chatMsgAtt
@@ -528,3 +533,29 @@ summarizeConversationHistory llmRespBody chatMsgAttLst = do
         then
           acc `T.append` "User: " <> cont <> "\n"
         else acc `T.append` "Assistant: " <> cont <> "\n"
+
+getOrCreateConversationSummary ::
+  AnyLLMProvider -> ConversationID -> Text -> AppM (Either String Message)
+getOrCreateConversationSummary (AnyLLMProvider llmProvider) convId oldConvo = do
+  mbSummary <- findSummaryByConvID convId
+  case mbSummary of
+    Just summary -> pure $ Right $ Message Langchain.System (oldConvSummarySummary summary) defaultMessageData
+    Nothing -> do
+      eSummaryText <- liftIO $ summarizeOlderConversation llmProvider oldConvo
+      case eSummaryText of
+        Left err -> pure $ Left err
+        Right summaryText -> do
+          let summaryMsg =
+                Message
+                  Langchain.System
+                  summaryText
+                  defaultMessageData
+          void $
+            addSummary $
+              OldConvSummary
+                { oldConvSummaryID = ()
+                , oldConvSummaryConversationID = convId
+                , oldConvSummarySummary = summaryText
+                , oldConvSummaryCreatedAt = ()
+                }
+          pure $ Right summaryMsg

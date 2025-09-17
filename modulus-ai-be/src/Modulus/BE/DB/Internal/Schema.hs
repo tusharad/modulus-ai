@@ -26,6 +26,7 @@ import Modulus.BE.DB.Internal.Table
   , documentEmbeddingTable
   , emailVerificationOTPTable
   , messageAttachmentTable
+  , oldConvSummaryTable
   , refreshTokenTable
   , subscriptionPlanTable
   , userSubscriptionTable
@@ -71,6 +72,7 @@ autoMigrateQ = do
         , SchemaTable auditLogTable
         , SchemaTable emailVerificationOTPTable
         , SchemaTable refreshTokenTable
+        , SchemaTable oldConvSummaryTable
         ]
 
   -- TODO: Add test case to make sure pgcrypto is being added

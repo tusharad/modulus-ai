@@ -77,6 +77,7 @@ module Modulus.BE.DB.Internal.Table
   , emailVerificationOTPTable
   , refreshTokenTable
   , documentEmbeddingTable
+  , oldConvSummaryTable
   ) where
 
 import Data.List.NonEmpty (NonEmpty (..))
@@ -307,6 +308,33 @@ documentEmbeddingTable =
         ( foreignReference
             (fieldName documentEmbeddingMessageAttachmentIDField)
             (fieldName messageAttachmentIDField)
+            :| []
+        )
+        ( defaultForeignKeyOptions
+            { foreignKeyOptionsOnUpdate = Cascade
+            , foreignKeyOptionsOnDelete = Cascade
+            }
+        )
+
+oldConvSummaryTable ::
+  TableDefinition (HasKey OldConvSummaryID) OldConvSummaryWrite OldConvSummaryRead
+oldConvSummaryTable =
+  addTableIndexes [idxOldConvSummaryConversationId] $
+    addTableConstraints
+      [ fkOldConvSummaryToConversation
+      ]
+      ( mkTableDefinition
+          "old_conv_summaries"
+          (primaryKey oldConvSummaryIDField)
+          oldConvSummaryMarshaller
+      )
+  where
+    fkOldConvSummaryToConversation =
+      foreignKeyConstraintWithOptions
+        (tableIdentifier conversationTable)
+        ( foreignReference
+            (fieldName oldConvSummaryConversationIDField)
+            (fieldName conversationIDField)
             :| []
         )
         ( defaultForeignKeyOptions
