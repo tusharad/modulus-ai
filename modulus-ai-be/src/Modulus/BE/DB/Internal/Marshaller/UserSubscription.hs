@@ -15,7 +15,7 @@ module Modulus.BE.DB.Internal.Marshaller.UserSubscription
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan (subscriptionStatusField)
+import Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
 import Modulus.BE.DB.Internal.Marshaller.User (userCreatedAtField, userUpdatedAtField)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Utils (genRandomUuidDefault)
@@ -32,7 +32,7 @@ userSubscriptionUserIDField :: FieldDefinition NotNull UserID
 userSubscriptionUserIDField = coerceField $ uuidField "user_id"
 
 userSubscriptionPlanIDField :: FieldDefinition NotNull SubscriptionPlanID
-userSubscriptionPlanIDField = coerceField $ boundedTextField "plan_id" 255
+userSubscriptionPlanIDField = subscriptionPlanIDFieldFunc "plan_id"
 
 userSubscriptionStripeSubscriptionIDField :: FieldDefinition Nullable (Maybe Text)
 userSubscriptionStripeSubscriptionIDField =

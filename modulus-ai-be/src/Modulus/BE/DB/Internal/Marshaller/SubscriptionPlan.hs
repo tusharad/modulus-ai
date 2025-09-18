@@ -11,6 +11,7 @@ module Modulus.BE.DB.Internal.Marshaller.SubscriptionPlan
 
     -- * Subscription Status Marshaller
   , subscriptionStatusField
+  , subscriptionPlanIDFieldFunc
   ) where
 
 import Data.Int (Int32)
@@ -21,7 +22,25 @@ import Orville.PostgreSQL
 
 -- Subscription Plan Fields
 subscriptionPlanIDField :: FieldDefinition NotNull SubscriptionPlanID
-subscriptionPlanIDField = coerceField $ boundedTextField "id" 255
+subscriptionPlanIDField = subscriptionPlanIDFieldFunc "subscription_plan_id"
+
+subscriptionPlanIDFieldFunc :: String -> FieldDefinition NotNull SubscriptionPlanID
+subscriptionPlanIDFieldFunc = fieldOfType subscriptionPlanIDSqlType
+
+subscriptionPlanIDSqlType :: SqlType SubscriptionPlanID
+subscriptionPlanIDSqlType =
+  tryConvertSqlType convertPlanIDToString convertStringToPlanID integer
+  where
+    convertPlanIDToString :: SubscriptionPlanID -> Int32
+    convertPlanIDToString Free = 0
+    convertPlanIDToString Gold = 1
+    convertPlanIDToString Premium = 2
+
+    convertStringToPlanID :: Int32 -> Either String SubscriptionPlanID
+    convertStringToPlanID 0 = Right Free
+    convertStringToPlanID 1 = Right Gold
+    convertStringToPlanID 2 = Right Premium
+    convertStringToPlanID s = Left $ "Invalid SubscriptionPlanID value: " ++ show s
 
 subscriptionPlanNameField :: FieldDefinition NotNull Text
 subscriptionPlanNameField = unboundedTextField "name"
@@ -57,14 +76,12 @@ subscriptionStatusField :: FieldDefinition NotNull SubscriptionStatus
 subscriptionStatusField = subscriptionStatusFieldFunc "status"
 
 -- Subscription Plan Marshaller
-subscriptionPlanMarshaller :: SqlMarshaller SubscriptionPlanWrite SubscriptionPlanRead
+subscriptionPlanMarshaller :: SqlMarshaller SubscriptionPlan SubscriptionPlan
 subscriptionPlanMarshaller =
   SubscriptionPlan
-    <$> marshallReadOnly
-      ( marshallField
-          (\SubscriptionPlan {..} -> subscriptionPlanID)
-          subscriptionPlanIDField
-      )
+    <$> marshallField
+      (\SubscriptionPlan {..} -> subscriptionPlanID)
+      subscriptionPlanIDField
     <*> marshallField
       (\SubscriptionPlan {..} -> subscriptionPlanName)
       subscriptionPlanNameField

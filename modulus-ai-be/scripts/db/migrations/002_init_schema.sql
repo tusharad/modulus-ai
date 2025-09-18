@@ -25,4 +25,4 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
       );
 
 ALTER TABLE users ALTER COLUMN id SET DEFAULT gen_random_uuid();
-
+alter table subscription_plans rename column id to subscription_plan_id;

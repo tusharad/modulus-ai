@@ -8,11 +8,11 @@ import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table (subscriptionPlanTable)
 import Orville.PostgreSQL
 
-getSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanID -> m (Maybe SubscriptionPlanRead)
+getSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanID -> m (Maybe SubscriptionPlan)
 getSubscriptionPlan = findEntity subscriptionPlanTable
 
-getAllSubscriptionPlans :: (MonadOrville m) => m [SubscriptionPlanRead]
+getAllSubscriptionPlans :: (MonadOrville m) => m [SubscriptionPlan]
 getAllSubscriptionPlans = findEntitiesBy subscriptionPlanTable mempty
 
-addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanWrite -> m SubscriptionPlanRead
+addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlan -> m SubscriptionPlan
 addSubscriptionPlan = insertAndReturnEntity subscriptionPlanTable

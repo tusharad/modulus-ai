@@ -9,6 +9,7 @@ import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.ChatMessage (addChatMessage)
 import Modulus.BE.DB.Queries.Conversation (addConversation)
 import Modulus.BE.DB.Queries.User (addUser)
+import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
 import Orville.PostgreSQL (MonadOrville)
 
 insertData :: MonadOrville m => m (UserID, UserID, BS.ByteString, T.Text)
@@ -62,6 +63,31 @@ insertData = do
           Nothing
           ()
   void $ addChatMessage chatMsgWrite
+  let newUserSubscription1 =
+        UserSubscription
+          { userSubscriptionID = ()
+          , userSubscriptionUserID = userID user1
+          , userSubscriptionPlanID = Free
+          , userSubscriptionStripeSubscriptionID = Nothing
+          , userSubscriptionStatus = SubscriptionStatusActive
+          , userSubscriptionCurrentPeriodEndsAt = Nothing
+          , userSubscriptionCreatedAt = ()
+          , userSubscriptionUpdatedAt = ()
+          }
+  _ <- addUserSubscription newUserSubscription1
+
+  let newUserSubscription2 =
+        UserSubscription
+          { userSubscriptionID = ()
+          , userSubscriptionUserID = userID user2
+          , userSubscriptionPlanID = Free
+          , userSubscriptionStripeSubscriptionID = Nothing
+          , userSubscriptionStatus = SubscriptionStatusActive
+          , userSubscriptionCurrentPeriodEndsAt = Nothing
+          , userSubscriptionCreatedAt = ()
+          , userSubscriptionUpdatedAt = ()
+          }
+  _ <- addUserSubscription newUserSubscription2
 
   let (ConversationPublicID pubID_) = conversationPublicID conversationRead
   let pubID = UUID.toASCIIBytes pubID_

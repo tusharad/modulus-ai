@@ -227,7 +227,7 @@ registerHandler registerReq@RegisterRequest {..} = do
         UserSubscription
           { userSubscriptionID = ()
           , userSubscriptionUserID = userID newUserRead
-          , userSubscriptionPlanID = SubscriptionPlanID "free"
+          , userSubscriptionPlanID = Free
           , userSubscriptionStripeSubscriptionID = Nothing
           , userSubscriptionStatus = SubscriptionStatusActive
           , userSubscriptionCurrentPeriodEndsAt = Nothing

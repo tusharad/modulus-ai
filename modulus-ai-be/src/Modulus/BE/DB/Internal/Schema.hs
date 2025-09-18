@@ -20,7 +20,7 @@ module Modulus.BE.DB.Internal.Schema
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
-import Modulus.BE.DB.Internal.Model (SubscriptionPlan (..))
+import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table
   ( auditLogTable
   , chatMessageTable
@@ -101,7 +101,7 @@ subscriptionPlanData :: Orville.MonadOrville m => m ()
 subscriptionPlanData = do
   let freePlan =
         SubscriptionPlan
-          { subscriptionPlanID = ()
+          { subscriptionPlanID = Free
           , subscriptionPlanName = "Free Plan"
           , subscriptionPlanPriceCents = 0
           , subscriptionPlanFeatures =
@@ -109,7 +109,7 @@ subscriptionPlanData = do
           }
   let goldPlan =
         SubscriptionPlan
-          { subscriptionPlanID = ()
+          { subscriptionPlanID = Gold
           , subscriptionPlanName = "Gold Plan"
           , subscriptionPlanPriceCents = 999
           , subscriptionPlanFeatures =
@@ -118,7 +118,7 @@ subscriptionPlanData = do
           }
   let premiumPlan =
         SubscriptionPlan
-          { subscriptionPlanID = ()
+          { subscriptionPlanID = Premium
           , subscriptionPlanName = "Premium Plan"
           , subscriptionPlanPriceCents = 1999
           , subscriptionPlanFeatures =
