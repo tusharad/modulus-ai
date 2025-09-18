@@ -62,7 +62,7 @@ getModelProvidersHandler = do
   pure x
 
 deleteConversationHandler :: AuthResult -> ConversationPublicID -> AppM ()
-deleteConversationHandler (Authenticated user) convPublicId = do
+deleteConversationHandler (Authenticated user _subscription) convPublicId = do
   convRead <- getConvRead user convPublicId
   deleteConversation (conversationID convRead)
 deleteConversationHandler _ _ = throwError $ AuthenticationError "Invalid token"
@@ -164,7 +164,7 @@ getConversationMessagesHandler ::
   AuthResult ->
   ConversationPublicID ->
   AppM [ChatMessageWithAttachments]
-getConversationMessagesHandler (Authenticated user) convPublicId = do
+getConversationMessagesHandler (Authenticated user _subscription) convPublicId = do
   convRead <- getConvRead user convPublicId
   getChatMessagesWithAttachmentsByConvID (conversationID convRead)
 getConversationMessagesHandler _ _ =
@@ -223,7 +223,7 @@ addConversationMessageHandler ::
   AddMessageRequest ->
   AppM ()
 addConversationMessageHandler
-  (Authenticated user)
+  (Authenticated user _subscription)
   convPublicId
   AddMessageRequest {..} = do
     convRead <- getConvRead user convPublicId
@@ -268,7 +268,7 @@ addConversationMessageHandler _ _ _ =
 
 addConversationHandler ::
   AuthResult -> AddConversationRequest -> AppM ConversationPublicID
-addConversationHandler (Authenticated user) AddConversationRequest {..} = do
+addConversationHandler (Authenticated user _subscription) AddConversationRequest {..} = do
   let conversationWrite =
         Conversation
           { conversationID = ()
@@ -285,6 +285,6 @@ addConversationHandler TokenExpired _ =
 addConversationHandler _ _ = throwError $ AuthenticationError "Invalid token"
 
 getConversationsHandler :: AuthResult -> AppM [ConversationRead]
-getConversationsHandler (Authenticated user) = getConversationsByUserID (userID user)
+getConversationsHandler (Authenticated user _subscription) = getConversationsByUserID (userID user)
 getConversationsHandler TokenExpired = throwError $ AuthenticationError "Token expired"
 getConversationsHandler _ = throwError $ AuthenticationError "Invalid token"

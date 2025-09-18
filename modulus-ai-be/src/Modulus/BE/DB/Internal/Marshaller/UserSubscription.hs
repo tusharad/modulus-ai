@@ -4,6 +4,7 @@
 module Modulus.BE.DB.Internal.Marshaller.UserSubscription
   ( -- * User Subscription Marshallers
     userSubscriptionIDField
+  , userSubscriptionUserIDField
   , userSubscriptionPlanIDField
   , userSubscriptionStripeSubscriptionIDField
   , userSubscriptionCurrentPeriodEndsAtField
@@ -26,6 +27,9 @@ userSubscriptionIDField =
   coerceField $
     setDefaultValue genRandomUuidDefault $
       uuidField "id"
+
+userSubscriptionUserIDField :: FieldDefinition NotNull UserID
+userSubscriptionUserIDField = coerceField $ uuidField "user_id"
 
 userSubscriptionPlanIDField :: FieldDefinition NotNull SubscriptionPlanID
 userSubscriptionPlanIDField = coerceField $ boundedTextField "plan_id" 255
@@ -53,6 +57,9 @@ userSubscriptionMarshaller =
           (\UserSubscription {..} -> userSubscriptionID)
           userSubscriptionIDField
       )
+    <*> marshallField
+      (\UserSubscription {..} -> userSubscriptionUserID)
+      userSubscriptionUserIDField
     <*> marshallField
       (\UserSubscription {..} -> userSubscriptionPlanID)
       userSubscriptionPlanIDField

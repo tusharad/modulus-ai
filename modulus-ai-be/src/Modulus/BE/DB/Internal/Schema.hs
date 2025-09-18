@@ -17,8 +17,10 @@ module Modulus.BE.DB.Internal.Schema
   , autoMigrateQ
   ) where
 
+import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
+import Modulus.BE.DB.Internal.Model (SubscriptionPlan (..))
 import Modulus.BE.DB.Internal.Table
   ( auditLogTable
   , chatMessageTable
@@ -32,6 +34,7 @@ import Modulus.BE.DB.Internal.Table
   , userSubscriptionTable
   , userTable
   )
+import Modulus.BE.DB.Queries.SubscriptionPlan (addSubscriptionPlan)
 import Orville.PostgreSQL (ConnectionPool)
 import qualified Orville.PostgreSQL as Orville
 import Orville.PostgreSQL.AutoMigration
@@ -91,3 +94,37 @@ autoMigrateQ = do
 
   AutoMigration.autoMigrateSchema AutoMigration.defaultOptions schemaItems
   liftIO $ putStrLn "Database schema migration completed."
+  liftIO $ putStrLn "Inserting subscription plans..."
+  subscriptionPlanData
+
+subscriptionPlanData :: Orville.MonadOrville m => m ()
+subscriptionPlanData = do
+  let freePlan =
+        SubscriptionPlan
+          { subscriptionPlanID = ()
+          , subscriptionPlanName = "Free Plan"
+          , subscriptionPlanPriceCents = 0
+          , subscriptionPlanFeatures =
+              Just "{\"max_messages_per_day\": 50, \"providers\": [\"ollama\"], \"file_uploads\": false}"
+          }
+  let goldPlan =
+        SubscriptionPlan
+          { subscriptionPlanID = ()
+          , subscriptionPlanName = "Gold Plan"
+          , subscriptionPlanPriceCents = 999
+          , subscriptionPlanFeatures =
+              Just
+                "{\"max_messages_per_day\": 500, \"providers\": [\"openrouter\"], \"file_uploads\": true, \"priority_support\": true}"
+          }
+  let premiumPlan =
+        SubscriptionPlan
+          { subscriptionPlanID = ()
+          , subscriptionPlanName = "Premium Plan"
+          , subscriptionPlanPriceCents = 1999
+          , subscriptionPlanFeatures =
+              Just
+                "{\"max_messages_per_day\": -1, \"providers\": [ \"openrouter\", \"ollama\" ], \"file_uploads\": true, \"priority_support\": true, \"custom_models\": true}"
+          }
+  void $ addSubscriptionPlan freePlan
+  void $ addSubscriptionPlan goldPlan
+  void $ addSubscriptionPlan premiumPlan

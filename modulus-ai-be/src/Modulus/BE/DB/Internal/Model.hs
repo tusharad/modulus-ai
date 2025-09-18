@@ -282,6 +282,7 @@ newtype UserSubscriptionID = UserSubscriptionID UUID
 
 data UserSubscription a b = UserSubscription
   { userSubscriptionID :: a
+  , userSubscriptionUserID :: UserID
   , userSubscriptionPlanID :: SubscriptionPlanID
   , userSubscriptionStripeSubscriptionID :: Maybe Text
   , userSubscriptionStatus :: SubscriptionStatus

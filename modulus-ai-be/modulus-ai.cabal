@@ -57,7 +57,9 @@ library
       Modulus.BE.DB.Queries.DocumentEmbedding
       Modulus.BE.DB.Queries.EmailVerification
       Modulus.BE.DB.Queries.RefreshTokens
+      Modulus.BE.DB.Queries.SubscriptionPlan
       Modulus.BE.DB.Queries.User
+      Modulus.BE.DB.Queries.UserSubscription
       Modulus.BE.Handler
       Modulus.BE.Handler.Auth
       Modulus.BE.Handler.Conversations

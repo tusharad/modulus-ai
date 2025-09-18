@@ -35,9 +35,12 @@ import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
 import Modulus.BE.DB.Internal.Model
   ( EmailVerificationOTP (..)
   , RefreshToken (..)
+  , SubscriptionPlanID (..)
+  , SubscriptionStatus (..)
   , User (..)
   , UserID (..)
   , UserRead
+  , UserSubscription (..)
   )
 import Modulus.BE.DB.Queries.EmailVerification
   ( addEmailVerificationOTP
@@ -46,6 +49,7 @@ import Modulus.BE.DB.Queries.EmailVerification
   )
 import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken, deleteRefreshToken, getRefreshToken)
 import Modulus.BE.DB.Queries.User (addUser, getUser, getUserByEmailQ, updateUser)
+import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
 import Modulus.BE.Log (logDebug, logInfo)
 import Modulus.BE.Monad.AppM
 import Modulus.BE.Monad.Error
@@ -133,9 +137,10 @@ verifyOTPHandler otpVerifyReq = do
   pure "Email verified successfully. You may now log in."
 
 meHandler :: AuthResult -> AppM T.Text
-meHandler (Authenticated user) = return $ "Hello, " <> userEmail user
+meHandler (Authenticated user _subscription) = return $ "Hello, " <> userEmail user
 meHandler TokenExpired = throwError $ AuthenticationError "Token expired"
 meHandler InvalidToken = throwError $ AuthenticationError "Invalid token"
+meHandler SubscriptionNotFound = throwError $ AuthenticationError "User subscription not found"
 meHandler r = throwError $ AuthenticationError $ "User not found " <> T.pack (show r)
 
 isValidPassword :: String -> Bool
@@ -216,13 +221,28 @@ registerHandler registerReq@RegisterRequest {..} = do
           , userLockedUntil = Nothing
           }
   newUserRead <- addUser newUser
+
+  -- Create free subscription for new user
+  let newUserSubscription =
+        UserSubscription
+          { userSubscriptionID = ()
+          , userSubscriptionUserID = userID newUserRead
+          , userSubscriptionPlanID = SubscriptionPlanID "free"
+          , userSubscriptionStripeSubscriptionID = Nothing
+          , userSubscriptionStatus = SubscriptionStatusActive
+          , userSubscriptionCurrentPeriodEndsAt = Nothing
+          , userSubscriptionCreatedAt = ()
+          , userSubscriptionUpdatedAt = ()
+          }
+  _ <- addUserSubscription newUserSubscription
+
   otp <- genAndStoreEmailOTP (userID newUserRead)
   emailApiKey <- asks configMailGunApiKey
   liftIO $
     void $
       forkIO $
         sendEmailAsync emailApiKey (userEmail newUserRead) (T.pack $ show otp)
-  logDebug "query successful"
+  logDebug "User registration successful with free subscription"
   return $
     UserProfile
       { userProfileId = userID newUserRead

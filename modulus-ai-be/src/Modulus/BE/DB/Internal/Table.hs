@@ -203,7 +203,9 @@ userSubscriptionTable ::
   TableDefinition (HasKey UserSubscriptionID) UserSubscriptionWrite UserSubscriptionRead
 userSubscriptionTable =
   addTableConstraints
-    [ fkUserSubscriptionToPlan
+    [ fkUserSubscriptionToUser
+    , fkUserSubscriptionToPlan
+    , uniqueConstraint (fieldName userSubscriptionUserIDField :| [])
     ]
     ( mkTableDefinition
         "user_subscriptions"
@@ -211,6 +213,19 @@ userSubscriptionTable =
         userSubscriptionMarshaller
     )
   where
+    fkUserSubscriptionToUser =
+      foreignKeyConstraintWithOptions
+        (tableIdentifier userTable)
+        ( foreignReference
+            (fieldName userSubscriptionUserIDField)
+            (fieldName userIDField)
+            :| []
+        )
+        ( defaultForeignKeyOptions
+            { foreignKeyOptionsOnUpdate = Cascade
+            , foreignKeyOptionsOnDelete = Cascade
+            }
+        )
     fkUserSubscriptionToPlan =
       foreignKeyConstraintWithOptions
         (tableIdentifier subscriptionPlanTable)

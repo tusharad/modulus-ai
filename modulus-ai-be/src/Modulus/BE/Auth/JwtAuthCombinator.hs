@@ -26,8 +26,9 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as TE
 import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
-import Modulus.BE.DB.Internal.Model (UserID (UserID), UserRead)
+import Modulus.BE.DB.Internal.Model (UserID (UserID), UserRead, UserSubscriptionRead)
 import Modulus.BE.DB.Queries.User (getUser)
+import Modulus.BE.DB.Queries.UserSubscription (getUserSubscriptionByUserId)
 import Modulus.BE.Log (logError)
 import Modulus.BE.Monad.AppM (AppM, runAppM)
 import Modulus.Common.Types
@@ -42,11 +43,12 @@ import Servant.Server.Internal
   )
 
 data AuthResult
-  = Authenticated UserRead
+  = Authenticated UserRead UserSubscriptionRead
   | TokenExpired
   | InvalidToken
   | TokenNotFound
   | UserNotFound
+  | SubscriptionNotFound
   deriving (Show, Generic, ToJSON)
 
 -- | Authenticate a request using Bearer Authentication
@@ -137,5 +139,11 @@ authenticateToken appCfg rawToken = do
 
     fetchUser :: UserID -> AppM AuthResult
     fetchUser uid = do
-      result <- getUser uid
-      pure $ maybe UserNotFound Authenticated result
+      userResult <- getUser uid
+      case userResult of
+        Nothing -> pure UserNotFound
+        Just user -> do
+          subscriptionResult <- getUserSubscriptionByUserId uid
+          case subscriptionResult of
+            Nothing -> pure SubscriptionNotFound
+            Just subscription -> pure $ Authenticated user subscription
