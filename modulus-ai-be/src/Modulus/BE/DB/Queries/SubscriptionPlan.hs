@@ -4,9 +4,13 @@ module Modulus.BE.DB.Queries.SubscriptionPlan
   , addSubscriptionPlan
   ) where
 
+import qualified Data.List.NonEmpty as NE
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table (subscriptionPlanTable)
 import Orville.PostgreSQL
+import qualified Orville.PostgreSQL.Execution as Expr
+import qualified Orville.PostgreSQL.Expr as Expr
+import qualified Orville.PostgreSQL.Schema.TableDefinition as Expr
 
 getSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanID -> m (Maybe SubscriptionPlan)
 getSubscriptionPlan = findEntity subscriptionPlanTable
@@ -14,5 +18,11 @@ getSubscriptionPlan = findEntity subscriptionPlanTable
 getAllSubscriptionPlans :: (MonadOrville m) => m [SubscriptionPlan]
 getAllSubscriptionPlans = findEntitiesBy subscriptionPlanTable mempty
 
-addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlan -> m SubscriptionPlan
-addSubscriptionPlan = insertAndReturnEntity subscriptionPlanTable
+addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlan -> m ()
+addSubscriptionPlan x =
+  executeVoid InsertQuery $
+    Expr.mkInsertExpr
+      Expr.WithReturning
+      subscriptionPlanTable
+      (Just Expr.onConflictDoNothing)
+      (x NE.:| [])
