@@ -90,7 +90,7 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
         ( void $ UnliftIO.forkIO $ do
             updateConversationTitle convPublicId streamBody
         )
-      let (chatMsgLst, remainingMsgs) = takeRecentMessages 300 chatMsgLst_
+      let (chatMsgLst, remainingMsgs) = takeRecentMessages 5000 chatMsgLst_
       let msgList_ =
             NE.map
               ( \ChatMessage {..} ->

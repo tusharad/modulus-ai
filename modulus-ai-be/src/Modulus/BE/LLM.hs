@@ -524,7 +524,7 @@ summarizeConversationHistory llmRespBody chatMsgAttLst = do
       eLLM <- mkLLMProvider llmRespBody
       case eLLM of
         Left e -> pure $ Left (T.unpack e)
-        Right anyLLMProvider -> getOrCreateConversationSummary anyLLMProvider convID oldConvo
+        Right anyLLMProvider -> getOrCreateConversationSummary anyLLMProvider convID (T.take 5000 oldConvo)
   where
     combineContent chatMsgAtt acc = do
       let c = cm chatMsgAtt
