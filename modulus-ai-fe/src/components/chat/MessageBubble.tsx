@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessageRead } from '../../types';
+import GeneratingReplyAnimation from './GeneratingReplyAnimation';
 
 interface Props {
   message: ChatMessageRead;
@@ -36,9 +37,12 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
             : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
         }`}>
           <div className="text-sm leading-relaxed prose prose-sm max-w-none">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
+            {message.chatMessageContent === 'loading...' ? (
+              <GeneratingReplyAnimation />
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
                 // Custom styling for different markdown elements
                 p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                 code: ({ children, className }) => {
@@ -130,9 +134,10 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
                   return <input type={type} {...props} />;
                 },
               }}
-            >
-              {message.chatMessageContent}
-            </ReactMarkdown>
+                >
+                  {message.chatMessageContent}
+                </ReactMarkdown>
+              )}
           </div>
         </div>
       </div>
