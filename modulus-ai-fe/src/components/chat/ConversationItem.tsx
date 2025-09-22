@@ -13,8 +13,8 @@ const ConversationItem: React.FC<Props> = ({ conversation, selected, onClick, on
   <div
     className={`group flex items-center justify-between p-3 cursor-pointer transition-all duration-200 ${
       selected 
-        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 shadow-sm' 
-        : 'hover:bg-gray-50/80 hover:shadow-sm'
+        ? 'bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-l-4 border-blue-400 shadow-sm' 
+        : 'hover:bg-gray-800/50 hover:shadow-sm'
     }`}
     onClick={onClick}
   >
@@ -22,12 +22,12 @@ const ConversationItem: React.FC<Props> = ({ conversation, selected, onClick, on
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
         selected 
           ? 'bg-blue-500 text-white' 
-          : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+          : 'bg-gray-800 text-gray-400 group-hover:bg-blue-900/30 group-hover:text-blue-400'
       }`}>
         <MessageSquare size={14} />
       </div>
       <span className={`truncate text-sm font-medium transition-colors duration-200 ${
-        selected ? 'text-blue-900' : 'text-gray-700 group-hover:text-gray-900'
+        selected ? 'text-white' : 'text-gray-300 group-hover:text-gray-100'
       }`}>
         {conversation.conversationTitle}
       </span>
@@ -37,7 +37,7 @@ const ConversationItem: React.FC<Props> = ({ conversation, selected, onClick, on
         e.stopPropagation();
         onDelete();
       }}
-      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all duration-200 p-1 rounded hover:bg-red-50"
+      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all duration-200 p-1 rounded hover:bg-red-900/20"
     >
       <X size={14} />
     </button>

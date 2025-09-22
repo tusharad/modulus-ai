@@ -34,7 +34,7 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
         <div className={`px-4 py-3 rounded-2xl shadow-sm ${
           isUser
             ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-gray-200 rounded-br-md'
-            : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
+            : 'bg-gray-800 text-gray-100 rounded-bl-md border border-gray-700'
         }`}>
           <div className="text-sm leading-relaxed prose prose-sm max-w-none">
             {message.chatMessageContent === 'loading...' ? (

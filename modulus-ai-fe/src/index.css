@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Modern Design System */
+/* Modern Design System - Dark Mode Only */
 :root {
   /* Color Palette */
   --primary-50: #eff6ff;
@@ -86,8 +86,8 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: var(--secondary-800);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: var(--secondary-100);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -96,7 +96,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.25;
-  color: var(--secondary-900);
+  color: var(--secondary-100);
   margin: 0;
 }
 
@@ -113,13 +113,13 @@ p {
 
 /* Links */
 a {
-  color: var(--primary-600);
+  color: var(--primary-400);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--primary-700);
+  color: var(--primary-300);
   text-decoration: underline;
 }
 
@@ -159,24 +159,24 @@ input, textarea, select {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--secondary-100);
+  background: var(--secondary-800);
   border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary-300);
+  background: var(--secondary-600);
   border-radius: var(--radius-sm);
   transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--secondary-400);
+  background: var(--secondary-500);
 }
 
 /* Selection */
 ::selection {
-  background: var(--primary-100);
-  color: var(--primary-900);
+  background: var(--primary-800);
+  color: var(--primary-100);
 }
 
 /* Animations */
@@ -239,10 +239,10 @@ input, textarea, select {
 
 /* Card styles */
 .card {
-  background: white;
+  background: var(--secondary-800);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--secondary-200);
+  border: 1px solid var(--secondary-700);
   transition: all var(--transition-normal);
 }
 
@@ -280,45 +280,45 @@ input, textarea, select {
 }
 
 .btn-secondary {
-  background: var(--secondary-100);
-  color: var(--secondary-700);
-  border: 1px solid var(--secondary-300);
+  background: var(--secondary-700);
+  color: var(--secondary-100);
+  border: 1px solid var(--secondary-600);
 }
 
 .btn-secondary:hover {
-  background: var(--secondary-200);
-  border-color: var(--secondary-400);
+  background: var(--secondary-600);
+  border-color: var(--secondary-500);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--secondary-600);
+  color: var(--secondary-300);
 }
 
 .btn-ghost:hover {
-  background: var(--secondary-100);
-  color: var(--secondary-700);
+  background: var(--secondary-800);
+  color: var(--secondary-100);
 }
 
 /* Input styles */
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--secondary-300);
+  border: 1px solid var(--secondary-600);
   border-radius: var(--radius-lg);
-  background: white;
-  color: var(--secondary-900);
+  background: var(--secondary-800);
+  color: var(--secondary-100);
   font-size: 0.875rem;
   transition: all var(--transition-fast);
 }
 
 .input:focus {
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px var(--primary-100);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .input::placeholder {
-  color: var(--secondary-400);
+  color: var(--secondary-500);
 }
 
 /* Responsive Design */

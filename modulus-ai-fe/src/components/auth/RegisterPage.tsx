@@ -41,11 +41,11 @@ const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-teal-50"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-400/20 to-teal-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-green-400/20 to-cyan-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-400/10 to-teal-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-600/30 to-teal-800/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-green-600/30 to-cyan-800/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-600/20 to-teal-800/20 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -60,10 +60,10 @@ const RegisterPage: React.FC = () => {
                 <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
               </div>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent mb-2">
               Create Account
             </h1>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Join our AI-powered conversation platform
             </p>
           </div>
@@ -72,7 +72,7 @@ const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
@@ -80,7 +80,7 @@ const RegisterPage: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="input pl-4 pr-4 py-3 text-sm border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200"
+                    className="input pl-4 pr-4 py-3 text-sm border-2 border-gray-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-900/20 transition-all duration-200"
                     placeholder="Enter your email address"
                     required
                   />
@@ -91,7 +91,7 @@ const RegisterPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -99,14 +99,14 @@ const RegisterPage: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input pl-4 pr-12 py-3 text-sm border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200"
+                    className="input pl-4 pr-12 py-3 text-sm border-2 border-gray-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-900/20 transition-all duration-200"
                     placeholder="Create a strong password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors duration-200"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -114,7 +114,7 @@ const RegisterPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -122,14 +122,14 @@ const RegisterPage: React.FC = () => {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input pl-4 pr-12 py-3 text-sm border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200"
+                    className="input pl-4 pr-12 py-3 text-sm border-2 border-gray-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-900/20 transition-all duration-200"
                     placeholder="Confirm your password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors duration-200"
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -138,15 +138,15 @@ const RegisterPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg animate-fade-in">
+              <div className="bg-red-900/20 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <div className="w-5 h-5 bg-red-400 rounded-full flex items-center justify-center">
+                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">!</span>
                     </div>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-300">{error}</p>
                   </div>
                 </div>
               </div>
@@ -170,11 +170,11 @@ const RegisterPage: React.FC = () => {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+                className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-200"
               >
                 Sign in here
               </Link>
