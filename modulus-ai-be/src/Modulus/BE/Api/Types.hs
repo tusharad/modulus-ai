@@ -14,6 +14,7 @@ module Modulus.BE.Api.Types
   , LLMRespStream (..)
   , LLMRespStreamBody (..)
   , UpdateConversationTitleMessage (..)
+  , ChangePasswordRequest (..)
   ) where
 
 import Data.Aeson
@@ -110,3 +111,10 @@ data UpdateConversationTitleMessage = UpdateConversationTitleMessage
   , uctmApiKey :: Text
   }
   deriving (Eq, Show, Generic, FromJSON, ToJSON)
+
+data ChangePasswordRequest = ChangePasswordRequest
+  { oldPassword :: Text
+  , newPassword :: Text
+  , confirmNewPassword :: Text
+  }
+  deriving (Show, Eq, Generic, FromJSON, ToJSON)

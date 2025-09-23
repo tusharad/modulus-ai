@@ -1,4 +1,4 @@
-module TestApp.SampleData (insertData) where
+module TestApp.SampleData (insertData, InsertedData (..)) where
 
 import Control.Monad (void)
 import qualified Data.ByteString.Char8 as BS
@@ -14,37 +14,64 @@ import Modulus.BE.DB.Queries.User (addUser)
 import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
 import Orville.PostgreSQL (MonadOrville)
 
-insertData :: MonadOrville m => m (UserID, UserID, BS.ByteString, T.Text)
+data InsertedData = InsertedData
+  { insertedUser1ID :: UserID
+  , insertedUser2ID :: UserID
+  , insertedConvID :: BS.ByteString
+  , insertedConvTitle :: T.Text
+  , insertedUser3ID :: UserID
+  }
+  deriving (Show)
+
+insertData :: MonadOrville m => m InsertedData
 insertData = do
   -- User 1 (the owner of the conversation)
   pass1 <- hashPassword (mkPassword "user1pass")
+  pass2 <- hashPassword (mkPassword "user2pass")
+  pass3 <- hashPassword (mkPassword "user3pass")
+
   let user1Write =
         User
-          ()
-          "user1@test.com"
-          (unPasswordHash pass1)
-          Nothing
-          ()
-          ()
-          True
-          0
-          Nothing
-  user1 <- addUser user1Write
-
+          { userID = ()
+          , userEmail = "user1@test.com"
+          , userHashedPassword = unPasswordHash pass1
+          , userLastLoginAt = Nothing
+          , userCreatedAt = ()
+          , userUpdatedAt = ()
+          , userIsEmailVerified = True
+          , userFailedLoginAttempts = 0
+          , userLockedUntil = Nothing
+          }
   -- User 2 (the intruder)
-  pass2 <- hashPassword (mkPassword "user2pass")
   let user2Write =
         User
-          ()
-          "user2@test.com"
-          (unPasswordHash pass2)
-          Nothing
-          ()
-          ()
-          True
-          0
-          Nothing
+          { userID = ()
+          , userEmail = "user2@test.com"
+          , userHashedPassword = unPasswordHash pass2
+          , userLastLoginAt = Nothing
+          , userCreatedAt = ()
+          , userUpdatedAt = ()
+          , userIsEmailVerified = True
+          , userFailedLoginAttempts = 0
+          , userLockedUntil = Nothing
+          }
+
+  let user3Write =
+        User
+          { userID = ()
+          , userEmail = "user3@test.com"
+          , userHashedPassword = unPasswordHash pass3
+          , userLastLoginAt = Nothing
+          , userCreatedAt = ()
+          , userUpdatedAt = ()
+          , userIsEmailVerified = True
+          , userFailedLoginAttempts = 0
+          , userLockedUntil = Nothing
+          }
+
+  user1 <- addUser user1Write
   user2 <- addUser user2Write
+  user3 <- addUser user3Write
 
   mbSubscriptionPlanRead <- listToMaybe <$> getAllSubscriptionPlans
   case mbSubscriptionPlanRead of
@@ -61,8 +88,6 @@ insertData = do
               , userSubscriptionCreatedAt = ()
               , userSubscriptionUpdatedAt = ()
               }
-      _ <- addUserSubscription newUserSubscription1
-
       let newUserSubscription2 =
             UserSubscription
               { userSubscriptionID = ()
@@ -74,7 +99,22 @@ insertData = do
               , userSubscriptionCreatedAt = ()
               , userSubscriptionUpdatedAt = ()
               }
+
+      let newUserSubscription3 =
+            UserSubscription
+              { userSubscriptionID = ()
+              , userSubscriptionUserID = userID user3
+              , userSubscriptionPlanID = subscriptionPlanID subscriptionPlanRead
+              , userSubscriptionStripeSubscriptionID = Nothing
+              , userSubscriptionStatus = SubscriptionStatusActive
+              , userSubscriptionCurrentPeriodEndsAt = Nothing
+              , userSubscriptionCreatedAt = ()
+              , userSubscriptionUpdatedAt = ()
+              }
+
+      _ <- addUserSubscription newUserSubscription1
       _ <- addUserSubscription newUserSubscription2
+      _ <- addUserSubscription newUserSubscription3
 
       -- Conversation owned by User 1
       let convTitle = "Test Conversation Title"
@@ -84,22 +124,26 @@ insertData = do
       -- Message in User 1's conversation
       let chatMsgWrite =
             ChatMessage
-              ()
-              ()
-              (conversationID conversationRead)
-              MessageRoleUser
-              "Hello World"
-              Nothing
-              Nothing
-              Nothing
-              Nothing
-              ()
+              { chatMessageID = ()
+              , chatMessagePublicID = ()
+              , chatMessageConversationID = conversationID conversationRead
+              , chatMessageRole = MessageRoleUser
+              , chatMessageContent = "Hello World"
+              , chatMessageModel = Nothing
+              , chatMessageProvider = Nothing
+              , chatMessagePromptTokens = Nothing
+              , chatMessageCompletionTokens = Nothing
+              , chatMessageCreatedAt = ()
+              }
       void $ addChatMessage chatMsgWrite
       let (ConversationPublicID pubID_) = conversationPublicID conversationRead
       let pubID = UUID.toASCIIBytes pubID_
-      pure
-        ( userID user1
-        , userID user2
-        , pubID
-        , conversationTitle conversationRead
-        )
+
+      pure $
+        InsertedData
+          { insertedUser1ID = userID user1
+          , insertedUser2ID = userID user2
+          , insertedConvID = pubID
+          , insertedConvTitle = convTitle
+          , insertedUser3ID = userID user3
+          }

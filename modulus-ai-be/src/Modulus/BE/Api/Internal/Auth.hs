@@ -18,3 +18,7 @@ type AuthAPI =
       :> ReqBody '[JSON] RefreshTokenRequest
       :> Post '[JSON] AuthTokens
     :<|> WithJWTAuth :> "me" :> Get '[JSON] Text
+    :<|> WithJWTAuth
+      :> "change-password"
+      :> ReqBody '[JSON] ChangePasswordRequest
+      :> Patch '[JSON] ()

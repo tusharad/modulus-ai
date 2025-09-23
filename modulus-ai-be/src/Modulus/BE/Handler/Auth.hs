@@ -49,7 +49,12 @@ import Modulus.BE.DB.Queries.EmailVerification
   , deleteOtp
   , getEmailVerificationOTPByUserId
   )
-import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken, deleteRefreshToken, getRefreshToken)
+import Modulus.BE.DB.Queries.RefreshTokens
+  ( addRefreshToken
+  , deleteRefreshToken
+  , deleteRefreshTokensByUserID
+  , getRefreshToken
+  )
 import Modulus.BE.DB.Queries.SubscriptionPlan (getAllSubscriptionPlans)
 import Modulus.BE.DB.Queries.User (addUser, getUser, getUserByEmailQ, updateUser)
 import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
@@ -71,6 +76,42 @@ authServer =
     :<|> verifyOTPHandler
     :<|> refreshTokenHandler
     :<|> meHandler
+    :<|> changePasswordHandler
+
+changePasswordHandler :: AuthResult -> ChangePasswordRequest -> AppM ()
+changePasswordHandler (Authenticated user _) ChangePasswordRequest {..} = do
+  let passwordMatches =
+        checkPassword (mkPassword oldPassword) (PasswordHash $ userHashedPassword user)
+  when (passwordMatches /= PasswordCheckSuccess) $
+    throwError $
+      ValidationError "Old password is incorrect"
+  when (newPassword /= confirmNewPassword) $
+    throwError $
+      ValidationError "New password and confirm new password do not match"
+  unless (isValidPassword $ T.unpack newPassword) $
+    throwError $
+      ValidationError "New password does not meet requirements"
+  when (oldPassword == newPassword) $
+    throwError $
+      ValidationError "New password cannot be the same as old password"
+  hashedPassword <- hashPassword (mkPassword newPassword)
+  let updatedUser =
+        user
+          { userHashedPassword = unPasswordHash hashedPassword
+          , userUpdatedAt = ()
+          , userID = ()
+          , userCreatedAt = ()
+          }
+  updateUser (userID user) updatedUser
+  -- Delete all refresh tokens for user
+  deleteAllRefreshTokensForUser (userID user)
+  logInfo $ "Password changed for user: " <> userEmail user
+  where
+    deleteAllRefreshTokensForUser :: UserID -> AppM ()
+    deleteAllRefreshTokensForUser uID = do
+      deleteRefreshTokensByUserID uID
+      logDebug $ "All refresh tokens deleted for user: " <> T.pack (show uID)
+changePasswordHandler _ _ = throwError $ AuthenticationError "Invalid token"
 
 refreshTokenHandler :: RefreshTokenRequest -> AppM AuthTokens
 refreshTokenHandler RefreshTokenRequest {..} = do

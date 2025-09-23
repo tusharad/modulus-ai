@@ -9,4 +9,7 @@ data TestData = TestData
   , user2Token :: BSL.ByteString
   , user1ConvID :: BS.ByteString
   , user1ConvTitle :: T.Text
+  , userPasswordChangeToken :: BSL.ByteString
+  , userPasswordChangeEmail :: T.Text
+  , userPasswordChangeNewPassword :: T.Text
   }
