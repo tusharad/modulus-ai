@@ -10,6 +10,35 @@ export const useMessages = (conversation: ConversationRead | null) => {
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const navigate = useNavigate();
 
+    // Helper function to merge messages and remove duplicates based on chatMessageID
+    const mergeMessages = (existingMessages: ChatMessageRead[], newMessages: ChatMessageRead[]): ChatMessageRead[] => {
+        const messageMap = new Map<number, ChatMessageRead>();
+        
+        // Add existing messages to map
+        existingMessages.forEach(msg => {
+            messageMap.set(msg.chatMessageID, msg);
+        });
+        
+        // Add or update with new messages
+        newMessages.forEach(msg => {
+            messageMap.set(msg.chatMessageID, msg);
+        });
+        
+        // Convert back to array and sort by chatMessageID
+        // Temporary messages (negative IDs) should come after real messages
+        return Array.from(messageMap.values()).sort((a, b) => {
+            // If both are temporary (negative), sort by ID
+            if (a.chatMessageID < 0 && b.chatMessageID < 0) {
+                return b.chatMessageID - a.chatMessageID; // Reverse for negative (newer first)
+            }
+            // If only one is temporary, real messages come first
+            if (a.chatMessageID < 0) return 1;
+            if (b.chatMessageID < 0) return -1;
+            // Both are real messages, sort normally
+            return a.chatMessageID - b.chatMessageID;
+        });
+    };
+
     // Load messages when conversation changes
     useEffect(() => {
         if (!conversation) {
@@ -26,8 +55,8 @@ export const useMessages = (conversation: ConversationRead | null) => {
                     undefined,
                     navigate,
                 );
-                // Reverse messages so newest are at bottom (oldest first)
-                setMessages(msgs.reverse());
+                // Reverse messages so newest are at bottom (oldest first) and merge to ensure uniqueness
+                setMessages(mergeMessages([], msgs.reverse()));
                 // If we get fewer messages than expected, there might not be more
                 setHasMoreMessages(msgs.length > 0);
             } catch (err) {
@@ -59,8 +88,8 @@ export const useMessages = (conversation: ConversationRead | null) => {
             if (olderMsgs.length === 0) {
                 setHasMoreMessages(false);
             } else {
-                // Prepend older messages (reverse them first since API returns desc order)
-                setMessages(prev => [...olderMsgs.reverse(), ...prev]);
+                // Merge older messages with existing ones, ensuring no duplicates
+                setMessages(prev => mergeMessages(prev, olderMsgs.reverse()));
             }
         } catch (err) {
             console.error("Failed to load more messages", err);
@@ -86,15 +115,15 @@ export const useMessages = (conversation: ConversationRead | null) => {
                 undefined,
                 navigate,
             );
-            // Reverse messages so newest are at bottom (oldest first)
-            setMessages(updatedMsgs.reverse());
+            // Merge with existing messages to avoid duplicates
+            setMessages(prev => mergeMessages(prev, updatedMsgs.reverse()));
         } catch (err) {
             console.error("Failed to send message", err);
         }
 
         const assistantMessageId = crypto.randomUUID();
         const assistantMessage: ChatMessageRead = {
-            chatMessageID: 0,
+            chatMessageID: -Date.now(), // Use negative timestamp to avoid conflicts with real IDs
             chatMessagePublicID: assistantMessageId,
             chatMessageContent: "loading...",
             chatMessageRole: "MessageRoleAssistant",
@@ -130,6 +159,18 @@ export const useMessages = (conversation: ConversationRead | null) => {
             await apiService.sendMessage(conversation.conversationPublicID, {
                 messageContent: finalContent,
                 addMessageRole: "assistant",
+            });
+            
+            // Reload messages to get the real assistant message with proper ID
+            const updatedMsgs = await apiService.getMessages(
+                conversation.conversationPublicID,
+                undefined,
+                navigate,
+            );
+            // Remove temporary message and merge with real messages
+            setMessages(prev => {
+                const filteredPrev = prev.filter(m => m.chatMessagePublicID !== assistantMessageId);
+                return mergeMessages(filteredPrev, updatedMsgs.reverse());
             });
         } catch (err) {
             console.error("Streaming failed:", err);
