@@ -50,6 +50,7 @@ module Modulus.BE.DB.Internal.Marshaller
   ( module Export
   ) where
 
+import Modulus.BE.DB.Internal.Marshaller.ApiKeys as Export
 import Modulus.BE.DB.Internal.Marshaller.AuditLog as Export
 import Modulus.BE.DB.Internal.Marshaller.ChatMessage as Export
 import Modulus.BE.DB.Internal.Marshaller.Conversation as Export

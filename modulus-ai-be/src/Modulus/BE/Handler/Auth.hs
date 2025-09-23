@@ -34,7 +34,9 @@ import Modulus.BE.Api.Internal.Auth (AuthAPI)
 import Modulus.BE.Api.Types
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
 import Modulus.BE.DB.Internal.Model
-  ( EmailVerificationOTP (..)
+  ( ApiKeyRead
+  , ApiKeys (..)
+  , EmailVerificationOTP (..)
   , RefreshToken (..)
   , SubscriptionPlan (subscriptionPlanID, subscriptionPlanName)
   , SubscriptionPlanID
@@ -43,6 +45,12 @@ import Modulus.BE.DB.Internal.Model
   , UserID (..)
   , UserRead
   , UserSubscription (..)
+  )
+import Modulus.BE.DB.Queries.ApiKeys
+  ( addApiKey
+  , getApiKeyByUserIdAndProviderName
+  , getApiKeysByUserId
+  , updateApiKey
   )
 import Modulus.BE.DB.Queries.EmailVerification
   ( addEmailVerificationOTP
@@ -77,6 +85,29 @@ authServer =
     :<|> refreshTokenHandler
     :<|> meHandler
     :<|> changePasswordHandler
+    :<|> addApiKeyHandler
+    :<|> getApiKeysHandler
+
+getApiKeysHandler :: AuthResult -> AppM [ApiKeyRead]
+getApiKeysHandler (Authenticated user _) = do
+  getApiKeysByUserId (userID user)
+getApiKeysHandler _ = throwError $ AuthenticationError "Invalid token"
+
+addApiKeyHandler :: AuthResult -> AddApiKeyRequest -> AppM ()
+addApiKeyHandler (Authenticated user _) AddApiKeyRequest {..} = do
+  let aKeyWrite =
+        ApiKeys
+          { apiKeyID = ()
+          , apiKeyUserID = userID user
+          , apiKeyProviderName = providerName
+          , apiKeyVal = keyVal
+          , apiKeyCreatedAt = ()
+          }
+  mbApiKeyRead <- getApiKeyByUserIdAndProviderName (userID user) providerName
+  case mbApiKeyRead of
+    Just apiKeyRead -> updateApiKey (apiKeyID apiKeyRead) aKeyWrite
+    Nothing -> void $ addApiKey aKeyWrite
+addApiKeyHandler _ _ = throwError $ AuthenticationError "Invalid token"
 
 changePasswordHandler :: AuthResult -> ChangePasswordRequest -> AppM ()
 changePasswordHandler (Authenticated user _) ChangePasswordRequest {..} = do

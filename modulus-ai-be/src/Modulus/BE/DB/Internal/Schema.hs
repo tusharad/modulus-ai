@@ -22,7 +22,8 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Internal.Table
-  ( auditLogTable
+  ( apiKeysTable
+  , auditLogTable
   , chatMessageTable
   , conversationTable
   , documentEmbeddingTable
@@ -76,6 +77,7 @@ autoMigrateQ = do
         , SchemaTable emailVerificationOTPTable
         , SchemaTable refreshTokenTable
         , SchemaTable oldConvSummaryTable
+        , SchemaTable apiKeysTable
         ]
 
   -- TODO: Add test case to make sure pgcrypto is being added

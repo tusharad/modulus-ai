@@ -43,6 +43,7 @@ getTests = do
               , userPasswordChangeToken = token3
               , userPasswordChangeEmail = "user3@test.com"
               , userPasswordChangeNewPassword = "Newpassword@123"
+              , user1ID = uID1
               }
       let app = appToServer appConf
       let t =

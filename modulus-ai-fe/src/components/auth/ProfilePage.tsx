@@ -2,16 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { User, Lock, ArrowLeft, Settings, Mail, Shield, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import ChangePasswordModal from './ChangePasswordModal';
+import ApiKeyManagement from './ApiKeyManagement';
+import { apiService } from '../../services/api.service';
+
+interface ModelProvider {
+  isApiFieldRequired: boolean;
+  modelList: string[];
+  providerName: string;
+}
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [providers, setProviders] = useState<ModelProvider[]>([]);
 
   useEffect(() => {
     // In a real app, you might want to fetch user data from an API
     // For now, we'll use a placeholder email
     setUserEmail('user@example.com');
+
+    // Load model providers for API key management
+    const loadProviders = async () => {
+      try {
+        const data = await apiService.getModelProviders();
+        setProviders(data);
+      } catch (err) {
+        console.error('Failed to load model providers', err);
+      }
+    };
+    loadProviders();
   }, []);
 
   const handleBackToChat = () => {
@@ -117,6 +137,9 @@ const ProfilePage: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* API Keys Section */}
+            <ApiKeyManagement providers={providers} />
 
             {/* Settings Section */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">

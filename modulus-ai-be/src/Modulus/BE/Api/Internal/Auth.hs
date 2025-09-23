@@ -8,6 +8,7 @@ module Modulus.BE.Api.Internal.Auth
 import Data.Text (Text)
 import Modulus.BE.Api.Types
 import Modulus.BE.Auth.JwtAuthCombinator
+import Modulus.BE.DB.Internal.Model (ApiKeyRead)
 import Servant
 
 type AuthAPI =
@@ -22,3 +23,5 @@ type AuthAPI =
       :> "change-password"
       :> ReqBody '[JSON] ChangePasswordRequest
       :> Put '[JSON] ()
+    :<|> WithJWTAuth :> "api-keys" :> ReqBody '[JSON] AddApiKeyRequest :> Post '[JSON] ()
+    :<|> WithJWTAuth :> "api-keys" :> Get '[JSON] [ApiKeyRead]

@@ -1,6 +1,7 @@
 import type {
+    AddApiKeyRequest,
     AddConversationRequest,
-    AddMessageRequest,
+    ApiKeyRead,
     AuthTokens,
     ChangePasswordRequest,
     ChatMessageRead,
@@ -8,6 +9,7 @@ import type {
     ConversationRead,
     LoginRequest,
     RegisterRequest,
+    UpdateApiKeyRequest,
     UserProfile,
 } from "../types";
 import { getCookie } from "./cookies";
@@ -259,6 +261,37 @@ class APIService {
         );
         if (!response.ok) throw new Error("Failed to change password");
     }
+
+    async addApiKey(data: AddApiKeyRequest): Promise<void> {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/auth/api-keys`,
+            {
+                method: "POST",
+                body: JSON.stringify(data),
+            },
+        );
+        if (!response.ok) throw new Error("Failed to add API key");
+    }
+
+    async getApiKeys(): Promise<ApiKeyRead[]> {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/auth/api-keys`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch API keys");
+        return response.json();
+    }
+
+    async updateApiKey(apiKeyId: number, data: UpdateApiKeyRequest): Promise<void> {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/auth/api-keys/${apiKeyId}`,
+            {
+                method: "PUT",
+                body: JSON.stringify(data),
+            },
+        );
+        if (!response.ok) throw new Error("Failed to update API key");
+    }
+
 }
 
 export const apiService = new APIService();

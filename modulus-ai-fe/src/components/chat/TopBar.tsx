@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiService } from "../../services/api.service";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useApiKeys } from "../../contexts/ApiKeyContext";
 
 interface ModelProvider {
   isApiFieldRequired: boolean;
@@ -16,6 +17,7 @@ interface Props {
 
 const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
   const navigate = useNavigate();
+  const { getApiKeyForProvider } = useApiKeys();
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<ModelProvider | null>(null);
   const [selectedModel, setSelectedModel] = useState("");
@@ -48,13 +50,18 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
 
   useEffect(() => {
     if (selectedProvider && selectedModel) {
+      // Use stored API key if available, otherwise fall back to manually entered key
+      const storedApiKey = selectedProvider.isApiFieldRequired 
+        ? getApiKeyForProvider(selectedProvider.providerName)
+        : undefined;
+      
       onChange({
         provider: selectedProvider.providerName,
         model: selectedModel,
-        apiKey: selectedProvider.isApiFieldRequired ? apiKey : undefined,
+        apiKey: storedApiKey || (selectedProvider.isApiFieldRequired ? apiKey : undefined),
       });
     }
-  }, [selectedProvider, selectedModel, apiKey]);
+  }, [selectedProvider, selectedModel, apiKey, getApiKeyForProvider]);
 
   return (
     <div className="flex items-center justify-between p-4 bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50 shadow-sm">
@@ -93,15 +100,32 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
           ))}
         </select>
 
-        {selectedProvider?.isApiFieldRequired && (
-          <input
-            type="password"
-            placeholder="Enter API Key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="input px-3 py-2 text-sm border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-900/20 transition-all duration-200 min-w-[200px]"
-          />
-        )}
+        {selectedProvider?.isApiFieldRequired && (() => {
+          const storedApiKey = getApiKeyForProvider(selectedProvider.providerName);
+          const hasStoredKey = !!storedApiKey;
+          
+          return (
+            <div className="relative">
+              <input
+                type="password"
+                placeholder={hasStoredKey ? "Using stored API key" : "Enter API Key"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className={`input px-3 py-2 text-sm border-2 transition-all duration-200 min-w-[200px] ${
+                  hasStoredKey && !apiKey 
+                    ? 'border-green-500 bg-green-900/10 focus:border-green-400 focus:ring-2 focus:ring-green-900/20' 
+                    : 'border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-900/20'
+                }`}
+                disabled={hasStoredKey}
+              />
+              {hasStoredKey && !apiKey && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Right side: Profile dropdown */}

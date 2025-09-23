@@ -136,6 +136,12 @@ module Modulus.BE.DB.Internal.Model
   , OldConvSummaryID (..)
   , OldConvSummaryRead
   , OldConvSummaryWrite
+
+    -- * API Key Types
+  , ApiKeys (..)
+  , ApiKeyID (..)
+  , ApiKeyRead
+  , ApiKeyWrite
   ) where
 
 import Data.Aeson
@@ -375,3 +381,18 @@ data OldConvSummary a b = OldConvSummary
 
 type OldConvSummaryRead = OldConvSummary OldConvSummaryID UTCTime
 type OldConvSummaryWrite = OldConvSummary () ()
+
+newtype ApiKeyID = ApiKeyID Int32
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
+
+data ApiKeys a b = ApiKeys
+  { apiKeyID :: a
+  , apiKeyUserID :: UserID
+  , apiKeyProviderName :: Text
+  , apiKeyVal :: Text
+  , apiKeyCreatedAt :: b
+  }
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+type ApiKeyRead = ApiKeys ApiKeyID UTCTime
+type ApiKeyWrite = ApiKeys () ()

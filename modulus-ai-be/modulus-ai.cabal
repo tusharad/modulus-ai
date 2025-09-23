@@ -37,6 +37,7 @@ library
       Modulus.BE.DB.Internal.Config
       Modulus.BE.DB.Internal.Index
       Modulus.BE.DB.Internal.Marshaller
+      Modulus.BE.DB.Internal.Marshaller.ApiKeys
       Modulus.BE.DB.Internal.Marshaller.AuditLog
       Modulus.BE.DB.Internal.Marshaller.ChatMessage
       Modulus.BE.DB.Internal.Marshaller.Conversation
@@ -52,6 +53,7 @@ library
       Modulus.BE.DB.Internal.Schema
       Modulus.BE.DB.Internal.Table
       Modulus.BE.DB.Internal.Utils
+      Modulus.BE.DB.Queries.ApiKeys
       Modulus.BE.DB.Queries.ChatMessage
       Modulus.BE.DB.Queries.Conversation
       Modulus.BE.DB.Queries.DocumentEmbedding

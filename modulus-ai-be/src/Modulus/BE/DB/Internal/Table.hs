@@ -78,6 +78,7 @@ module Modulus.BE.DB.Internal.Table
   , refreshTokenTable
   , documentEmbeddingTable
   , oldConvSummaryTable
+  , apiKeysTable
   ) where
 
 import Data.List.NonEmpty (NonEmpty (..))
@@ -350,6 +351,33 @@ oldConvSummaryTable =
         ( foreignReference
             (fieldName oldConvSummaryConversationIDField)
             (fieldName conversationIDField)
+            :| []
+        )
+        ( defaultForeignKeyOptions
+            { foreignKeyOptionsOnUpdate = Cascade
+            , foreignKeyOptionsOnDelete = Cascade
+            }
+        )
+
+apiKeysTable :: TableDefinition (HasKey ApiKeyID) ApiKeyWrite ApiKeyRead
+apiKeysTable =
+  addTableIndexes [idxApiKeysUserIdAndProviderName] $
+    addTableConstraints
+      [ fkApiKeyToUser
+      , uniqueConstraint (fieldName apiKeyUserIDField :| [fieldName apiKeyProviderNameField]) -- Ensure unique (user_id, provider_name) pairs
+      ]
+      ( mkTableDefinition
+          "api_keys"
+          (primaryKey apiKeyIDField)
+          apiKeysMarshaller
+      )
+  where
+    fkApiKeyToUser =
+      foreignKeyConstraintWithOptions
+        (tableIdentifier userTable)
+        ( foreignReference
+            (fieldName apiKeyUserIDField)
+            (fieldName userIDField)
             :| []
         )
         ( defaultForeignKeyOptions

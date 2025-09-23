@@ -24,4 +24,23 @@ export interface ChangePasswordRequest {
   newPassword: string;
   confirmNewPassword: string;
 }
+
+export interface AddApiKeyRequest {
+  providerName: string;
+  keyVal: string;
+}
+
+export interface UpdateApiKeyRequest {
+  keyVal: string;
+}
+
+export type ApiKeyID = number;
+
+export interface ApiKeyRead {
+  apiKeyID: ApiKeyID;
+  apiKeyUserID: string;
+  apiKeyProviderName: string;
+  apiKeyVal: string;
+  apiKeyCreatedAt: string;
+}
   
