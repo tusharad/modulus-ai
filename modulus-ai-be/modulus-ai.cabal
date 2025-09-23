@@ -202,6 +202,7 @@ test-suite modulus-ai-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TestApp.Auth
       TestApp.Common
       TestApp.Conversation
       TestApp.Core

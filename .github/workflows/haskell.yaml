@@ -205,12 +205,12 @@ jobs:
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
           docker push $IMAGE_NAME
       
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: deploy to cloud run
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
-          gcloud run deploy modulus-ai-frontend \
-            --image=$IMAGE_NAME \
-            --min-instances=0 \
-            --region=europe-west1 \
-            --project=haskread
+          terraform init
+          terraform apply -auto-approve -var="image=$IMAGE_NAME"
