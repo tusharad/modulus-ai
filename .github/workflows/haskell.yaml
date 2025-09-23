@@ -48,13 +48,42 @@ jobs:
         working-directory: ./modulus-ai-be/
         shell: bash
 
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17-trixie
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: tushar
+          POSTGRES_PASSWORD: 1234
+          POSTGRES_DB: modulus_test_db
+        options: >-
+          --health-cmd="pg_isready -U tushar"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - name: Copy repo into actions 
       uses: actions/checkout@v4
 
-    - name: run test script
+    - name: Export environment variables
+      run: source ./scripts/export-test-env.sh
+
+    - name: Wait for DB to be healthy
       run: |
-        ./scripts/run-tests.sh
+          for i in {1..10}; do
+            pg_isready -h localhost -U tushar && exit 0
+            echo "Waiting for database..."
+            sleep 3
+          done
+          echo "Database did not become ready in time" >&2
+          exit 1
+
+    - name: install dependancies, build and export binaries.
+      uses: freckle/stack-action@v5
+      with:
+        working-directory: ./modulus-ai-be/
 
   deploy-backend:
     if: github.ref == 'refs/heads/release'

@@ -191,15 +191,12 @@ messageAttachmentTable =
 
 -- SUBSCRIPTION PLAN TABLE
 subscriptionPlanTable ::
-  TableDefinition (HasKey SubscriptionPlanID) SubscriptionPlan SubscriptionPlan
+  TableDefinition (HasKey SubscriptionPlanID) SubscriptionPlanWrite SubscriptionPlanRead
 subscriptionPlanTable =
-  addTableConstraints
-    [uniqueConstraint (fieldName subscriptionPlanIDField :| [])]
-    ( mkTableDefinition
-        "subscription_plans"
-        (primaryKey subscriptionPlanIDField)
-        subscriptionPlanMarshaller
-    )
+  mkTableDefinition
+    "subscription_plans"
+    (primaryKey subscriptionPlanIDField)
+    subscriptionPlanMarshaller
 
 -- USER SUBSCRIPTION TABLE
 userSubscriptionTable ::

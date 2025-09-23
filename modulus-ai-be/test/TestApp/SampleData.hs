@@ -2,12 +2,14 @@ module TestApp.SampleData (insertData) where
 
 import Control.Monad (void)
 import qualified Data.ByteString.Char8 as BS
+import Data.Maybe (listToMaybe)
 import Data.Password.Bcrypt
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.ChatMessage (addChatMessage)
 import Modulus.BE.DB.Queries.Conversation (addConversation)
+import Modulus.BE.DB.Queries.SubscriptionPlan (getAllSubscriptionPlans)
 import Modulus.BE.DB.Queries.User (addUser)
 import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
 import Orville.PostgreSQL (MonadOrville)
@@ -44,56 +46,60 @@ insertData = do
           Nothing
   user2 <- addUser user2Write
 
-  -- Conversation owned by User 1
-  let convTitle = "Test Conversation Title"
-  let conversationWrite = Conversation () () (Just $ userID user1) convTitle () ()
-  conversationRead <- addConversation conversationWrite
+  mbSubscriptionPlanRead <- listToMaybe <$> getAllSubscriptionPlans
+  case mbSubscriptionPlanRead of
+    Nothing -> error "no values in subscription plans"
+    Just subscriptionPlanRead -> do
+      let newUserSubscription1 =
+            UserSubscription
+              { userSubscriptionID = ()
+              , userSubscriptionUserID = userID user1
+              , userSubscriptionPlanID = subscriptionPlanID subscriptionPlanRead
+              , userSubscriptionStripeSubscriptionID = Nothing
+              , userSubscriptionStatus = SubscriptionStatusActive
+              , userSubscriptionCurrentPeriodEndsAt = Nothing
+              , userSubscriptionCreatedAt = ()
+              , userSubscriptionUpdatedAt = ()
+              }
+      _ <- addUserSubscription newUserSubscription1
 
-  -- Message in User 1's conversation
-  let chatMsgWrite =
-        ChatMessage
-          ()
-          ()
-          (conversationID conversationRead)
-          MessageRoleUser
-          "Hello World"
-          Nothing
-          Nothing
-          Nothing
-          Nothing
-          ()
-  void $ addChatMessage chatMsgWrite
-  let newUserSubscription1 =
-        UserSubscription
-          { userSubscriptionID = ()
-          , userSubscriptionUserID = userID user1
-          , userSubscriptionPlanID = Free
-          , userSubscriptionStripeSubscriptionID = Nothing
-          , userSubscriptionStatus = SubscriptionStatusActive
-          , userSubscriptionCurrentPeriodEndsAt = Nothing
-          , userSubscriptionCreatedAt = ()
-          , userSubscriptionUpdatedAt = ()
-          }
-  _ <- addUserSubscription newUserSubscription1
+      let newUserSubscription2 =
+            UserSubscription
+              { userSubscriptionID = ()
+              , userSubscriptionUserID = userID user2
+              , userSubscriptionPlanID = subscriptionPlanID subscriptionPlanRead
+              , userSubscriptionStripeSubscriptionID = Nothing
+              , userSubscriptionStatus = SubscriptionStatusActive
+              , userSubscriptionCurrentPeriodEndsAt = Nothing
+              , userSubscriptionCreatedAt = ()
+              , userSubscriptionUpdatedAt = ()
+              }
+      _ <- addUserSubscription newUserSubscription2
 
-  let newUserSubscription2 =
-        UserSubscription
-          { userSubscriptionID = ()
-          , userSubscriptionUserID = userID user2
-          , userSubscriptionPlanID = Free
-          , userSubscriptionStripeSubscriptionID = Nothing
-          , userSubscriptionStatus = SubscriptionStatusActive
-          , userSubscriptionCurrentPeriodEndsAt = Nothing
-          , userSubscriptionCreatedAt = ()
-          , userSubscriptionUpdatedAt = ()
-          }
-  _ <- addUserSubscription newUserSubscription2
+      -- Conversation owned by User 1
+      let convTitle = "Test Conversation Title"
+      let conversationWrite = Conversation () () (Just $ userID user1) convTitle () ()
+      conversationRead <- addConversation conversationWrite
 
-  let (ConversationPublicID pubID_) = conversationPublicID conversationRead
-  let pubID = UUID.toASCIIBytes pubID_
-  pure
-    ( userID user1
-    , userID user2
-    , pubID
-    , conversationTitle conversationRead
-    )
+      -- Message in User 1's conversation
+      let chatMsgWrite =
+            ChatMessage
+              ()
+              ()
+              (conversationID conversationRead)
+              MessageRoleUser
+              "Hello World"
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              ()
+      void $ addChatMessage chatMsgWrite
+      let (ConversationPublicID pubID_) = conversationPublicID conversationRead
+      let pubID = UUID.toASCIIBytes pubID_
+      pure
+        ( userID user1
+        , userID user2
+        , pubID
+        , conversationTitle conversationRead
+        )

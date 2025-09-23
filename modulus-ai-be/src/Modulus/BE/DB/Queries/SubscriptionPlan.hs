@@ -12,13 +12,16 @@ import qualified Orville.PostgreSQL.Execution as Expr
 import qualified Orville.PostgreSQL.Expr as Expr
 import qualified Orville.PostgreSQL.Schema.TableDefinition as Expr
 
-getSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanID -> m (Maybe SubscriptionPlan)
+getSubscriptionPlan ::
+  (MonadOrville m) =>
+  SubscriptionPlanID ->
+  m (Maybe SubscriptionPlanRead)
 getSubscriptionPlan = findEntity subscriptionPlanTable
 
-getAllSubscriptionPlans :: (MonadOrville m) => m [SubscriptionPlan]
+getAllSubscriptionPlans :: (MonadOrville m) => m [SubscriptionPlanRead]
 getAllSubscriptionPlans = findEntitiesBy subscriptionPlanTable mempty
 
-addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlan -> m ()
+addSubscriptionPlan :: (MonadOrville m) => SubscriptionPlanWrite -> m ()
 addSubscriptionPlan x =
   executeVoid InsertQuery $
     Expr.mkInsertExpr

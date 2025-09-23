@@ -20,6 +20,7 @@ import Crypto.JWT
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import Data.Either (isLeft)
+import Data.List
 import Data.Maybe (isJust)
 import Data.Password.Bcrypt
 import qualified Data.String as Str
@@ -35,7 +36,8 @@ import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
 import Modulus.BE.DB.Internal.Model
   ( EmailVerificationOTP (..)
   , RefreshToken (..)
-  , SubscriptionPlanID (..)
+  , SubscriptionPlan (subscriptionPlanID, subscriptionPlanName)
+  , SubscriptionPlanID
   , SubscriptionStatus (..)
   , User (..)
   , UserID (..)
@@ -48,6 +50,7 @@ import Modulus.BE.DB.Queries.EmailVerification
   , getEmailVerificationOTPByUserId
   )
 import Modulus.BE.DB.Queries.RefreshTokens (addRefreshToken, deleteRefreshToken, getRefreshToken)
+import Modulus.BE.DB.Queries.SubscriptionPlan (getAllSubscriptionPlans)
 import Modulus.BE.DB.Queries.User (addUser, getUser, getUserByEmailQ, updateUser)
 import Modulus.BE.DB.Queries.UserSubscription (addUserSubscription)
 import Modulus.BE.Log (logDebug, logInfo)
@@ -203,6 +206,17 @@ sendEmailAsync apiKey email otp = do
             trySend (attemptsLeft - 1)
   trySend (2 :: Int)
 
+getFreePlanID :: AppM SubscriptionPlanID
+getFreePlanID = do
+  mbSubscriptionPlanRead <-
+    find (\planRead -> subscriptionPlanName planRead == "Free Plan")
+      <$> getAllSubscriptionPlans
+  case mbSubscriptionPlanRead of
+    Nothing ->
+      throwError $
+        DatabaseError "Account with this email already exists"
+    Just subRead -> pure $ subscriptionPlanID subRead
+
 registerHandler :: RegisterRequest -> AppM UserProfile
 registerHandler registerReq@RegisterRequest {..} = do
   logDebug "New user registration attempt"
@@ -222,12 +236,13 @@ registerHandler registerReq@RegisterRequest {..} = do
           }
   newUserRead <- addUser newUser
 
+  freePlanID <- getFreePlanID
   -- Create free subscription for new user
   let newUserSubscription =
         UserSubscription
           { userSubscriptionID = ()
           , userSubscriptionUserID = userID newUserRead
-          , userSubscriptionPlanID = Free
+          , userSubscriptionPlanID = freePlanID
           , userSubscriptionStripeSubscriptionID = Nothing
           , userSubscriptionStatus = SubscriptionStatusActive
           , userSubscriptionCurrentPeriodEndsAt = Nothing

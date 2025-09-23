@@ -32,7 +32,7 @@ userSubscriptionUserIDField :: FieldDefinition NotNull UserID
 userSubscriptionUserIDField = coerceField $ uuidField "user_id"
 
 userSubscriptionPlanIDField :: FieldDefinition NotNull SubscriptionPlanID
-userSubscriptionPlanIDField = subscriptionPlanIDFieldFunc "plan_id"
+userSubscriptionPlanIDField = coerceField $ integerField "plan_id"
 
 userSubscriptionStripeSubscriptionIDField :: FieldDefinition Nullable (Maybe Text)
 userSubscriptionStripeSubscriptionIDField =

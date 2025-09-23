@@ -101,7 +101,7 @@ subscriptionPlanData :: Orville.MonadOrville m => m ()
 subscriptionPlanData = do
   let freePlan =
         SubscriptionPlan
-          { subscriptionPlanID = Free
+          { subscriptionPlanID = ()
           , subscriptionPlanName = "Free Plan"
           , subscriptionPlanPriceCents = 0
           , subscriptionPlanFeatures =
@@ -109,7 +109,7 @@ subscriptionPlanData = do
           }
   let goldPlan =
         SubscriptionPlan
-          { subscriptionPlanID = Gold
+          { subscriptionPlanID = ()
           , subscriptionPlanName = "Gold Plan"
           , subscriptionPlanPriceCents = 999
           , subscriptionPlanFeatures =
@@ -118,7 +118,7 @@ subscriptionPlanData = do
           }
   let premiumPlan =
         SubscriptionPlan
-          { subscriptionPlanID = Premium
+          { subscriptionPlanID = ()
           , subscriptionPlanName = "Premium Plan"
           , subscriptionPlanPriceCents = 1999
           , subscriptionPlanFeatures =

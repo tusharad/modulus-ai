@@ -96,6 +96,8 @@ module Modulus.BE.DB.Internal.Model
     -- * Subscription Plan Types
   , SubscriptionPlanID (..)
   , SubscriptionPlan (..)
+  , SubscriptionPlanWrite
+  , SubscriptionPlanRead
 
     -- * User Subscription Types
   , UserSubscriptionID (..)
@@ -252,16 +254,19 @@ type MessageAttachmentRead = MessageAttachment MessageAttachmentID UTCTime
 type MessageAttachmentWrite = MessageAttachment () ()
 
 -- Subscription Plan Model
-data SubscriptionPlanID = Free | Gold | Premium
-  deriving (Show, Eq, Ord, Generic, ToJSON, FromJSON)
+newtype SubscriptionPlanID = SubscriptionPlanID Int32
+  deriving newtype (Show, Eq, ToJSON, FromJSON)
 
-data SubscriptionPlan = SubscriptionPlan
-  { subscriptionPlanID :: SubscriptionPlanID
+data SubscriptionPlan a = SubscriptionPlan
+  { subscriptionPlanID :: a
   , subscriptionPlanName :: Text
   , subscriptionPlanPriceCents :: Int32
   , subscriptionPlanFeatures :: Maybe Text -- JSONB field
   }
   deriving (Show, Eq, Generic, ToJSON)
+
+type SubscriptionPlanRead = SubscriptionPlan SubscriptionPlanID
+type SubscriptionPlanWrite = SubscriptionPlan ()
 
 -- Subscription Status Enum
 data SubscriptionStatus
