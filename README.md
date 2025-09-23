@@ -10,8 +10,9 @@ Modulus-AI is a multi-provider chat platform that offers premium, customizable u
 
 ## Features
 
-- Multi-provider chat interface (Ollama, OpenRouter)
+- Multi-provider chat interface (Ollama, OpenRouter, Gemini)
 - Premium user interface
+- Wide set of tools
 
 ## Screenshots
 
@@ -24,7 +25,7 @@ Modulus-AI is a multi-provider chat platform that offers premium, customizable u
 - **CI/CD**: GitHub Actions
 - **Code Quality**: Pre-commit hooks, HLint, fourmolu
 - **Deployment**: [GCP](https://modulus-ai-461848834131.europe-west2.run.app/)
-- **Model Serving**: Ollama, OpenRouter
+- **Model Serving**: Ollama, OpenRouter, Gemini
 - **Email Service**: [Mailgun](https://documentation.mailgun.com/docs/mailgun/api-reference)
 
 ## Local Development setup
@@ -80,7 +81,7 @@ The application should now be running and accessible at `http://localhost:8081`.
 ### Step 5: Run tests
 
 ```bash
-make tests
+./scripts/run-tests.sh
 ```
 
 ### Step 6: Change directory root to fe

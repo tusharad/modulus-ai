@@ -44,3 +44,8 @@ type ConversationsAPI =
       :> Capture "conversationID" ConversationPublicID
       :> Delete '[JSON] ()
     :<|> "model_providers" :> Get '[JSON] [ModelProviders]
+    :<|> WithJWTAuth
+      :> Capture "conversationID" ConversationPublicID
+      :> "messages"
+      :> QueryParam "after_message_id" ChatMessageID
+      :> Get '[JSON] [ChatMessageWithAttachments]

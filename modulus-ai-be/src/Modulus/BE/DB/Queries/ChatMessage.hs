@@ -4,6 +4,7 @@ module Modulus.BE.DB.Queries.ChatMessage
   , addMsgAttachment
   , findChatMessageWithAttachments
   , getChatMessagesWithAttachmentsByConvID
+  , getFirst10MessagesByConvIDAfterMsgID
   ) where
 
 import Control.Monad (forM)
@@ -47,6 +48,25 @@ getChatMessagesWithAttachmentsByConvID ::
 getChatMessagesWithAttachmentsByConvID convID = do
   msgs <- getChatMessagesByConvID convID
   -- For each message, load attachments
+  forM msgs $ \chat -> do
+    atts <-
+      findEntitiesBy messageAttachmentTable $
+        where_ (fieldEquals messageAttachmentMessageIDField (chatMessageID chat))
+    pure (ChatMessageWithAttachments chat atts)
+
+-- key set pagination for chat messages
+getFirst10MessagesByConvIDAfterMsgID ::
+  (MonadOrville m) =>
+  ConversationID ->
+  Maybe ChatMessageID ->
+  m [ChatMessageWithAttachments]
+getFirst10MessagesByConvIDAfterMsgID convID mAfterMsgID = do
+  msgs <-
+    findEntitiesBy chatMessageTable $
+      where_ (fieldEquals chatMessageConversationIDField convID)
+        <> maybe mempty (where_ . fieldLessThan chatMessageIDField) mAfterMsgID
+        <> orderBy (orderByField chatMessageIDField descendingOrder)
+        <> limit 10
   forM msgs $ \chat -> do
     atts <-
       findEntitiesBy messageAttachmentTable $

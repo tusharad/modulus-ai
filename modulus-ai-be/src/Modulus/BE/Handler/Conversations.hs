@@ -28,6 +28,7 @@ import Modulus.BE.DB.Queries.ChatMessage
   ( addChatMessage
   , addMsgAttachment
   , getChatMessagesWithAttachmentsByConvID
+  , getFirst10MessagesByConvIDAfterMsgID
   )
 import Modulus.BE.DB.Queries.Conversation
 import Modulus.BE.LLM
@@ -54,6 +55,15 @@ conversationsServer =
     :<|> getLLMRespStreamHandler
     :<|> deleteConversationHandler
     :<|> getModelProvidersHandler
+    :<|> getPaginatedMessagesHandler
+
+getPaginatedMessagesHandler ::
+  AuthResult -> ConversationPublicID -> Maybe ChatMessageID -> AppM [ChatMessageWithAttachments]
+getPaginatedMessagesHandler (Authenticated user _) convPublicId mAfterMsgID = do
+  convRead <- getConvRead user convPublicId
+  getFirst10MessagesByConvIDAfterMsgID (conversationID convRead) mAfterMsgID
+getPaginatedMessagesHandler _ _ _ =
+  throwError $ AuthenticationError "Invalid token"
 
 getModelProvidersHandler :: AppM [ModelProviders]
 getModelProvidersHandler = do

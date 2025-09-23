@@ -30,7 +30,24 @@ conversationTest app testData appCfg =
     , testGetConversationMessagesAPI app testData
     , testCacheMiss appCfg
     , testCacheHit appCfg
+    , testPaginatedMessagesAPI app testData
     ]
+
+testPaginatedMessagesAPI :: Application -> TestData -> TestTree
+testPaginatedMessagesAPI app TestData {..} = do
+  testWai app "/conversations/{conversation_id}/messages - 200" $ do
+    res <-
+      srequest
+        ( buildRequestWithHeaders
+            GET
+            ("/api/v1/conversations/" <> user1ConvID <> "/messages")
+            ""
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> BSL.toStrict user1Token)
+            ]
+        )
+    assertStatus' status200 res
+    assertHeader "Content-Type" "application/json;charset=utf-8" res
 
 testGetConversationMessagesAPI :: Application -> TestData -> TestTree
 testGetConversationMessagesAPI app TestData {..} = do

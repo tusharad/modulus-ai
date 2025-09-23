@@ -67,8 +67,11 @@ jobs:
     - name: Copy repo into actions 
       uses: actions/checkout@v4
 
-    - name: Export environment variables
-      run: source ./export-test-env.sh
+    - name: Load environment variables
+      run: | 
+        set -a
+        source ./export-test-env.sh
+        set +a
 
     - name: Wait for DB to be healthy
       run: |

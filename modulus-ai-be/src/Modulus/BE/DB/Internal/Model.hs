@@ -219,7 +219,7 @@ data MessageRole
 
 -- Chat Message Model
 newtype ChatMessageID = ChatMessageID Int64
-  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
+  deriving newtype (Show, Eq, Ord, ToJSON, FromJSON, FromHttpApiData, ToHttpApiData)
 
 newtype ChatMessagePublicID = ChatMessagePublicID UUID
   deriving newtype (Show, Eq, Ord, ToJSON, FromJSON)
