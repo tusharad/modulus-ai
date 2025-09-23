@@ -14,8 +14,14 @@ export interface RegisterRequest {
     userProfileEmail: string;
   }
   
-  export interface AuthTokens {
-    accessToken: string;
-    refreshToken: string;
-  }
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
   

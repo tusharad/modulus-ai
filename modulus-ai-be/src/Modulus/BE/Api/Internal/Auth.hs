@@ -21,4 +21,4 @@ type AuthAPI =
     :<|> WithJWTAuth
       :> "change-password"
       :> ReqBody '[JSON] ChangePasswordRequest
-      :> Patch '[JSON] ()
+      :> Put '[JSON] ()

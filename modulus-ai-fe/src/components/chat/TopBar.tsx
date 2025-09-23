@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { apiService } from "../../services/api.service";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { useNavigate } from "react-router";
 
 interface ModelProvider {
   isApiFieldRequired: boolean;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
+  const navigate = useNavigate();
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<ModelProvider | null>(null);
   const [selectedModel, setSelectedModel] = useState("");
@@ -118,6 +120,16 @@ const TopBar: React.FC<Props> = ({ onChange, onLogout }) => {
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-xl animate-fade-in">
             <div className="p-2">
+              <button
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  navigate('/profile');
+                }}
+              >
+                <User size={16} className="text-gray-400" />
+                Profile
+              </button>
               <button
                 className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-lg transition-colors duration-200"
                 onClick={() => alert("Settings clicked")}

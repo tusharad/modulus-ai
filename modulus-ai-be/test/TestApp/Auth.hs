@@ -53,7 +53,7 @@ testPasswordChange app TestData {..} = do
             res <-
               srequest
                 ( buildRequestWithHeaders
-                    PATCH
+                    PUT
                     "/api/v1/auth/change-password"
                     passwordChangeRequestPayload
                     [ ("Content-Type", "application/json")

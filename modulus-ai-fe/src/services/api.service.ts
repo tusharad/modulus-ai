@@ -2,6 +2,7 @@ import type {
     AddConversationRequest,
     AddMessageRequest,
     AuthTokens,
+    ChangePasswordRequest,
     ChatMessageRead,
     ChatMessageWithAttachments,
     ConversationRead,
@@ -246,6 +247,17 @@ class APIService {
         );
         if (!response.ok) throw new Error("Failed to fetch model providers");
         return response.json();
+    }
+
+    async changePassword(data: ChangePasswordRequest): Promise<void> {
+        const response = await this.fetchWithAuth(
+            `${this.baseUrl}/auth/change-password`,
+            {
+                method: "PUT",
+                body: JSON.stringify(data),
+            },
+        );
+        if (!response.ok) throw new Error("Failed to change password");
     }
 }
 
