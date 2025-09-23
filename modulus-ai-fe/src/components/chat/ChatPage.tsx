@@ -18,7 +18,13 @@ const ChatPage: React.FC = () => {
         deleteConversation,
     } = useConversations();
 
-    const { messages, sendMessage } = useMessages(selectedConversation);
+    const { 
+        messages, 
+        sendMessage, 
+        loadingMore, 
+        hasMoreMessages, 
+        loadMoreMessages 
+    } = useMessages(selectedConversation);
     const [llmConfig, setLlmConfig] = useState<
         {
             provider: string;
@@ -59,7 +65,12 @@ const ChatPage: React.FC = () => {
                     {selectedConversation
                         ? (
                             <>
-                                <MessageList messages={messages} />
+                                <MessageList 
+                                    messages={messages}
+                                    loadingMore={loadingMore}
+                                    hasMoreMessages={hasMoreMessages}
+                                    onLoadMore={loadMoreMessages}
+                                />
                                 <MessageInput
                                     onSend={(content, file) => {
                                         if (llmConfig) {

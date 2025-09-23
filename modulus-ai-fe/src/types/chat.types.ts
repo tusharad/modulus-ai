@@ -1,4 +1,5 @@
 export interface ChatMessageRead {
+    chatMessageID: number;
     chatMessagePublicID: string;
     chatMessageContent: string;
     chatMessageRole: "MessageRoleUser" | "MessageRoleAssistant";

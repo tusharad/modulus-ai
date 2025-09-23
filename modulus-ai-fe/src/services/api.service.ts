@@ -136,10 +136,16 @@ class APIService {
 
     async getMessages(
         conversationId: string,
+        afterMessageId?: number,
         navigate?: (path: string) => void,
     ): Promise<ChatMessageRead[]> {
+        const url = new URL(`${this.baseUrl}/conversations/${conversationId}/messages`);
+        if (afterMessageId) {
+            url.searchParams.set("after_message_id", afterMessageId.toString());
+        }
+        
         const response = await this.fetchWithAuth(
-            `${this.baseUrl}/conversations/${conversationId}`,
+            url.toString(),
             {},
             navigate,
         );
@@ -200,7 +206,7 @@ class APIService {
 
     async streamMessage(
         conversationId: string,
-        body: { modelUsed: string; provider: string },
+        body: { modelUsed: string; provider: string; apiKey?: string; toolCall?: string },
         onChunk: (content: string) => void,
     ): Promise<void> {
         const response = await this.fetchWithAuth(
