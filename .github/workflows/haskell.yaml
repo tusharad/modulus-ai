@@ -10,7 +10,6 @@ env:
   PROJECT_ID: haskread
   REGION: us-central1
   GAR_LOCATION: us-central1-docker.pkg.dev/haskread/modulus-ai-repo
-  BACKEND_URL: https://modulus-ai-backend-461848834131.southamerica-west1.run.app/api/v1
 
 permissions:
   contents: read
@@ -146,7 +145,7 @@ jobs:
         gcloud run deploy modulus-ai-backend \
           --image $IMAGE_NAME \
           --min-instances=0 \
-          --region=southamerica-west1 \
+          --region=europe-west1 \
           --project=haskread \
           --platform managed \
           --allow-unauthenticated \
@@ -163,7 +162,8 @@ jobs:
           --set-env-vars=MODULUS_API_TIMEOUT=60 \
           --set-env-vars=MODULUS_MAILGUN_API=${{secrets.MODULUS_MAILGUN_API}} \
           --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
-          --memory 512Mi \
+          --memory 1Gi \
+          --cpu 2 \
           --add-volume=name=gcs-1,type=cloud-storage,bucket=modulus_ai_bucket \
           --add-volume-mount=volume=gcs-1,mount-path=/home/appuser/app/uploads
 
@@ -200,7 +200,7 @@ jobs:
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
-          docker build -f dockerfile.release -t $IMAGE_NAME . --build-arg VITE_API_BASE_URL=${{env.BACKEND_URL}}
+          docker build -f dockerfile.release -t $IMAGE_NAME . 
 
       - name: Push image
         run: |
@@ -219,4 +219,6 @@ jobs:
             --image=$IMAGE_NAME \
             --min-instances=0 \
             --region=europe-west1 \
-            --project=haskread
+            --project=haskread \
+            --memory 1Gi \
+            --cpu 2
