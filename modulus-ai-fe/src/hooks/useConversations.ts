@@ -5,7 +5,7 @@ import type { ConversationRead } from '../types';
 export const useConversations = () => {
   const [conversations, setConversations] = useState<ConversationRead[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<ConversationRead | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingConversation, setLoadingConversation] = useState(true);
 
   // Load conversations on mount
   useEffect(() => {
@@ -17,7 +17,7 @@ export const useConversations = () => {
       } catch (err) {
         console.error('Failed to load conversations', err);
       } finally {
-        setLoading(false);
+        setLoadingConversation(false);
       }
     };
     loadConversations();
@@ -25,10 +25,10 @@ export const useConversations = () => {
 
   const createConversation = async (title: string = 'New Chat') => {
     try {
-      const newConv = await apiService.createConversation({ conversationTitle: title });
+      const newConvPubId = await apiService.createConversation({ conversationTitle: title });
       const updatedConvs : ConversationRead[] = await apiService.getConversations();
       setConversations(updatedConvs);
-      const conv = updatedConvs.find((c) => c.conversationPublicID === newConv.conversationPublicID) || null;
+      const conv = updatedConvs.find((c) => c.conversationPublicID === newConvPubId);
       setSelectedConversation(conv);
     } catch (err) {
       console.error('Failed to create conversation', err);
@@ -54,6 +54,6 @@ export const useConversations = () => {
     setSelectedConversation,
     createConversation,
     deleteConversation,
-    loading,
+    loadingConversation,
   };
 };

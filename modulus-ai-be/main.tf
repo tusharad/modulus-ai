@@ -26,6 +26,8 @@ resource "google_cloud_run_v2_service" "backend" {
           memory = "1Gi"
           cpu    = "2"
         }
+        cpu_idle = true
+        startup_cpu_boost = true
       }
 
       # environment variables
@@ -89,7 +91,7 @@ resource "google_cloud_run_v2_service" "backend" {
     }
 
     scaling {
-      min_instance_count = 0
+      min_instance_count = 0      
     }
 
     volumes {

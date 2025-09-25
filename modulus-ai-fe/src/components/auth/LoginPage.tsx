@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageSquare, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 import { setCookie } from '../../services/cookies';
 import type { AuthTokens } from '../../types';
 import { useNavigate, Link } from 'react-router';
+import { getCookie } from '../../services/cookies.ts';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,11 +13,21 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [msg, setMsg] = useState<string|null>(null);
+
+  useEffect(() => {
+    const token = getCookie("accessToken")
+    if (token) {
+        console.log("user already logged in, redirecting to chat");
+        navigate("/chat")
+    }
+  },[]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError('')
+    setMsg('')
 
     try {
       const tokens: AuthTokens = await apiService.login({
@@ -25,6 +36,8 @@ const LoginPage: React.FC = () => {
       });
       setCookie('accessToken', tokens.accessToken);
       setCookie('refreshToken', tokens.refreshToken);
+      setMsg("Loging successful! redirecting to chat page...");
+      console.log("redirecting to chat");
       navigate('/chat');
     } catch (err) {
       setError(`Invalid email or password ${err}`);
@@ -35,14 +48,6 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-600/30 to-purple-800/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-cyan-600/30 to-pink-800/30 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-violet-600/20 to-blue-800/20 rounded-full blur-3xl"></div>
-      </div>
-
       <div className="relative z-10 w-full max-w-md">
         <div className="card p-8 animate-fade-in">
           {/* Header */}
@@ -51,12 +56,9 @@ const LoginPage: React.FC = () => {
               <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <MessageSquare className="text-white" size={32} />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent mb-2">
-              Welcome Back
+              Welcome Back to Modulus AI
             </h1>
             <p className="text-gray-400 text-sm">
               Sign in to continue your AI conversations
@@ -75,13 +77,10 @@ const LoginPage: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="input pl-4 pr-4 py-3 text-sm border-2 border-gray-600 focus:border-blue-400 focus:ring-4 focus:ring-blue-900/20 transition-all duration-200"
+                    className="input pl-4 pr-4 py-3 text-sm border-2 focus:border-blue-400 focus:ring-4 focus:ring-blue-900 transition-all duration-200"
                     placeholder="Enter your email address"
                     required
                   />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  </div>
                 </div>
               </div>
 
@@ -94,7 +93,7 @@ const LoginPage: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input pl-4 pr-12 py-3 text-sm border-2 border-gray-600 focus:border-blue-400 focus:ring-4 focus:ring-blue-900/20 transition-all duration-200"
+                    className="input pl-4 pr-12 py-3 text-sm border-2 focus:border-blue-400 focus:ring-4 focus:ring-blue-900 transition-all duration-200"
                     placeholder="Enter your password"
                     required
                   />
@@ -119,6 +118,19 @@ const LoginPage: React.FC = () => {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-red-300">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {msg && (
+              <div className="bg-green-900/20 border-l-4 border-green-500 p-4 rounded-lg animate-fade-in">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-green-300">{msg}</p>
+                    <p className="text-sm text-green-300">If not redirected, please click 
+                        <Link to="/chat" className="text-emerald-400 hover:text-emerald-300"> here</Link>
+                    </p>
                   </div>
                 </div>
               </div>

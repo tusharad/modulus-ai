@@ -3,6 +3,7 @@ import { apiService } from "../../services/api.service";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useApiKeys } from "../../contexts/ApiKeyContext";
+import type { LLMConfig } from "../../types";
 
 interface ModelProvider {
   isApiFieldRequired: boolean;
@@ -11,7 +12,7 @@ interface ModelProvider {
 }
 
 interface Props {
-  onChange: (config: { provider: string; model: string; apiKey?: string }) => void;
+  onChange: (config: LLMConfig) => void;
   onLogout: () => void;
 }
 
