@@ -10,6 +10,19 @@ env:
   PROJECT_ID: haskread
   REGION: us-central1
   GAR_LOCATION: us-central1-docker.pkg.dev/haskread/modulus-ai-repo
+  POSTGRES_DB: modulus_test_db
+  POSTGRES_USER: tushar
+  POSTGRES_PASSWORD: 1234
+  POSTGRES_HOST: localhost
+  MODULUS_DB_TIMEOUT: 30
+  MODULUS_APP_PORT: 8081
+  MODULUS_JWT_SECRET: asdasdayour-super-secret-and-long-jwt-key
+  MODULUS_LOG_LEVEL: DEBUG
+  MODULUS_ENVIRONMENT: Development
+  MODULUS_REDIS_URL: redis://localhost:6379
+  MODULUS_API_TIMEOUT: 60
+  MODULUS_MAILGUN_API: 1234
+  MODULUS_FILE_UPLOAD_PATH: ./uploads
 
 permissions:
   contents: read
@@ -65,12 +78,6 @@ jobs:
     steps:
     - name: Copy repo into actions 
       uses: actions/checkout@v4
-
-    - name: Load environment variables
-      run: | 
-        set -a
-        source ./export-test-env.sh
-        set +a
 
     - name: Wait for DB to be healthy
       run: |
@@ -138,34 +145,28 @@ jobs:
         IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
         docker push $IMAGE_NAME
     
-    - name: deploy to cloud run
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: terraform init -input=false
+
+    - name: Terraform Apply Backend
+      env:
+        TF_VAR_postgres_db: ${{ secrets.POSTGRES_DB }}
+        TF_VAR_postgres_user: ${{ secrets.POSTGRES_USER }}
+        TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
+        TF_VAR_postgres_host: ${{ secrets.POSTGRES_HOST }}
+        TF_VAR_modulus_jwt_secret: ${{ secrets.MODULUS_JWT_SECRET }}
+        TF_VAR_modulus_mailgun_api: ${{ secrets.MODULUS_MAILGUN_API }}
       run: |
         COMMIT_HASH=$(git rev-parse --short HEAD)
         IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-backend:$COMMIT_HASH
-        gcloud run deploy modulus-ai-backend \
-          --image $IMAGE_NAME \
-          --min-instances=0 \
-          --region=europe-west1 \
-          --project=haskread \
-          --platform managed \
-          --allow-unauthenticated \
-          --set-env-vars=POSTGRES_DB=${{secrets.POSTGRES_DB}} \
-          --set-env-vars=POSTGRES_USER=${{secrets.POSTGRES_USER}} \
-          --set-env-vars=POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}} \
-          --set-env-vars=POSTGRES_HOST=${{secrets.POSTGRES_HOST}} \
-          --set-env-vars=MODULUS_DB_TIMEOUT=30 \
-          --set-env-vars=MODULUS_APP_PORT=8080 \
-          --set-env-vars=MODULUS_JWT_SECRET=${{secrets.MODULUS_JWT_SECRET}} \
-          --set-env-vars=MODULUS_LOG_LEVEL=debug \
-          --set-env-vars=MODULUS_ENVIRONMENT=development \
-          --set-env-vars='MODULUS_REDIS_URL=redis://localhost:6379' \
-          --set-env-vars=MODULUS_API_TIMEOUT=60 \
-          --set-env-vars=MODULUS_MAILGUN_API=${{secrets.MODULUS_MAILGUN_API}} \
-          --set-env-vars='MODULUS_FILE_UPLOAD_PATH=/home/appuser/app/uploads' \
-          --memory 1Gi \
-          --cpu 2 \
-          --add-volume=name=gcs-1,type=cloud-storage,bucket=modulus_ai_bucket \
-          --add-volume-mount=volume=gcs-1,mount-path=/home/appuser/app/uploads
+        export TF_VAR_backend_image=$IMAGE_NAME
+        terraform import \
+          google_cloud_run_v2_service.backend \
+          projects/haskread/locations/europe-west1/services/modulus-ai-backend || true
+        terraform apply -auto-approve
 
   deploy-frontend:
     if: github.ref == 'refs/heads/release'
@@ -211,14 +212,15 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Terraform Init
+        run: terraform init -input=false
+
       - name: deploy to cloud run
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
-          gcloud run deploy modulus-ai-frontend \
-            --image=$IMAGE_NAME \
-            --min-instances=0 \
-            --region=europe-west1 \
-            --project=haskread \
-            --memory 1Gi \
-            --cpu 2
+          export TF_VAR_image_name=$IMAGE_NAME
+          terraform import \
+            google_cloud_run_v2_service.frontend \
+            projects/haskread/locations/europe-west1/services/modulus-ai-frontend || true
+          terraform apply -auto-approve

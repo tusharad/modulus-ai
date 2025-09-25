@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .vite
 package-lock.json
+
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
