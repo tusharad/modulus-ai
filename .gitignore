@@ -9,3 +9,8 @@ modulus-ai-exe
 html_ui
 uploads
 prompt.txt
+modulus-ai-fe/terraform.tfstate.backup
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup

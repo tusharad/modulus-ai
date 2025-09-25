@@ -12,12 +12,11 @@ provider "google" {
   region  = "europe-west1"
 }
 
-resource "google_cloud_run_service" "frontend" {
+resource "google_cloud_run_v2_service" "frontend" {
   name     = "modulus-ai-frontend"
   location = "europe-west1"
 
   template {
-    spec {
       containers {
         image = var.image_name
         resources {
@@ -27,11 +26,10 @@ resource "google_cloud_run_service" "frontend" {
           }
         }
       }
-    }
   }
 
-  traffic {
-    percent         = 100
-    latest_revision = true
-  }
+  scaling {
+      min_instance_count = 0
+    }
+
 }
