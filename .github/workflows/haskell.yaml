@@ -211,14 +211,17 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Import Cloud Run
+        run: |
+          terraform import \
+            google_cloud_run_v2_service.frontend \
+            projects/haskread/locations/europe-west1/services/modulus-ai-frontend || true
+
       - name: deploy to cloud run
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           IMAGE_NAME=${{ env.GAR_LOCATION }}/modulus-ai-frontend:$COMMIT_HASH
-          gcloud run deploy modulus-ai-frontend \
-            --image=$IMAGE_NAME \
-            --min-instances=0 \
-            --region=europe-west1 \
-            --project=haskread \
-            --memory 1Gi \
-            --cpu 2
+          terraform apply -auto-approve -var="image_name=$IMAGE_NAME"
