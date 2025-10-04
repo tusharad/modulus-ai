@@ -49,4 +49,6 @@ updateConversationTitle convPublicID llmRespBody = do
                           , conversationUpdatedAt = ()
                           }
                   updateConversation (conversationID convRead) updatedConv
-                  logDebug $ "Title updated for conversation ID " <> T.pack (show convPublicID)
+                  logDebug $
+                    "Title updated for conversation ID "
+                      <> T.pack (show convPublicID)

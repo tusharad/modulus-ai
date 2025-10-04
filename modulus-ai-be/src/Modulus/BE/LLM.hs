@@ -20,6 +20,7 @@ import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
 import Control.Monad.IO.Class
 import Data.Aeson
 import qualified Data.ByteString as BS
+import Data.Either (partitionEithers)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -60,6 +61,7 @@ import Modulus.BE.Log (logDebug, logError)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Storage
 import System.FilePath
+import UnliftIO.Async (mapConcurrently)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -69,6 +71,38 @@ createToolMessage (functionName, result) =
     ("Tool (" <> T.pack functionName <> ") result: " <> result)
     defaultMessageData
 
+storeDocIfNotExist ::
+  Storage handle =>
+  handle ->
+  LLMRespStreamBody ->
+  MessageAttachment MessageAttachmentID b ->
+  AppM (Either LangchainError ())
+storeDocIfNotExist storageConfig respStreamBody MessageAttachment {..} = do
+  runExceptT $ do
+    existing <-
+      ExceptT $
+        Right
+          <$> getDocumentEmbeddingsByAttachmentId messageAttachmentID
+    case existing of
+      [] -> do
+        let attName = T.unpack messageAttachmentFileName
+        fPath <- ExceptT $ loadFile storageConfig attName
+        docs <-
+          if ".pdf" == takeExtension fPath
+            then do
+              let sourcePdf = PdfLoader fPath
+              ExceptT $ liftIO $ load sourcePdf
+            else do
+              let source = FileLoader fPath
+              ExceptT $ liftIO $ load source
+        ExceptT $ Right <$> logDebug "storing new docs"
+        ExceptT $
+          storeDocsForEmbeddings
+            respStreamBody
+            messageAttachmentID
+            docs
+      _ -> pure ()
+
 attachDocumentRAG ::
   [MessageAttachmentRead] ->
   NE.NonEmpty L.Message ->
@@ -76,37 +110,11 @@ attachDocumentRAG ::
   AppM (NE.NonEmpty L.Message)
 attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
   storageConfig <- mkStorageFromEnv
-  eDocs <- runExceptT $ do
-    perAttachmentDocs <-
-      mapM
-        ( \MessageAttachment {..} -> do
-            existing <-
-              ExceptT $
-                Right
-                  <$> getDocumentEmbeddingsByAttachmentId messageAttachmentID
-            case existing of
-              [] -> do
-                let attName = T.unpack messageAttachmentFileName
-                fPath <- ExceptT $ loadFile storageConfig attName
-                docs <-
-                  if ".pdf" == takeExtension fPath
-                    then do
-                      let sourcePdf = PdfLoader fPath
-                      ExceptT $ liftIO $ load sourcePdf
-                    else do
-                      let source = FileLoader fPath
-                      ExceptT $ liftIO $ load source
-                ExceptT $ Right <$> logDebug "storing new docs"
-                ExceptT $ storeDocsForEmbeddings respStreamBody messageAttachmentID docs
-              _ -> pure ()
-        )
-        msgAttachmentsList
-    pure $ mconcat perAttachmentDocs
-  case eDocs of
-    Left err -> do
-      logDebug $ "Error while generating docs" <> showText err
-      pure msgList_
-    Right _ -> do
+  (errs, _) <-
+    partitionEithers
+      <$> mapConcurrently (storeDocIfNotExist storageConfig respStreamBody) msgAttachmentsList
+  case errs of
+    [] -> do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
         ExceptT $ Right <$> logDebug "getting relevant context"
@@ -124,6 +132,9 @@ attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
           let userMsg = L.Message L.User lastUserMsg L.defaultMessageData
           logDebug $ "sysPrompt" <> L.content sysMsg
           pure $ NE.fromList $ NE.init msgList_ ++ [sysMsg, userMsg]
+    lst -> do
+      logDebug $ "Error while generating docs" <> showText lst
+      pure msgList_
 
 systemTemplate :: Text
 systemTemplate =
@@ -156,7 +167,7 @@ runOpenRouterWithTools llm msgList sh tool = do
           pure $ Right ()
         Just toolCallList -> do
           -- Execute tool calls and add results to message list
-          toolResults <- mapM (executeOpenRouterToolCall tool) toolCallList
+          toolResults <- mapConcurrently (executeOpenRouterToolCall tool) toolCallList
           print ("tool result" :: String, toolResults)
           let toolMessages = map createToolMessage toolResults
               updatedMsgList = msgList <> NE.fromList toolMessages
@@ -278,7 +289,7 @@ runOllamaWithTools llm msgList sh tool = do
           pure $ Right ()
         Just toolCallList -> do
           -- Execute tool calls and add results to message list
-          toolResults <- mapM (executeToolCallFromResponse tool) toolCallList
+          toolResults <- mapConcurrently (executeToolCallFromResponse tool) toolCallList
           print ("tool result" :: String, toolResults)
           let toolMessages = map createToolMessage toolResults
               updatedMsgList = msgList <> NE.fromList toolMessages

@@ -76,6 +76,7 @@ import qualified Orville.PostgreSQL as Orville
 import Servant
 import System.Random
 import Text.Email.Validate
+import UnliftIO.Async (concurrently)
 
 authServer :: ServerT AuthAPI AppM
 authServer =
@@ -465,8 +466,10 @@ loginHandler loginReq = do
   -- Reset failed attempts on success
   when (userFailedLoginAttempts > 0) (resetFailedLoginAttempts user)
   -- Generate tokens
-  jwtToken <- generateJWT userID
-  refreshToken <- generateAndStoreRefreshToken userID
+  (jwtToken, refreshToken) <-
+    concurrently
+      (generateJWT userID)
+      (generateAndStoreRefreshToken userID)
   logDebug $ "Login successful: " <> T.pack (show userID)
   pure $
     AuthTokens

@@ -45,6 +45,7 @@ import Servant
 import Servant.Multipart
 import qualified Servant.Types.SourceT as S
 import System.FilePath
+import UnliftIO.Async (concurrently)
 import qualified UnliftIO.Concurrent as UnliftIO (forkIO)
 
 conversationsServer :: ServerT ConversationsAPI AppM
@@ -237,8 +238,10 @@ addConversationMessageHandler
   (Authenticated user _subscription)
   convPublicId
   AddMessageRequest {..} = do
-    convRead <- getConvRead user convPublicId
-    mbAttachmentInfo <- storeAttachmentIfExist addMessageAttachment
+    (convRead, mbAttachmentInfo) <-
+      concurrently
+        (getConvRead user convPublicId)
+        (storeAttachmentIfExist addMessageAttachment)
     let role = case addMessageRole of
           "user" -> MessageRoleUser
           "assistant" -> MessageRoleAssistant
