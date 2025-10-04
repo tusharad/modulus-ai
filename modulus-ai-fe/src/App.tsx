@@ -6,16 +6,14 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ApiKeyProvider } from './contexts/ApiKeyContext';
 import './App.css';
 
-// Main App Component
 const App: React.FC = () => {
-  const [, setIsAuthenticated] = useState(false);
+  const [_, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = getCookie('accessToken');
     if (token) {
       setIsAuthenticated(true);
-    }
+    } 
   }, []);
 
   return (

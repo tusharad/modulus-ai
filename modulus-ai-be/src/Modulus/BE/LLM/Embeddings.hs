@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import Langchain.DocumentLoader.Core
 import qualified Langchain.Embeddings.Gemini as Gemini
 import Langchain.Embeddings.Ollama
+import Langchain.Error (LangchainError, fromString, toString)
 import Langchain.Retriever.Core (Retriever (_get_relevant_documents))
 import Langchain.VectorStore.InMemory (InMemory (..), fromDocuments)
 import Modulus.BE.Api.Types (LLMRespStreamBody (..))
@@ -33,25 +34,28 @@ storeDocsForEmbeddings ::
   LLMRespStreamBody ->
   MessageAttachmentID ->
   [Document] ->
-  m (Either String ())
+  m (Either LangchainError ())
 storeDocsForEmbeddings respStreamBody msgAttachID docs = do
   runExceptT $ do
     case provider respStreamBody of
       "ollama" -> ExceptT $ storeOllamaEmbeddingsForAttachment msgAttachID docs
       "gemini" -> do
         case apiKey respStreamBody of
-          Nothing -> ExceptT $ pure $ Left "Please provide API Key for Gemini embeddings"
+          Nothing -> ExceptT . pure . Left $ fromString "Please provide API Key for Gemini embeddings"
           Just aKey -> ExceptT $ storeGeminiEmbeddingsForAttachment msgAttachID docs aKey
       unknownProvider ->
-        ExceptT . pure . Left $
-          "Unsupported provider for embeddings: " <> T.unpack unknownProvider
+        ExceptT
+          . pure
+          . Left
+          . fromString
+          $ "Unsupported provider for embeddings: " <> T.unpack unknownProvider
 
 -- Create embeddings using Ollama for provided docs and persist them for an attachment
 storeOllamaEmbeddingsForAttachment ::
   MonadOrville m =>
   MessageAttachmentID ->
   [Document] ->
-  m (Either String ())
+  m (Either LangchainError ())
 storeOllamaEmbeddingsForAttachment attachmentId docs = do
   let ollamaEmbeddings =
         OllamaEmbeddings
@@ -61,7 +65,7 @@ storeOllamaEmbeddingsForAttachment attachmentId docs = do
           Nothing
   eVecStore <- liftIO $ fromDocuments ollamaEmbeddings docs
   case eVecStore of
-    Left err -> pure $ Left $ "Error generating embeddings: " <> err
+    Left err -> pure $ Left $ fromString ("Error generating embeddings: " <> toString err)
     Right vectorStore -> do
       let docEmbedList = map snd $ Map.toList $ store vectorStore
       Right <$> mapM_ (insertDocEmbed attachmentId) docEmbedList
@@ -71,7 +75,7 @@ storeGeminiEmbeddingsForAttachment ::
   MessageAttachmentID ->
   [Document] ->
   Text ->
-  m (Either String ())
+  m (Either LangchainError ())
 storeGeminiEmbeddingsForAttachment attachmentId docs aKey = do
   let geminiEmbeddings =
         Gemini.defaultGeminiEmbeddings
@@ -81,7 +85,7 @@ storeGeminiEmbeddingsForAttachment attachmentId docs aKey = do
   eVecStore <- liftIO $ fromDocuments geminiEmbeddings docs
   case eVecStore of
     Left err -> do
-      pure $ Left $ "Error loading documents: " <> err
+      pure $ Left $ fromString $ "Error loading documents: " <> toString err
     Right vectorStore -> do
       liftIO $ putStrLn "vector store for storing embedding created"
       let docEmbedList = map snd $ Map.toList $ store vectorStore
@@ -105,7 +109,7 @@ insertDocEmbed attId (d, e) = do
 getRelevantContext ::
   LLMRespStreamBody ->
   Text ->
-  AppM (Either String Text)
+  AppM (Either LangchainError Text)
 getRelevantContext LLMRespStreamBody {..} userQuery = do
   runExceptT $ do
     case provider of

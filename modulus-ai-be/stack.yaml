@@ -1,4 +1,4 @@
-snapshot: nightly-2025-09-02
+snapshot: nightly-2025-10-02
 
 packages:
 - .
@@ -10,10 +10,7 @@ extra-deps:
      - orville-postgresql
 
   - git: https://github.com/tusharad/langchain-hs
-    commit: 120d54578df976a8fe6548ff24e7b02b375ec4e4
-
-  - git: https://github.com/tusharad/ollama-haskell
-    commit: 05c7869652870a2a88bec259f501ee77cec79134
+    commit: bb71820e013c6bbbbbfa435763738c8dab669f57
 
   - pdf-toolbox-document-0.1.4@sha256:6016daf47765f4a06b23a90e59741f34f7c2c8561091a9db3caa922339037108,2405
 

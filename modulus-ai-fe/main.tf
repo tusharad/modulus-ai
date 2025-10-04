@@ -24,6 +24,8 @@ resource "google_cloud_run_v2_service" "frontend" {
             memory = "1Gi"
             cpu    = "2"
           }
+          cpu_idle = true
+          startup_cpu_boost = true
         }
       }
   }
@@ -32,4 +34,12 @@ resource "google_cloud_run_v2_service" "frontend" {
       min_instance_count = 0
     }
 
+}
+
+resource "google_cloud_run_v2_service_iam_member" "member" {
+  project  = "haskread"
+  location = "europe-west1"
+  name = google_cloud_run_v2_service.frontend.name
+  role   = "roles/run.invoker"
+  member = "allUsers"
 }

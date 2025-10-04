@@ -16,9 +16,9 @@ export interface MessageAttachmentRead {
     messageAttachmentCreatedAt: string;
 }
 
-export interface ChatMessageWithAttachments  {
-    cm  : ChatMessageRead
-  , mas : [MessageAttachmentRead]
+export interface ChatMessageWithAttachments {
+    cm: ChatMessageRead;
+    mas: [MessageAttachmentRead];
 }
 
 export interface ConversationRead {
@@ -42,4 +42,11 @@ export interface LLMRespStreamBody {
     modelUsed: string;
     provider: string;
     apiKey?: string;
+}
+
+export interface LLMConfig {
+    provider: string;
+    model: string;
+    apiKey?: string;
+    toolCall?: "Wikipedia" | "WebSearch"; 
 }

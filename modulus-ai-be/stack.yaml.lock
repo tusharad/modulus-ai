@@ -18,27 +18,16 @@ packages:
     git: https://github.com/tusharad/orville
     subdir: orville-postgresql
 - completed:
-    commit: 120d54578df976a8fe6548ff24e7b02b375ec4e4
+    commit: bb71820e013c6bbbbbfa435763738c8dab669f57
     git: https://github.com/tusharad/langchain-hs
     name: langchain-hs
     pantry-tree:
-      sha256: f8cbd682f5fc0202b1d7dc05b1f68b87cc5ce507d0c014e401e929f9cd4045bd
-      size: 9505
+      sha256: 5eb12855893b7c067c2dc902039d26ad234b34c58eb9f11dcee77370821972ab
+      size: 9850
     version: 0.0.2.0
   original:
-    commit: 120d54578df976a8fe6548ff24e7b02b375ec4e4
+    commit: bb71820e013c6bbbbbfa435763738c8dab669f57
     git: https://github.com/tusharad/langchain-hs
-- completed:
-    commit: 05c7869652870a2a88bec259f501ee77cec79134
-    git: https://github.com/tusharad/ollama-haskell
-    name: ollama-haskell
-    pantry-tree:
-      sha256: 3c42eac164608453fd702d797184dedddfd34a343b273ffe670c270ff9046baf
-      size: 5233
-    version: 0.2.0.0
-  original:
-    commit: 05c7869652870a2a88bec259f501ee77cec79134
-    git: https://github.com/tusharad/ollama-haskell
 - completed:
     hackage: pdf-toolbox-document-0.1.4@sha256:6016daf47765f4a06b23a90e59741f34f7c2c8561091a9db3caa922339037108,2405
     pantry-tree:
@@ -76,7 +65,7 @@ packages:
     hackage: cryptonite-0.30@sha256:12c85dea7be63e5ad90bcb487eb3846bf3c413347f94336fa1dede7b28f9936a,18301
 snapshots:
 - completed:
-    sha256: 7f07131896bfbbf735dde989a199c44e2216b6a808002677d81da745cfc2664e
-    size: 690520
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/9/2.yaml
-  original: nightly-2025-09-02
+    sha256: d7298f063488cee81798b1fad30d9cf529aeb76f637f462546b8f9f8d93f724e
+    size: 696614
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/10/2.yaml
+  original: nightly-2025-10-02

@@ -7,6 +7,7 @@ import { useConversations } from "../../hooks/useConversations";
 import { useMessages } from "../../hooks/useMessages";
 import { useNavigate } from "react-router";
 import TopBar from "./TopBar";
+import type { LLMConfig } from "../../types";
 
 const ChatPage: React.FC = () => {
     const navigate = useNavigate();
@@ -14,8 +15,9 @@ const ChatPage: React.FC = () => {
         conversations,
         selectedConversation,
         setSelectedConversation,
-        createConversation,
         deleteConversation,
+        createConversation,
+        loadingConversation
     } = useConversations();
 
     const { 
@@ -25,14 +27,7 @@ const ChatPage: React.FC = () => {
         hasMoreMessages, 
         loadMoreMessages 
     } = useMessages(selectedConversation);
-    const [llmConfig, setLlmConfig] = useState<
-        {
-            provider: string;
-            model: string;
-            apiKey?: string;
-            toolCall?: "Wikipedia" | "WebSearch" | null;
-        } | null
-    >(null);
+    const [llmConfig, setLlmConfig] = useState<LLMConfig | null>(null);
 
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const handleLogout = () => {
@@ -44,8 +39,8 @@ const ChatPage: React.FC = () => {
     return (
         <div className="chat-container">
             <TopBar
-                onChange={(config) =>
-                    setLlmConfig((prev) => ({ ...prev, ...config }))}
+                onChange={(config : Partial<LLMConfig>) =>
+                    setLlmConfig((prev : LLMConfig) => ({ ...prev, ...config }))}
                 onLogout={handleLogout}
             />
 
@@ -56,9 +51,9 @@ const ChatPage: React.FC = () => {
                     onSelect={setSelectedConversation}
                     onDelete={deleteConversation}
                     onNewConversation={() => createConversation()}
-                    onLogout={handleLogout}
                     collapsed={sidebarCollapsed}
                     onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
+                    loadingConversation={loadingConversation}
                 />
 
                 <div className="flex flex-col flex-1 bg-gradient-to-br from-gray-900 to-gray-800">
