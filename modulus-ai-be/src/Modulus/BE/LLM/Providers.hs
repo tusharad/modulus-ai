@@ -6,14 +6,18 @@ import Data.Either (fromRight)
 import Modulus.Common.Openrouter (OpenRouterModel (modelId), getOpenRouterModelList)
 import Modulus.Common.Types (ModelProviders (..))
 import Modulus.Common.Utils (listAvailableOllamaModels)
+import UnliftIO.Async (concurrently)
 
 fetchAllProviders :: IO [ModelProviders]
-fetchAllProviders =
-  sequenceA
-    [ toOllamaModels <$> listAvailableOllamaModels
-    , toOpenRouterModels . map modelId . take 5 . fromRight []
-        <$> getOpenRouterModelList
-    , pure geminiProviderList
+fetchAllProviders = do
+  (ollamaModels, openRouterModels) <-
+    concurrently
+      listAvailableOllamaModels
+      (map modelId . take 5 . fromRight [] <$> getOpenRouterModelList)
+  pure
+    [ toOllamaModels ollamaModels
+    , toOpenRouterModels openRouterModels
+    , geminiProviderList
     ]
   where
     toOllamaModels ollamaModelList =
