@@ -30,7 +30,7 @@ dependencies:
   - lens
   - mtl
   - orville-postgresql
-  - ollama-haskell
+  - ollama-haskell >= 0.2.1.0
   - password
   - random
   - req

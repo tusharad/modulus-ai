@@ -20,6 +20,7 @@ import Control.Monad.Except (ExceptT (ExceptT), runExceptT)
 import Control.Monad.IO.Class
 import Data.Aeson
 import qualified Data.ByteString as BS
+import Data.Either (partitionEithers)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as HM
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -37,6 +38,7 @@ import GHC.Generics
 import Langchain.DocumentLoader.Core (BaseLoader (load))
 import Langchain.DocumentLoader.FileLoader (FileLoader (FileLoader))
 import Langchain.DocumentLoader.PdfLoader (PdfLoader (PdfLoader))
+import Langchain.Error (LangchainError, fromString)
 import qualified Langchain.LLM.Core as L
 import qualified Langchain.LLM.Core as Langchain
 import Langchain.LLM.Gemini as LLMGemini
@@ -49,6 +51,7 @@ import Langchain.PromptTemplate
 import Langchain.Tool.Core (Tool (runTool))
 import Langchain.Tool.WebScraper (WebScraper (WebScraper))
 import Langchain.Tool.WikipediaTool (defaultWikipediaTool)
+import Langchain.Utils (showText)
 import Modulus.BE.Api.Types (LLMRespStreamBody (..))
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.Conversation (addSummary, findSummaryByConvID)
@@ -58,6 +61,7 @@ import Modulus.BE.Log (logDebug, logError)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.BE.Monad.Storage
 import System.FilePath
+import UnliftIO.Async (mapConcurrently)
 
 -- | Create tool message from tool result
 createToolMessage :: (String, Text) -> Message
@@ -67,6 +71,38 @@ createToolMessage (functionName, result) =
     ("Tool (" <> T.pack functionName <> ") result: " <> result)
     defaultMessageData
 
+storeDocIfNotExist ::
+  Storage handle =>
+  handle ->
+  LLMRespStreamBody ->
+  MessageAttachment MessageAttachmentID b ->
+  AppM (Either LangchainError ())
+storeDocIfNotExist storageConfig respStreamBody MessageAttachment {..} = do
+  runExceptT $ do
+    existing <-
+      ExceptT $
+        Right
+          <$> getDocumentEmbeddingsByAttachmentId messageAttachmentID
+    case existing of
+      [] -> do
+        let attName = T.unpack messageAttachmentFileName
+        fPath <- ExceptT $ loadFile storageConfig attName
+        docs <-
+          if ".pdf" == takeExtension fPath
+            then do
+              let sourcePdf = PdfLoader fPath
+              ExceptT $ liftIO $ load sourcePdf
+            else do
+              let source = FileLoader fPath
+              ExceptT $ liftIO $ load source
+        ExceptT $ Right <$> logDebug "storing new docs"
+        ExceptT $
+          storeDocsForEmbeddings
+            respStreamBody
+            messageAttachmentID
+            docs
+      _ -> pure ()
+
 attachDocumentRAG ::
   [MessageAttachmentRead] ->
   NE.NonEmpty L.Message ->
@@ -74,37 +110,11 @@ attachDocumentRAG ::
   AppM (NE.NonEmpty L.Message)
 attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
   storageConfig <- mkStorageFromEnv
-  eDocs <- runExceptT $ do
-    perAttachmentDocs <-
-      mapM
-        ( \MessageAttachment {..} -> do
-            existing <-
-              ExceptT $
-                Right
-                  <$> getDocumentEmbeddingsByAttachmentId messageAttachmentID
-            case existing of
-              [] -> do
-                let attName = T.unpack messageAttachmentFileName
-                fPath <- ExceptT $ loadFile storageConfig attName
-                docs <-
-                  if ".pdf" == takeExtension fPath
-                    then do
-                      let sourcePdf = PdfLoader fPath
-                      ExceptT $ liftIO $ load sourcePdf
-                    else do
-                      let source = FileLoader fPath
-                      ExceptT $ liftIO $ load source
-                ExceptT $ Right <$> logDebug "storing new docs"
-                ExceptT $ storeDocsForEmbeddings respStreamBody messageAttachmentID docs
-              _ -> pure ()
-        )
-        msgAttachmentsList
-    pure $ mconcat perAttachmentDocs
-  case eDocs of
-    Left err -> do
-      logDebug $ "Error while generating docs" <> T.pack err
-      pure msgList_
-    Right _ -> do
+  (errs, _) <-
+    partitionEithers
+      <$> mapConcurrently (storeDocIfNotExist storageConfig respStreamBody) msgAttachmentsList
+  case errs of
+    [] -> do
       let lastUserMsg = Langchain.content $ NE.last msgList_
       eSysPrompt <- runExceptT $ do
         ExceptT $ Right <$> logDebug "getting relevant context"
@@ -115,13 +125,16 @@ attachDocumentRAG msgAttachmentsList msgList_ respStreamBody = do
             (HM.fromList [("context", context)])
       case eSysPrompt of
         Left err -> do
-          logError $ "Error while getting relevant docs" <> T.pack err
+          logError $ "Error while getting relevant docs" <> showText err
           pure msgList_
         Right sysPrompt -> do
           let sysMsg = L.Message L.System sysPrompt L.defaultMessageData
           let userMsg = L.Message L.User lastUserMsg L.defaultMessageData
           logDebug $ "sysPrompt" <> L.content sysMsg
           pure $ NE.fromList $ NE.init msgList_ ++ [sysMsg, userMsg]
+    lst -> do
+      logDebug $ "Error while generating docs" <> showText lst
+      pure msgList_
 
 systemTemplate :: Text
 systemTemplate =
@@ -135,9 +148,9 @@ systemTemplate =
 runOpenRouterWithTools ::
   OpenAICompatible ->
   NE.NonEmpty Message ->
-  StreamHandler Text ->
+  StreamHandler OpenAIInternal.ChatCompletionChunk ->
   Text ->
-  IO (Either String ())
+  IO (Either LangchainError ())
 runOpenRouterWithTools llm msgList sh tool = do
   let toolDefs = getOpenRouterToolDefinitions tool
       openAIParams = defaultOpenAIParams {OpenAILike.tools = Just toolDefs}
@@ -145,7 +158,7 @@ runOpenRouterWithTools llm msgList sh tool = do
   -- First call to get tool calls
   eRes <- chat llm msgList (Just openAIParams)
   case eRes of
-    Left err -> pure $ Left $ "Error from chat: " ++ show err
+    Left err -> pure $ Left err
     Right response -> do
       case toolCalls (messageData response) of
         Nothing -> do
@@ -154,7 +167,7 @@ runOpenRouterWithTools llm msgList sh tool = do
           pure $ Right ()
         Just toolCallList -> do
           -- Execute tool calls and add results to message list
-          toolResults <- mapM (executeOpenRouterToolCall tool) toolCallList
+          toolResults <- mapConcurrently (executeOpenRouterToolCall tool) toolCallList
           print ("tool result" :: String, toolResults)
           let toolMessages = map createToolMessage toolResults
               updatedMsgList = msgList <> NE.fromList toolMessages
@@ -257,16 +270,16 @@ executeOpenRouterToolCall tool (ToolCall _ _ toolFunction) = do
 runOllamaWithTools ::
   Ollama ->
   NE.NonEmpty Message ->
-  StreamHandler Text ->
+  StreamHandler Ollama.ChatResponse ->
   Text ->
-  IO (Either String ())
+  IO (Either LangchainError ())
 runOllamaWithTools llm msgList sh tool = do
   let toolDefs = getToolDefinitions tool
       ollamaParams = defaultOllamaParams {LLMOllama.tools = Just toolDefs}
   -- First call to get tool calls
   eRes <- chat llm msgList (Just ollamaParams)
   case eRes of
-    Left err -> pure $ Left $ "Error from chat: " ++ show err
+    Left err -> pure $ Left err
     Right response -> do
       case toolCalls (messageData response) of
         Nothing -> do
@@ -276,7 +289,7 @@ runOllamaWithTools llm msgList sh tool = do
           pure $ Right ()
         Just toolCallList -> do
           -- Execute tool calls and add results to message list
-          toolResults <- mapM (executeToolCallFromResponse tool) toolCallList
+          toolResults <- mapConcurrently (executeToolCallFromResponse tool) toolCallList
           print ("tool result" :: String, toolResults)
           let toolMessages = map createToolMessage toolResults
               updatedMsgList = msgList <> NE.fromList toolMessages
@@ -374,17 +387,20 @@ class LLMProvider a where
     NE.NonEmpty Langchain.Message ->
     StreamHandler Text ->
     Maybe (Langchain.LLMParams a) ->
-    IO (Either String ())
+    IO (Either LangchainError ())
 
   streamWithTools ::
     a ->
     NE.NonEmpty Langchain.Message ->
     StreamHandler Text ->
     Text ->
-    IO (Either String ())
+    IO (Either LangchainError ())
 
-  generateNewConversationTitle :: a -> Text -> IO (Either String NewConversationTitle)
-  summarizeOlderConversation :: a -> Text -> IO (Either String Text)
+  generateNewConversationTitle ::
+    a ->
+    Text ->
+    IO (Either LangchainError NewConversationTitle)
+  summarizeOlderConversation :: a -> Text -> IO (Either LangchainError Text)
 
 data AnyLLMProvider where
   AnyLLMProvider :: (LLMProvider a) => a -> AnyLLMProvider
@@ -394,15 +410,25 @@ streamWithProvider ::
   NE.NonEmpty Langchain.Message ->
   StreamHandler Text ->
   Maybe Text ->
-  IO (Either String ())
+  IO (Either LangchainError ())
 streamWithProvider (AnyLLMProvider provider) msgs sh Nothing =
   streamResponse provider msgs sh Nothing
 streamWithProvider (AnyLLMProvider provider) msgs sh (Just tool) =
   streamWithTools provider msgs sh tool
 
+toOllamaHandler :: StreamHandler Text -> StreamHandler Ollama.ChatResponse
+toOllamaHandler sh =
+  StreamHandler
+    { onToken = onToken sh . Ollama.content . fromMaybe emptyMsg . Ollama.message
+    , onComplete = onComplete sh
+    }
+  where
+    emptyMsg = Ollama.assistantMessage ""
+
 instance LLMProvider Ollama where
-  streamResponse = Langchain.stream
-  streamWithTools = runOllamaWithTools
+  streamResponse provider msgs sh _ =
+    Langchain.stream provider msgs (toOllamaHandler sh) Nothing
+  streamWithTools provider msgs sh = runOllamaWithTools provider msgs (toOllamaHandler sh)
   generateNewConversationTitle l userQuestion = do
     let schema =
           Ollama.buildSchema $
@@ -421,9 +447,33 @@ instance LLMProvider Ollama where
     let msg = NE.fromList [Message OpenAILike.User msgContent defaultMessageData]
     fmap content <$> chat l msg Nothing
 
+openAIChunkToText :: OpenAIInternal.ChatCompletionChunk -> T.Text
+openAIChunkToText completionChunk = do
+  fromMaybe ""
+    . OpenAIInternal.contentForDelta
+    . OpenAIInternal.delta
+    . fromMaybe emptyChoice
+    . listToMaybe
+    $ OpenAIInternal.chunkChoices completionChunk
+  where
+    emptyChoice = OpenAIInternal.ChunkChoice (OpenAIInternal.Delta Nothing) Nothing
+
+toOpenAIStreamHandler ::
+  StreamHandler Text -> StreamHandler OpenAIInternal.ChatCompletionChunk
+toOpenAIStreamHandler sh =
+  StreamHandler
+    { onToken = onToken sh . openAIChunkToText
+    , onComplete = onComplete sh
+    }
+
 instance LLMProvider OpenAICompatible where
-  streamResponse = Langchain.stream
-  streamWithTools = runOpenRouterWithTools
+  streamResponse provider msgs sh =
+    Langchain.stream provider msgs (toOpenAIStreamHandler sh)
+  streamWithTools provider msgs sh =
+    runOpenRouterWithTools
+      provider
+      msgs
+      (toOpenAIStreamHandler sh)
   generateNewConversationTitle l userQuestion = do
     let schema =
           LangchainSchema.buildSchema $
@@ -445,8 +495,13 @@ instance LLMProvider OpenAICompatible where
     fmap content <$> chat l msg Nothing
 
 instance LLMProvider Gemini where
-  streamResponse = Langchain.stream
-  streamWithTools = runOpenRouterWithTools . geminiToOpenAICompatible
+  streamResponse provider msgs sh =
+    Langchain.stream provider msgs (toOpenAIStreamHandler sh)
+  streamWithTools provider msgs sh =
+    runOpenRouterWithTools
+      (geminiToOpenAICompatible provider)
+      msgs
+      (toOpenAIStreamHandler sh)
   generateNewConversationTitle =
     generateNewConversationTitle . geminiToOpenAICompatible
   summarizeOlderConversation l oldConv = do
@@ -513,17 +568,17 @@ summarizeConversationHistoryPrompt =
 summarizeConversationHistory ::
   LLMRespStreamBody ->
   [ChatMessageWithAttachments] ->
-  AppM (Either String Message)
-summarizeConversationHistory _ [] = pure $ Left "No messages to summarize"
+  AppM (Either LangchainError Message)
+summarizeConversationHistory _ [] = pure $ Left $ fromString "No messages to summarize"
 summarizeConversationHistory llmRespBody chatMsgAttLst = do
   let mbConvID = chatMessageConversationID . cm <$> listToMaybe chatMsgAttLst
   case mbConvID of
-    Nothing -> pure $ Left "No conversation ID found in messages"
+    Nothing -> pure $ Left $ fromString "No conversation ID found in messages"
     Just convID -> do
       let oldConvo = foldr combineContent "Older conversation context: \n" chatMsgAttLst
       eLLM <- mkLLMProvider llmRespBody
       case eLLM of
-        Left e -> pure $ Left (T.unpack e)
+        Left e -> pure . Left . fromString $ show e
         Right anyLLMProvider -> getOrCreateConversationSummary anyLLMProvider convID (T.take 5000 oldConvo)
   where
     combineContent chatMsgAtt acc = do
@@ -535,7 +590,7 @@ summarizeConversationHistory llmRespBody chatMsgAttLst = do
         else acc `T.append` "Assistant: " <> cont <> "\n"
 
 getOrCreateConversationSummary ::
-  AnyLLMProvider -> ConversationID -> Text -> AppM (Either String Message)
+  AnyLLMProvider -> ConversationID -> Text -> AppM (Either LangchainError Message)
 getOrCreateConversationSummary (AnyLLMProvider llmProvider) convId oldConvo = do
   mbSummary <- findSummaryByConvID convId
   case mbSummary of

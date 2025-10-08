@@ -2,6 +2,7 @@ module Modulus.BE.Service.Conversation (updateConversationTitle) where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import qualified Data.Text as T
+import Langchain.Utils (showText)
 import Modulus.BE.Api.Types (LLMRespStreamBody)
 import Modulus.BE.DB.Internal.Model
 import Modulus.BE.DB.Queries.ChatMessage (getChatMessagesByConvID)
@@ -37,7 +38,7 @@ updateConversationTitle convPublicID llmRespBody = do
                     llmProvider
                     (chatMessageContent firstMsg)
               case eRes of
-                Left err -> logDebug $ "Failed to generate new title: " <> T.pack err
+                Left err -> logDebug $ "Failed to generate new title: " <> showText err
                 Right (NewConversationTitle newTitle) -> do
                   let updatedConv =
                         convRead
@@ -48,4 +49,6 @@ updateConversationTitle convPublicID llmRespBody = do
                           , conversationUpdatedAt = ()
                           }
                   updateConversation (conversationID convRead) updatedConv
-                  logDebug $ "Title updated for conversation ID " <> T.pack (show convPublicID)
+                  logDebug $
+                    "Title updated for conversation ID "
+                      <> T.pack (show convPublicID)

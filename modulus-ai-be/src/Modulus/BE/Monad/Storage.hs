@@ -7,14 +7,15 @@ module Modulus.BE.Monad.Storage
 import Control.Exception (SomeException, try)
 import Control.Monad.Reader (MonadIO (liftIO), asks)
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import Langchain.Error (LangchainError, fromString)
 import Modulus.BE.Monad.AppM (AppM)
 import Modulus.Common.Types
 import System.FilePath
 
 class Storage handle where
-  saveFile :: handle -> FilePath -> BSL.ByteString -> AppM (Either String ())
+  saveFile :: handle -> FilePath -> BSL.ByteString -> AppM (Either LangchainError ())
 
-  loadFile :: handle -> FilePath -> AppM (Either String FilePath)
+  loadFile :: handle -> FilePath -> AppM (Either LangchainError FilePath)
 
 newtype StorageConfig = FileSystem FilePath
   deriving (Eq, Show)
@@ -22,13 +23,13 @@ newtype StorageConfig = FileSystem FilePath
 instance Storage StorageConfig where
   saveFile (FileSystem uploadPath) fileName fileContent = do
     eRes <- liftIO $ try $ BSL.writeFile (uploadPath </> fileName) fileContent
-    pure $ someExpToString eRes
+    pure $ someExpToError eRes
 
   loadFile (FileSystem uploadPath) fileName = pure $ Right (uploadPath </> fileName)
 
-someExpToString :: Either SomeException a -> Either String a
-someExpToString (Left ex) = Left (show ex)
-someExpToString (Right x) = Right x
+someExpToError :: Either SomeException a -> Either LangchainError a
+someExpToError (Left ex) = Left (fromString $ show ex)
+someExpToError (Right x) = Right x
 
 mkStorageFromEnv :: AppM StorageConfig
 mkStorageFromEnv = asks (FileSystem . configFileUploadPath)

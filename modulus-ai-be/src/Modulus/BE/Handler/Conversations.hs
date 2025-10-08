@@ -20,6 +20,7 @@ import qualified Data.Text as T
 import Data.UUID.V4 (nextRandom)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
+import Langchain.Utils (showText)
 import Modulus.BE.Api.Types
 import Modulus.BE.Api.V1
 import Modulus.BE.Auth.JwtAuthCombinator (AuthResult (..))
@@ -44,6 +45,7 @@ import Servant
 import Servant.Multipart
 import qualified Servant.Types.SourceT as S
 import System.FilePath
+import UnliftIO.Async (concurrently)
 import qualified UnliftIO.Concurrent as UnliftIO (forkIO)
 
 conversationsServer :: ServerT ConversationsAPI AppM
@@ -122,7 +124,7 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
           eSummarizedMsg <- summarizeConversationHistory streamBody remainingMsgs
           case eSummarizedMsg of
             Left err -> do
-              logDebug $ "Failed to summarize older messages: " <> T.pack err
+              logDebug $ "Failed to summarize older messages: " <> showText err
               pure msgListWithoutSummarizedHistory
             Right summarizedMsg -> do
               logDebug $ "summarized history " <> T.pack (show summarizedMsg)
@@ -209,7 +211,7 @@ storeAttachmentIfExist (Just FileData {..}) = do
         eRes <- saveFile storageConf newAttachmentObjectName fdPayload
         case eRes of
           Left err -> do
-            throwError $ ValidationError $ "Could not upload file: " <> T.pack err
+            throwError $ ValidationError $ "Could not upload file: " <> showText err
           Right _ ->
             pure $
               Just $
@@ -236,8 +238,10 @@ addConversationMessageHandler
   (Authenticated user _subscription)
   convPublicId
   AddMessageRequest {..} = do
-    convRead <- getConvRead user convPublicId
-    mbAttachmentInfo <- storeAttachmentIfExist addMessageAttachment
+    (convRead, mbAttachmentInfo) <-
+      concurrently
+        (getConvRead user convPublicId)
+        (storeAttachmentIfExist addMessageAttachment)
     let role = case addMessageRole of
           "user" -> MessageRoleUser
           "assistant" -> MessageRoleAssistant

@@ -115,7 +115,7 @@ library
     , langchain-hs
     , lens
     , mtl
-    , ollama-haskell
+    , ollama-haskell >=0.2.1.0
     , orville-postgresql
     , password
     , random
@@ -177,7 +177,7 @@ executable modulus-ai-exe
     , lens
     , modulus-ai
     , mtl
-    , ollama-haskell
+    , ollama-haskell >=0.2.1.0
     , orville-postgresql
     , password
     , random
@@ -246,7 +246,7 @@ test-suite modulus-ai-test
     , lens
     , modulus-ai
     , mtl
-    , ollama-haskell
+    , ollama-haskell >=0.2.1.0
     , orville-postgresql
     , password
     , random

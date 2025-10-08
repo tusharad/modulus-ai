@@ -9,9 +9,9 @@ interface Props {
   onSelect: (conv: ConversationRead) => void;
   onDelete: (id: string) => void;
   onNewConversation: () => void;
-  onLogout: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  loadingConversation: boolean;
 }
 
 const ConversationList: React.FC<Props> = ({
@@ -20,9 +20,9 @@ const ConversationList: React.FC<Props> = ({
   onSelect,
   onDelete,
   onNewConversation,
-  onLogout,
   collapsed,
   onToggleCollapse,
+  loadingConversation
 }) => (
   <div
     className={`${
@@ -53,6 +53,11 @@ const ConversationList: React.FC<Props> = ({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto chat-scroll">
+          { loadingConversation ? (
+            <div className="p-4 text-center">
+              <p className="text-xs text-gray-500 mt-1">loading conversation...</p>
+            </div>
+          ) : null}
           {conversations.length === 0 ? (
             <div className="p-4 text-center">
               <div className="w-12 h-12 mx-auto mb-3 bg-gray-800 rounded-xl flex items-center justify-center">

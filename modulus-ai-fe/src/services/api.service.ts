@@ -53,7 +53,6 @@ class APIService {
             ...(token && { Authorization: `Bearer ${token}` }),
         };
 
-        // ❌ Don't force Content-Type if FormData is used
         if (!(options.body instanceof FormData)) {
             headers["Content-Type"] = "application/json";
         }
@@ -108,7 +107,7 @@ class APIService {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error("Login failed");
+        if (!response.ok) throw new Error("Login failed: ", response.body);
         return response.json();
     }
 

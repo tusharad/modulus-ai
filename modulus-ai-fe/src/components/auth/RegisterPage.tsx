@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 import { useNavigate, Link } from 'react-router';
+import { getCookie } from '../../services/cookies.ts';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,15 @@ const RegisterPage: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [msg, setMsg] = useState<string|null>(null);
+
+  useEffect(() => {
+    const token = getCookie("accessToken")
+    if (token) {
+        console.log("user already logged in, redirecting to chat");
+        navigate("/chat")
+    }
+  },[]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +40,8 @@ const RegisterPage: React.FC = () => {
         registerPassword: password,
         registerConfirmPassword: confirmPassword,
       });
+      setMsg("Registration successful! redirecting to OTP page...");
+      console.log("redirecting to otp");
       navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(`Registration failed. Please try again. ${err}`);
@@ -56,15 +68,12 @@ const RegisterPage: React.FC = () => {
               <div className="w-20 h-20 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <User className="text-white" size={32} />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-              </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent mb-2">
               Create Account
             </h1>
             <p className="text-gray-400 text-sm">
-              Join our AI-powered conversation platform
+              Join Modulus AI
             </p>
           </div>
 
@@ -84,9 +93,6 @@ const RegisterPage: React.FC = () => {
                     placeholder="Enter your email address"
                     required
                   />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
                 </div>
               </div>
 
@@ -147,6 +153,19 @@ const RegisterPage: React.FC = () => {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-red-300">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {msg && (
+              <div className="bg-green-900/20 border-l-4 border-green-500 p-4 rounded-lg animate-fade-in">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-green-300">{msg}</p>
+                    <p className="text-sm text-green-300">If not redirected, please click 
+                        <Link to={`/verify-email?email=${encodeURIComponent(email)}`} className="text-emerald-400 hover:text-emerald-300"> here</Link>
+                    </p>
                   </div>
                 </div>
               </div>
