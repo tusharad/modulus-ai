@@ -161,8 +161,10 @@ refreshTokenHandler RefreshTokenRequest {..} = do
       case mbUser of
         Nothing -> throwError $ ValidationError "User not found for token"
         Just User {..} -> do
-          jwtToken <- generateJWT userID
-          refreshToken_ <- generateAndStoreRefreshToken userID
+          (jwtToken, refreshToken_) <-
+            concurrently
+              (generateJWT userID)
+              (generateAndStoreRefreshToken userID)
           pure $
             AuthTokens
               { accessToken = TE.decodeUtf8 $ BSL.toStrict jwtToken
