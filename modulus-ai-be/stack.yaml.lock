@@ -18,15 +18,15 @@ packages:
     git: https://github.com/tusharad/orville
     subdir: orville-postgresql
 - completed:
-    commit: bb71820e013c6bbbbbfa435763738c8dab669f57
+    commit: 2b4dcc8a369ba5393b65a00e702f9d7e841ab1b0
     git: https://github.com/tusharad/langchain-hs
     name: langchain-hs
     pantry-tree:
-      sha256: 5eb12855893b7c067c2dc902039d26ad234b34c58eb9f11dcee77370821972ab
-      size: 9850
+      sha256: 280ea2be397defc1a61988064dd8d5e9443017c93df5f7c4ff448d2ef5eee435
+      size: 10123
     version: 0.0.2.0
   original:
-    commit: bb71820e013c6bbbbbfa435763738c8dab669f57
+    commit: 2b4dcc8a369ba5393b65a00e702f9d7e841ab1b0
     git: https://github.com/tusharad/langchain-hs
 - completed:
     hackage: pdf-toolbox-document-0.1.4@sha256:6016daf47765f4a06b23a90e59741f34f7c2c8561091a9db3caa922339037108,2405

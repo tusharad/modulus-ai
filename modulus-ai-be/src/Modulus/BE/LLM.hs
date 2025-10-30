@@ -451,12 +451,17 @@ openAIChunkToText :: OpenAIInternal.ChatCompletionChunk -> T.Text
 openAIChunkToText completionChunk = do
   fromMaybe ""
     . OpenAIInternal.contentForDelta
-    . OpenAIInternal.delta
+    . OpenAIInternal.chunkChoiceDelta
     . fromMaybe emptyChoice
     . listToMaybe
     $ OpenAIInternal.chunkChoices completionChunk
   where
-    emptyChoice = OpenAIInternal.ChunkChoice (OpenAIInternal.Delta Nothing) Nothing
+    emptyChoice =
+      OpenAIInternal.ChunkChoice
+        (OpenAIInternal.Delta Nothing Nothing Nothing Nothing Nothing)
+        1
+        Nothing
+        Nothing
 
 toOpenAIStreamHandler ::
   StreamHandler Text -> StreamHandler OpenAIInternal.ChatCompletionChunk
