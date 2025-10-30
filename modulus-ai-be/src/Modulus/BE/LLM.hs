@@ -458,7 +458,14 @@ openAIChunkToText completionChunk = do
   where
     emptyChoice =
       OpenAIInternal.ChunkChoice
-        (OpenAIInternal.Delta Nothing Nothing Nothing Nothing Nothing)
+        (OpenAIInternal.Delta
+          { OpenAIInternal.deltaRole = Nothing
+          , OpenAIInternal.deltaContent = Nothing
+          , OpenAIInternal.deltaFunctionCall = Nothing
+          , OpenAIInternal.deltaToolCalls = Nothing
+          , OpenAIInternal.deltaToolCallId = Nothing
+          }
+        )
         1
         Nothing
         Nothing
