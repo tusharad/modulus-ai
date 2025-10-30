@@ -109,8 +109,8 @@ supportedExtensions = [".jpg", ".jpeg", ".png"]
 isSupportedExtension :: FilePath -> Bool
 isSupportedExtension p = map toLower (takeExtension p) `elem` supportedExtensions
 
-encodeImage :: Text -> FilePath -> IO (Maybe Text)
-encodeImage provider filePath = do
+encodeImage :: Text -> Text -> FilePath -> IO (Maybe Text)
+encodeImage provider fileType filePath = do
   if not (isSupportedExtension filePath)
     then return Nothing
     else do
@@ -123,7 +123,7 @@ encodeImage provider filePath = do
           return $
             ( \encodedImageData ->
                 "data:image/"
-                  <> T.pack (drop 1 $ takeExtension filePath)
+                  <> T.drop 6 fileType -- dropping image/
                   <> ";base64,"
                   <> encodedImageData
             )
@@ -146,6 +146,9 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
             updateConversationTitle convPublicId streamBody
         )
       let (chatMsgLst, remainingMsgs) = takeRecentMessages 5000 chatMsgLst_
+      -- Converting ModulusAI's Message type into Langchain's Message type
+      -- Along with conversation, also finding if there are any image attachments
+      -- If yes, encoding it as base64 image and attaching it as part of MessageImages.
       msgList_ <-
         mapM
           ( \chatMsg -> do
@@ -158,10 +161,11 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
                       (mas chatMsg)
               encodedImagesMaybes <-
                 mapM
-                  ( liftIO
-                      . encodeImage provider
-                      . T.unpack
-                      . messageAttachmentStoragePath
+                  ( \m ->
+                      liftIO
+                        . encodeImage provider (messageAttachmentFileType m)
+                        . T.unpack
+                        $ messageAttachmentStoragePath m
                   )
                   imageAttachments
               let encodedImages = catMaybes encodedImagesMaybes
@@ -176,6 +180,7 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
                   )
           )
           chatMsgLst
+      -- Filtering attachments whose type is image, since images are being attached in the message type itself.
       msgListWithoutSummarizedHistory <- case ( filter
                                                   ( \m ->
                                                       not $
@@ -263,7 +268,6 @@ supportedFileTypes =
   [ "text/plain"
   , "application/pdf"
   , "image/png"
-  , "image/jpg"
   , "image/jpeg"
   ]
 
