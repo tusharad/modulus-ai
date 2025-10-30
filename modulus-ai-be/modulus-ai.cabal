@@ -103,8 +103,10 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
+    , directory
     , email-validate
     , fast-logger
     , filepath
@@ -164,8 +166,10 @@ executable modulus-ai-exe
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
+    , directory
     , email-validate
     , fast-logger
     , filepath
@@ -233,8 +237,10 @@ test-suite modulus-ai-test
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
+    , directory
     , email-validate
     , fast-logger
     , filepath

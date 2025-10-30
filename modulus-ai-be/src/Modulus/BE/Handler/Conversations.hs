@@ -9,14 +9,20 @@ module Modulus.BE.Handler.Conversations
   ) where
 
 import Control.Concurrent (Chan, newChan, readChan, writeChan)
+import Control.Exception (IOException, try)
 import Control.Monad (unless, void, when)
 import Control.Monad.IO.Class
 import Control.Monad.Reader (asks)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Lazy as BSL
+import Data.Char (toLower)
 import Data.Int (Int64)
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Data.UUID.V4 (nextRandom)
 import Langchain.LLM.Core (StreamHandler (..))
 import qualified Langchain.LLM.Core as Langchain
@@ -44,6 +50,7 @@ import qualified Orville.PostgreSQL as Orville
 import Servant
 import Servant.Multipart
 import qualified Servant.Types.SourceT as S
+import System.Directory
 import System.FilePath
 import UnliftIO.Async (concurrently)
 import qualified UnliftIO.Concurrent as UnliftIO (forkIO)
@@ -86,6 +93,42 @@ toLangchainRole r = case r of
   MessageRoleSystem -> Langchain.System
   MessageRoleTool -> Langchain.Tool
 
+safeReadFile :: FilePath -> IO (Either IOException BS.ByteString)
+safeReadFile = try . BS.readFile
+
+asPath :: FilePath -> IO (Maybe BS.ByteString)
+asPath filePath = do
+  exists <- doesFileExist filePath
+  if exists
+    then either (const Nothing) Just <$> safeReadFile filePath
+    else return Nothing
+
+supportedExtensions :: [String]
+supportedExtensions = [".jpg", ".jpeg", ".png"]
+
+isSupportedExtension :: FilePath -> Bool
+isSupportedExtension p = map toLower (takeExtension p) `elem` supportedExtensions
+
+encodeImage :: Text -> Text -> FilePath -> IO (Maybe Text)
+encodeImage provider fileType filePath = do
+  if not (isSupportedExtension filePath)
+    then return Nothing
+    else do
+      maybeContent <- asPath filePath
+      let res = fmap (TE.decodeUtf8 . Base64.encode) maybeContent
+      if provider == "ollama"
+        then
+          return res
+        else
+          return $
+            ( \encodedImageData ->
+                "data:image/"
+                  <> T.drop 6 fileType -- dropping image/
+                  <> ";base64,"
+                  <> encodedImageData
+            )
+              <$> res
+
 getLLMRespStreamHandler ::
   AuthResult ->
   ConversationPublicID ->
@@ -103,20 +146,62 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
             updateConversationTitle convPublicId streamBody
         )
       let (chatMsgLst, remainingMsgs) = takeRecentMessages 5000 chatMsgLst_
-      let msgList_ =
-            NE.map
-              ( \ChatMessage {..} ->
-                  Langchain.Message
-                    (toLangchainRole chatMessageRole)
-                    chatMessageContent
-                    Langchain.defaultMessageData
-              )
-              (cm <$> chatMsgLst)
-      msgListWithoutSummarizedHistory <- case (mconcat . NE.toList) $ mas <$> chatMsgLst of
+      -- Converting ModulusAI's Message type into Langchain's Message type
+      -- Along with conversation, also finding if there are any image attachments
+      -- If yes, encoding it as base64 image and attaching it as part of MessageImages.
+      msgList_ <-
+        mapM
+          ( \chatMsg -> do
+              let imageAttachments =
+                    filter
+                      ( \m ->
+                          "image/"
+                            `T.isPrefixOf` messageAttachmentFileType m
+                      )
+                      (mas chatMsg)
+              encodedImagesMaybes <-
+                mapM
+                  ( \m ->
+                      liftIO
+                        . encodeImage provider (messageAttachmentFileType m)
+                        . T.unpack
+                        $ messageAttachmentStoragePath m
+                  )
+                  imageAttachments
+              let encodedImages = catMaybes encodedImagesMaybes
+              unless (null encodedImages) $
+                logDebug $
+                  "Attaching "
+                    <> showText (length encodedImages)
+                    <> " image(s) to conversation "
+                    <> showText convPublicId
+              pure $
+                Langchain.Message
+                  (toLangchainRole $ chatMessageRole $ cm chatMsg)
+                  (chatMessageContent $ cm chatMsg)
+                  ( Langchain.defaultMessageData
+                      { Langchain.messageImages = Just encodedImages
+                      }
+                  )
+          )
+          chatMsgLst
+      -- Filtering attachments whose type is image, since images are being attached in the message type itself.
+      msgListWithoutSummarizedHistory <- case ( filter
+                                                  ( \m ->
+                                                      not $
+                                                        "image/"
+                                                          `T.isPrefixOf` messageAttachmentFileType m
+                                                  )
+                                                  . mconcat
+                                                  . NE.toList
+                                              )
+        $ mas <$> chatMsgLst of
         [] -> do
-          logDebug $ "no chatMsgLst found" <> T.pack (show chatMsgLst)
+          logDebug $ "no attachments found" <> T.pack (show chatMsgLst)
           pure msgList_
-        msgAttachmentsList -> attachDocumentRAG msgAttachmentsList msgList_ streamBody
+        msgAttachmentsList -> do
+          logDebug $ "sending attachments " <> T.pack (show msgAttachmentsList)
+          attachDocumentRAG msgAttachmentsList msgList_ streamBody
       msgList <- case remainingMsgs of
         [] -> pure msgListWithoutSummarizedHistory
         _ -> do
@@ -187,6 +272,8 @@ supportedFileTypes :: [Text]
 supportedFileTypes =
   [ "text/plain"
   , "application/pdf"
+  , "image/png"
+  , "image/jpeg"
   ]
 
 storeAttachmentIfExist ::
