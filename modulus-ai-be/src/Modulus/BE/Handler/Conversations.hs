@@ -172,11 +172,11 @@ getLLMRespStreamHandler authUser convPublicId streamBody@LLMRespStreamBody {..} 
               unless (null encodedImages) $
                 logDebug $
                   "Attaching "
-                  <> showText (length encodedImages)
-                  <> " image(s) to conversation "
-                  <> convPublicId
-                  <> ", message ID "
-                  <> showText (chatMessageId $ cm chatMsg)
+                    <> showText (length encodedImages)
+                    <> " image(s) to conversation "
+                    <> convPublicId
+                    <> ", message ID "
+                    <> showText (chatMessageId $ cm chatMsg)
               pure $
                 Langchain.Message
                   (toLangchainRole $ chatMessageRole $ cm chatMsg)
